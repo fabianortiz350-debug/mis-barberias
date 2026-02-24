@@ -3,63 +3,199 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp Premium</title>
+    <title>BarberApp Pro | Reservas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
-        .card { background: #1a1a1a; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid #333; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
-        h2 { text-align: center; color: #d4af37; letter-spacing: 2px; text-transform: uppercase; }
-        label { display: block; margin-top: 15px; font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus, select:focus { border-color: #d4af37; }
-        button { width: 100%; padding: 15px; margin-top: 30px; background: linear-gradient(45deg, #d4af37, #f0ad4e); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #000; cursor: pointer; transition: 0.4s; }
-        button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        :root {
+            --primary: #000000;
+            --accent: #00a8ff; /* Azul estilo Booksy */
+            --bg: #f4f7f6;
+            --white: #ffffff;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: var(--white);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* Estilo de Tarjetas de Servicio como Booksy */
+        .service-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .service-info h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .service-info p {
+            margin: 5px 0 0;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        .service-price {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--accent);
+        }
+
+        /* Formulario */
+        .booking-form {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #0086cc;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>BarberApp Pro</h2>
-        
-        <label>Elige tu Barbería</label>
-        <select id="barberia">
-            <option value="fabianortiz350@gmail.com" data-name="Barbería El Estilo">💈 Barbería El Estilo</option>
-            <option value="otro_correo@gmail.com" data-name="Cortes VIP">✂️ Cortes VIP</option>
-        </select>
 
-        <label>Nombre del Cliente</label>
-        <input type="text" id="nombre" placeholder="Tu nombre">
-        
-        <label>Tu Correo</label>
-        <input type="email" id="email" placeholder="ejemplo@correo.com">
-        
-        <label>Fecha y Hora</label>
-        <div style="display: flex; gap: 10px;">
-            <input type="date" id="fecha">
-            <input type="time" id="hora">
+<header>
+    <h1>💈 BarberApp Pro</h1>
+    <p>Reserva tu estilo con los mejores</p>
+</header>
+
+<div class="container">
+    <div class="section-title">Nuestros Servicios</div>
+    
+    <div class="service-card" onclick="seleccionarServicio('Corte Clásico', 15)">
+        <div class="service-info">
+            <h3>Corte Clásico</h3>
+            <p>30 min • Tijera o máquina</p>
         </div>
-        
-        <button onclick="enviarReserva()">AGENDAR CITA</button>
+        <div class="service-price">$15.00</div>
     </div>
 
-    <script>
-        async function enviarReserva() {
-            const selector = document.getElementById('barberia');
-            const datos = {
-                barberiaNombre: selector.options[selector.selectedIndex].getAttribute('data-name'),
-                barberoEmail: selector.value,
-                clienteNombre: document.getElementById('nombre').value,
-                clienteEmail: document.getElementById('email').value,
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value
-            };
+    <div class="service-card" onclick="seleccionarServicio('Corte + Barba', 25)">
+        <div class="service-info">
+            <h3>Corte + Barba</h3>
+            <p>60 min • Ritual completo</p>
+        </div>
+        <div class="service-price">$25.00</div>
+    </div>
 
-            const res = await fetch('http://localhost:3000/reservar', {
+    <div class="booking-form">
+        <div class="section-title">Completa tu Reserva</div>
+        <form id="reservaForm">
+            <label>Servicio Seleccionado</label>
+            <input type="text" id="servicio" placeholder="Haz clic en un servicio arriba" readonly required>
+            
+            <label>Tu Nombre completo</label>
+            <input type="text" id="nombre" placeholder="Ej: Fabián Ortiz" required>
+            
+            <label>Fecha</label>
+            <input type="date" id="fecha" required>
+            
+            <label>Hora</label>
+            <input type="time" id="hora" required>
+            
+            <button type="submit">CONFIRMAR RESERVA</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function seleccionarServicio(nombre, precio) {
+        document.getElementById('servicio').value = nombre + " ($" + precio + ")";
+        // Pequeño efecto visual
+        document.getElementById('servicio').style.backgroundColor = "#e1f5fe";
+        setTimeout(() => { document.getElementById('servicio').style.backgroundColor = "white"; }, 500);
+    }
+
+    document.getElementById('reservaForm').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const datos = {
+            clienteNombre: document.getElementById('nombre').value,
+            barberiaNombre: document.getElementById('servicio').value,
+            fecha: document.getElementById('fecha').value,
+            hora: document.getElementById('hora').value,
+            clienteEmail: "cliente@ejemplo.com" // Aquí podrías añadir un campo de email
+        };
+
+        try {
+            const res = await fetch('https://mis-barberias.onrender.com/reservar', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(datos)
             });
-
-            if(res.ok) alert("¡Cita confirmada! El barbero y tú han sido notificados.");
+            
+            if(res.ok) {
+                alert("¡Cita agendada con éxito! Te esperamos.");
+            } else {
+                alert("Error al agendar. Intenta de nuevo.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Hubo un problema con la conexión.");
         }
-    </script>
+    };
+</script>
+
 </body>
 </html>
+

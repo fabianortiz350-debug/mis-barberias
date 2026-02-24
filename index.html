@@ -3,167 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp Pro | Reservas</title>
+    <title>BarberApp Pro | Tu Estilo, Tu Regla</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #000000;
-            --accent: #00a8ff; /* Azul estilo Booksy */
-            --bg: #f4f7f6;
+            --primary: #1a1a1a;
+            --accent: #d4af37; /* Dorado Premium */
+            --bg: #0f0f0f;
+            --card: #252525;
             --white: #ffffff;
+            --text-gray: #b0b0b0;
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--bg);
+            color: var(--white);
             margin: 0;
             padding: 0;
         }
 
+        /* Hero Section */
         header {
-            background: var(--white);
-            padding: 20px;
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            height: 40vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--accent);
         }
 
-        .container {
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-        }
+        header h1 { font-size: 2.5rem; margin: 0; letter-spacing: 2px; }
+        header p { color: var(--accent); font-weight: 300; margin-top: 10px; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
 
         .section-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: #333;
+            font-size: 1.5rem;
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+            margin-bottom: 30px;
         }
 
-        /* Estilo de Tarjetas de Servicio como Booksy */
+        /* Servicios */
+        .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
         .service-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
+            background: var(--card);
+            border-radius: 15px;
+            padding: 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            border: 2px solid transparent;
             cursor: pointer;
+            transition: 0.3s;
+            border: 1px solid #333;
         }
 
-        .service-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-2px);
-        }
+        .service-card:hover { border-color: var(--accent); transform: scale(1.02); }
+        .service-card.selected { border-color: var(--accent); background: #303030; }
 
-        .service-info h3 {
-            margin: 0;
-            font-size: 1.1rem;
-        }
-
-        .service-info p {
-            margin: 5px 0 0;
-            color: #777;
-            font-size: 0.9rem;
-        }
-
-        .service-price {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--accent);
-        }
+        .service-info h3 { margin: 0; font-size: 1.2rem; }
+        .service-info p { margin: 5px 0 0; color: var(--text-gray); font-size: 0.85rem; }
+        .service-price { color: var(--accent); font-weight: 600; font-size: 1.3rem; }
 
         /* Formulario */
-        .booking-form {
-            background: var(--white);
-            padding: 30px;
-            border-radius: 15px;
-            margin-top: 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        .booking-container {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 20px;
+            margin-top: 50px;
         }
 
-        input, select, button {
+        input {
             width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            box-sizing: border-box;
+            padding: 15px;
+            margin: 10px 0 25px;
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 10px;
+            color: white;
             font-family: inherit;
         }
 
         button {
-            background-color: var(--accent);
-            color: white;
+            width: 100%;
+            padding: 18px;
+            background: var(--accent);
+            color: black;
             border: none;
-            font-weight: 600;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: background 0.3s;
+            text-transform: uppercase;
+            transition: 0.3s;
         }
 
-        button:hover {
-            background-color: #0086cc;
+        button:hover { background: #b8962d; transform: translateY(-3px); }
+
+        footer { text-align: center; padding: 40px; color: var(--text-gray); font-size: 0.8rem; }
+
+        @media (max-width: 600px) {
+            .services-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>💈 BarberApp Pro</h1>
-    <p>Reserva tu estilo con los mejores</p>
+    <h1>BARBERAPP PRO</h1>
+    <p>ESTILO QUE DEFINE TU PERSONALIDAD</p>
 </header>
 
 <div class="container">
-    <div class="section-title">Nuestros Servicios</div>
+    <div class="section-title">Elige tu Servicio</div>
     
-    <div class="service-card" onclick="seleccionarServicio('Corte Clásico', 15)">
-        <div class="service-info">
-            <h3>Corte Clásico</h3>
-            <p>30 min • Tijera o máquina</p>
+    <div class="services-grid">
+        <div class="service-card" onclick="selectService(this, 'Corte Premium', '$18')">
+            <div class="service-info">
+                <h3>Corte Premium</h3>
+                <p>Degradado, lavado y peinado</p>
+            </div>
+            <div class="service-price">$18</div>
         </div>
-        <div class="service-price">$15.00</div>
+
+        <div class="service-card" onclick="selectService(this, 'Perfilado de Barba', '$10')">
+            <div class="service-info">
+                <h3>Perfilado de Barba</h3>
+                <p>Toalla caliente y aceite</p>
+            </div>
+            <div class="service-price">$10</div>
+        </div>
+
+        <div class="service-card" onclick="selectService(this, 'Combo Imperial', '$25')">
+            <div class="service-info">
+                <h3>Combo Imperial</h3>
+                <p>Corte + Barba + Mascarilla</p>
+            </div>
+            <div class="service-price">$25</div>
+        </div>
+
+        <div class="service-card" onclick="selectService(this, 'Cejas y Detalle', '$5')">
+            <div class="service-info">
+                <h3>Cejas y Detalle</h3>
+                <p>Diseño con navaja</p>
+            </div>
+            <div class="service-price">$5</div>
+        </div>
     </div>
 
-    <div class="service-card" onclick="seleccionarServicio('Corte + Barba', 25)">
-        <div class="service-info">
-            <h3>Corte + Barba</h3>
-            <p>60 min • Ritual completo</p>
-        </div>
-        <div class="service-price">$25.00</div>
-    </div>
-
-    <div class="booking-form">
-        <div class="section-title">Completa tu Reserva</div>
+    <div class="booking-container">
+        <div class="section-title">Tus Datos de Reserva</div>
         <form id="reservaForm">
             <label>Servicio Seleccionado</label>
-            <input type="text" id="servicio" placeholder="Haz clic en un servicio arriba" readonly required>
+            <input type="text" id="servicioSeleccionado" readonly required style="color: var(--accent); font-weight: bold;">
             
-            <label>Tu Nombre completo</label>
+            <label>Nombre Completo</label>
             <input type="text" id="nombre" placeholder="Ej: Fabián Ortiz" required>
             
-            <label>Fecha</label>
-            <input type="date" id="fecha" required>
+            <label>Tu Correo Electrónico</label>
+            <input type="email" id="email" placeholder="Para enviarte el comprobante" required>
             
-            <label>Hora</label>
-            <input type="time" id="hora" required>
+            <div style="display: flex; gap: 15px;">
+                <div style="flex: 1;">
+                    <label>Fecha</label>
+                    <input type="date" id="fecha" required>
+                </div>
+                <div style="flex: 1;">
+                    <label>Hora</label>
+                    <input type="time" id="hora" required>
+                </div>
+            </div>
             
-            <button type="submit">CONFIRMAR RESERVA</button>
+            <button type="submit">RESERVAR AHORA</button>
         </form>
     </div>
 </div>
 
+<footer>
+    © 2026 BarberApp Pro - Ubicación: Av. Principal Calle 123
+</footer>
+
 <script>
-    function seleccionarServicio(nombre, precio) {
-        document.getElementById('servicio').value = nombre + " ($" + precio + ")";
-        // Pequeño efecto visual
-        document.getElementById('servicio').style.backgroundColor = "#e1f5fe";
-        setTimeout(() => { document.getElementById('servicio').style.backgroundColor = "white"; }, 500);
+    let currentService = "";
+
+    function selectService(element, name, price) {
+        // Desmarcar otros
+        document.querySelectorAll('.service-card').forEach(card => card.classList.remove('selected'));
+        // Marcar este
+        element.classList.add('selected');
+        currentService = name + " (" + price + ")";
+        document.getElementById('servicioSeleccionado').value = currentService;
     }
 
     document.getElementById('reservaForm').onsubmit = async (e) => {
@@ -171,10 +206,10 @@
         
         const datos = {
             clienteNombre: document.getElementById('nombre').value,
-            barberiaNombre: document.getElementById('servicio').value,
+            clienteEmail: document.getElementById('email').value,
+            barberiaNombre: currentService,
             fecha: document.getElementById('fecha').value,
-            hora: document.getElementById('hora').value,
-            clienteEmail: "cliente@ejemplo.com" // Aquí podrías añadir un campo de email
+            hora: document.getElementById('hora').value
         };
 
         try {
@@ -185,13 +220,12 @@
             });
             
             if(res.ok) {
-                alert("¡Cita agendada con éxito! Te esperamos.");
+                alert("✅ ¡Éxito! Tu cita para " + currentService + " ha sido agendada.");
             } else {
-                alert("Error al agendar. Intenta de nuevo.");
+                alert("❌ Error en el servidor. Revisa si Render está encendido.");
             }
         } catch (err) {
-            console.error(err);
-            alert("Hubo un problema con la conexión.");
+            alert("❌ Hubo un problema al conectar con el servidor.");
         }
     };
 </script>

@@ -1,14 +1,15 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-const mongoose = require('mongoose'); // <-- Aquí solo debe decir 'mongoose'
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- AQUÍ VA TU ENLACE ---
-// Ya lo puse por ti basándome en lo que me enviaste.
+// Servir archivos estáticos (para que cargue tus fotos o estilos si tienes)
+app.use(express.static(__dirname));
+
 const mongoURI = 'mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP'; 
 
 mongoose.connect(mongoURI)
@@ -26,6 +27,11 @@ const CitaSchema = new mongoose.Schema({
 });
 const Cita = mongoose.model('Cita', CitaSchema);
 
+// --- ESTO ES LO NUEVO: MOSTRAR TU PÁGINA ---
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/index.html');
+});
+
 // CONFIGURACIÓN DE TU GMAIL
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -37,11 +43,9 @@ const transporter = nodemailer.createTransport({
 
 app.post('/reservar', async (req, res) => {
   try {
-    // 1. Guardamos la cita en la base de datos
     const nuevaCita = new Cita(req.body);
     await nuevaCita.save();
 
-    // 2. Enviamos los correos de confirmación
     const { clienteEmail, barberoEmail, clienteNombre, fecha, hora, barberiaNombre } = req.body;
     await transporter.sendMail({
       from: '"BarberApp Pro" <fabianortiz350@gmail.com>',

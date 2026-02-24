@@ -1,213 +1,74 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp Pro | Tu Estilo, Tu Regla</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #1a1a1a;
-            --accent: #d4af37; /* Dorado Premium */
-            --bg: #0f0f0f;
-            --card: #252525;
-            --white: #ffffff;
-            --text-gray: #b0b0b0;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg);
-            color: var(--white);
-            margin: 0;
-            padding: 0;
-        }
-
-        /* Hero Section */
-        header {
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1585747860715-2ba37e788b70?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
-            background-size: cover;
-            background-position: center;
-            height: 40vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            border-bottom: 4px solid var(--accent);
-        }
-
-        header h1 { font-size: 2.5rem; margin: 0; letter-spacing: 2px; }
-        header p { color: var(--accent); font-weight: 300; margin-top: 10px; }
-
-        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; }
-
-        .section-title {
-            font-size: 1.5rem;
-            border-left: 4px solid var(--accent);
-            padding-left: 15px;
-            margin-bottom: 30px;
-        }
-
-        /* Servicios */
-        .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        
-        .service-card {
-            background: var(--card);
-            border-radius: 15px;
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid #333;
-        }
-
-        .service-card:hover { border-color: var(--accent); transform: scale(1.02); }
-        .service-card.selected { border-color: var(--accent); background: #303030; }
-
-        .service-info h3 { margin: 0; font-size: 1.2rem; }
-        .service-info p { margin: 5px 0 0; color: var(--text-gray); font-size: 0.85rem; }
-        .service-price { color: var(--accent); font-weight: 600; font-size: 1.3rem; }
-
-        /* Formulario */
-        .booking-container {
-            background: var(--card);
-            padding: 40px;
-            border-radius: 20px;
-            margin-top: 50px;
-        }
-
-        input {
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0 25px;
-            background: #111;
-            border: 1px solid #444;
-            border-radius: 10px;
-            color: white;
-            font-family: inherit;
-        }
-
-        button {
-            width: 100%;
-            padding: 18px;
-            background: var(--accent);
-            color: black;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.3s;
-        }
-
-        button:hover { background: #b8962d; transform: translateY(-3px); }
-
-        footer { text-align: center; padding: 40px; color: var(--text-gray); font-size: 0.8rem; }
-
-        @media (max-width: 600px) {
-            .services-grid { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-
-<header>
-    <h1>BARBERAPP PRO</h1>
-    <p>ESTILO QUE DEFINE TU PERSONALIDAD</p>
-</header>
-
 <div class="container">
-    <div class="section-title">Elige tu Servicio</div>
-    
+    <div class="section-title">1. Elige tu Servicio</div>
     <div class="services-grid">
         <div class="service-card" onclick="selectService(this, 'Corte Premium', '$18')">
-            <div class="service-info">
-                <h3>Corte Premium</h3>
-                <p>Degradado, lavado y peinado</p>
-            </div>
+            <div class="service-info"><h3>Corte Premium</h3><p>30-40 min</p></div>
             <div class="service-price">$18</div>
         </div>
-
-        <div class="service-card" onclick="selectService(this, 'Perfilado de Barba', '$10')">
-            <div class="service-info">
-                <h3>Perfilado de Barba</h3>
-                <p>Toalla caliente y aceite</p>
-            </div>
-            <div class="service-price">$10</div>
-        </div>
-
-        <div class="service-card" onclick="selectService(this, 'Combo Imperial', '$25')">
-            <div class="service-info">
-                <h3>Combo Imperial</h3>
-                <p>Corte + Barba + Mascarilla</p>
-            </div>
+        <div class="service-card" onclick="selectService(this, 'Corte + Barba', '$25')">
+            <div class="service-info"><h3>Corte + Barba</h3><p>60 min</p></div>
             <div class="service-price">$25</div>
-        </div>
-
-        <div class="service-card" onclick="selectService(this, 'Cejas y Detalle', '$5')">
-            <div class="service-info">
-                <h3>Cejas y Detalle</h3>
-                <p>Diseño con navaja</p>
-            </div>
-            <div class="service-price">$5</div>
         </div>
     </div>
 
     <div class="booking-container">
-        <div class="section-title">Tus Datos de Reserva</div>
+        <div class="section-title">2. Detalles de la Cita</div>
         <form id="reservaForm">
-            <label>Servicio Seleccionado</label>
-            <input type="text" id="servicioSeleccionado" readonly required style="color: var(--accent); font-weight: bold;">
-            
-            <label>Nombre Completo</label>
-            <input type="text" id="nombre" placeholder="Ej: Fabián Ortiz" required>
-            
-            <label>Tu Correo Electrónico</label>
-            <input type="email" id="email" placeholder="Para enviarte el comprobante" required>
-            
-            <div style="display: flex; gap: 15px;">
-                <div style="flex: 1;">
-                    <label>Fecha</label>
-                    <input type="date" id="fecha" required>
-                </div>
-                <div style="flex: 1;">
-                    <label>Hora</label>
-                    <input type="time" id="hora" required>
-                </div>
-            </div>
-            
-            <button type="submit">RESERVAR AHORA</button>
+            <label>Barbero Disponible</label>
+            <select id="barbero" required>
+                <option value="">Selecciona un barbero...</option>
+                <option value="Fabian Ortiz">Fabian Ortiz (Master)</option>
+                <option value="Andrés Silva">Andrés Silva (Pro)</option>
+            </select>
+
+            <label>Día de la Cita</label>
+            <input type="date" id="fecha" required>
+
+            <label>Hora Disponible</label>
+            <select id="hora" required>
+                <option value="">Selecciona la hora...</option>
+                <option value="09:00">09:00 AM</option>
+                <option value="10:00">10:00 AM</option>
+                <option value="11:00">11:00 AM</option>
+                <option value="14:00">02:00 PM</option>
+                <option value="15:00">03:00 PM</option>
+                <option value="16:00">04:00 PM</option>
+            </select>
+
+            <label>Tu Nombre</label>
+            <input type="text" id="nombre" placeholder="Nombre completo" required>
+
+            <label>Tu Email</label>
+            <input type="email" id="email" placeholder="Para recibir tu confirmación" required>
+
+            <input type="hidden" id="servicioSeleccionado">
+            <button type="submit">AGENDAR CITA AHORA</button>
         </form>
     </div>
 </div>
 
-<footer>
-    © 2026 BarberApp Pro - Ubicación: Av. Principal Calle 123
-</footer>
-
 <script>
-    let currentService = "";
-
-    function selectService(element, name, price) {
-        // Desmarcar otros
-        document.querySelectorAll('.service-card').forEach(card => card.classList.remove('selected'));
-        // Marcar este
-        element.classList.add('selected');
-        currentService = name + " (" + price + ")";
-        document.getElementById('servicioSeleccionado').value = currentService;
+    let serviceSelected = "";
+    function selectService(el, name, price) {
+        document.querySelectorAll('.service-card').forEach(c => c.style.borderColor = '#333');
+        el.style.borderColor = '#d4af37';
+        serviceSelected = name + " (" + price + ")";
+        document.getElementById('servicioSeleccionado').value = serviceSelected;
     }
 
     document.getElementById('reservaForm').onsubmit = async (e) => {
         e.preventDefault();
-        
-        const datos = {
+        if(!serviceSelected) return alert("Por favor elige un servicio primero");
+
+        const btn = e.target.querySelector('button');
+        btn.innerText = "PROCESANDO...";
+        btn.disabled = true;
+
+        const data = {
             clienteNombre: document.getElementById('nombre').value,
             clienteEmail: document.getElementById('email').value,
-            barberiaNombre: currentService,
+            barberiaNombre: serviceSelected,
+            barbero: document.getElementById('barbero').value,
             fecha: document.getElementById('fecha').value,
             hora: document.getElementById('hora').value
         };
@@ -216,20 +77,17 @@
             const res = await fetch('https://mis-barberias.onrender.com/reservar', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(datos)
+                body: JSON.stringify(data)
             });
-            
             if(res.ok) {
-                alert("✅ ¡Éxito! Tu cita para " + currentService + " ha sido agendada.");
+                alert("✅ ¡Cita Confirmada! Revisa tu correo.");
+                location.reload();
             } else {
-                alert("❌ Error en el servidor. Revisa si Render está encendido.");
+                alert("❌ El servidor no respondió. Revisa Render.");
             }
         } catch (err) {
-            alert("❌ Hubo un problema al conectar con el servidor.");
+            alert("❌ Error de conexión.");
         }
     };
 </script>
-
-</body>
-</html>
 

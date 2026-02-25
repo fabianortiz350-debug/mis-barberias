@@ -1,296 +1,32 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Barber VIP | Reservas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --gold: #d4af37;
-            --deep-red: #8e1a1a;
-            --carbon: #0f0f0f;
-            --glass-white: rgba(255, 255, 255, 0.98);
-        }
+async function updateSchedule() {
+    const fecha = document.getElementById('fecha').value;
+    const barbero = document.getElementById('barbero').value;
+    if(!fecha) return;
 
-        body {
-            font-family: 'Montserrat', sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            color: #1a1a1a;
-        }
-
-        /* HEADER PREMIUM */
-        header {
-            background: linear-gradient(135deg, #000, #222);
-            color: white;
-            padding: 50px 20px 80px;
-            text-align: center;
-            border-bottom: 4px solid var(--gold);
-        }
-
-        header h1 { font-size: 2.8rem; margin: 0; letter-spacing: 6px; font-weight: 900; }
-        header p { color: var(--gold); letter-spacing: 3px; text-transform: uppercase; margin-top: 8px; font-size: 0.9rem; }
-
-        .main-wrapper {
-            max-width: 800px;
-            margin: -50px auto 60px;
-            padding: 0 15px;
-        }
-
-        .booking-card {
-            background: var(--glass-white);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
-        }
-
-        .section-header {
-            font-size: 1.1rem;
-            font-weight: 800;
-            margin: 25px 0 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #333;
-            text-transform: uppercase;
-        }
-
-        .section-header::before {
-            content: '';
-            width: 4px;
-            height: 18px;
-            background: var(--deep-red);
-        }
-
-        /* SERVICIOS */
-        .services-grid {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            padding-bottom: 10px;
-            scrollbar-width: none;
-        }
-        .services-grid::-webkit-scrollbar { display: none; }
-
-        .srv-card {
-            flex: 0 0 140px;
-            background: white;
-            border-radius: 12px;
-            padding: 20px 10px;
-            text-align: center;
-            border: 2px solid #eee;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .srv-card img { width: 45px; margin-bottom: 10px; filter: grayscale(1); opacity: 0.5; }
-        .srv-card h4 { font-size: 0.75rem; margin: 5px 0; font-weight: 700; }
-        .srv-card .price { color: var(--deep-red); font-weight: 800; font-size: 0.9rem; }
-
-        .srv-card.active {
-            border-color: var(--gold);
-            background: #fffdf5;
-            transform: translateY(-3px);
-        }
-        .srv-card.active img { filter: none; opacity: 1; }
-
-        /* HORAS - CORREGIDO PARA CELULAR */
-        .time-slots {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .slot {
-            padding: 15px 5px;
-            background: white;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .slot:hover:not(.disabled) { border-color: var(--gold); }
-        .slot.selected { background: var(--gold); color: white; border-color: var(--gold); box-shadow: 0 4px 10px rgba(212,175,55,0.3); }
-        .slot.disabled { background: #f8f8f8; color: #ddd; cursor: not-allowed; text-decoration: line-through; border-color: #f0f0f0; }
-
-        /* FORMULARIO */
-        .input-group { margin-bottom: 20px; }
-        label { display: block; font-weight: 700; font-size: 0.8rem; margin-bottom: 8px; color: #666; text-transform: uppercase; }
+    // Pedimos al servidor las horas ocupadas y bloqueadas
+    const res = await fetch(`https://tu-app-en-render.onrender.com/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
+    const data = await res.json();
+    
+    const container = document.getElementById('timeSlots');
+    container.innerHTML = "";
+    
+    const horasTodoElDia = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+    
+    horasTodoElDia.forEach(h => {
+        const div = document.createElement('div');
+        div.className = "slot";
+        div.innerText = h;
         
-        select, input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 1rem;
-            box-sizing: border-box;
-            background: #fff;
-        }
-
-        input:focus { border-color: var(--gold); outline: none; }
-
-        .btn-confirm {
-            width: 100%;
-            background: var(--deep-red);
-            color: white;
-            padding: 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
-
-        .btn-confirm:hover { transform: scale(1.02); filter: brightness(1.1); }
-
-        @media (max-width: 480px) {
-            .time-slots { grid-template-columns: repeat(3, 1fr); } /* 3 columnas en celular */
-            header h1 { font-size: 2.2rem; }
-            .booking-card { padding: 20px; }
-        }
-    </style>
-</head>
-<body>
-
-<header>
-    <h1>BARBERÍA</h1>
-    <p>Estilo & Distinción</p>
-</header>
-
-<div class="main-wrapper">
-    <div class="booking-card">
-        
-        <div class="section-header">1. Elige tu Servicio</div>
-        <div class="services-grid">
-            <div class="srv-card" onclick="selectSrv(this, 'Corte Clásico', '25.000')">
-                <img src="https://img.icons8.com/ios-filled/100/d4af37/scissors.png">
-                <h4>Corte</h4>
-                <p class="price">$25.000</p>
-            </div>
-            <div class="srv-card" onclick="selectSrv(this, 'Barba Ritual', '20.000')">
-                <img src="https://img.icons8.com/ios-filled/100/d4af37/beard.png">
-                <h4>Barba</h4>
-                <p class="price">$20.000</p>
-            </div>
-            <div class="srv-card" onclick="selectSrv(this, 'Combo VIP', '40.000')">
-                <img src="https://img.icons8.com/ios-filled/100/d4af37/barber-chair.png">
-                <h4>Combo</h4>
-                <p class="price">$40.000</p>
-            </div>
-        </div>
-
-        <div class="section-header">2. Barbero y Fecha</div>
-        <form id="bookingForm">
-            <div class="input-group">
-                <label>Barbero</label>
-                <select id="barbero" onchange="updateSchedule()">
-                    <option value="Fabian Ortiz">Fabian Ortiz (Master)</option>
-                    <option value="Andrés Silva">Andrés Silva (Pro)</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label>Fecha</label>
-                <input type="date" id="fecha" required onchange="updateSchedule()">
-            </div>
-
-            <label>Horas Disponibles</label>
-            <div class="time-slots" id="timeSlots">
-                </div>
-
-            <div class="section-header">3. Información</div>
-            
-            <div class="input-group">
-                <label>Nombre Completo</label>
-                <input type="text" id="nombre" placeholder="Nombre y Apellido" required>
-            </div>
-
-            <div class="input-group">
-                <label>Teléfono de Contacto</label>
-                <input type="tel" id="telefono" placeholder="300 000 0000" required>
-            </div>
-
-            <button type="submit" class="btn-confirm" id="submitBtn">AGENDAR MI CITA</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    let serviceSelected = "";
-    let timeSelected = "";
-    const dbOcupados = ["09:30", "11:00", "15:30"]; // Ejemplo de horas bloqueadas
-
-    function selectSrv(el, name, price) {
-        document.querySelectorAll('.srv-card').forEach(c => c.classList.remove('active'));
-        el.classList.add('active');
-        serviceSelected = name + " ($" + price + ")";
-    }
-
-    function updateSchedule() {
-        const container = document.getElementById('timeSlots');
-        container.innerHTML = "";
-        const horas = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
-        
-        horas.forEach(h => {
-            const div = document.createElement('div');
-            div.className = "slot";
-            div.innerText = h;
-            if(dbOcupados.includes(h)) {
-                div.classList.add('disabled');
-            } else {
-                div.onclick = function() {
-                    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                    div.classList.add('selected');
-                    timeSelected = h;
-                }
+        // Si la hora está en ocupadas O en bloqueadas, se deshabilita
+        if(data.ocupadas.includes(h) || data.bloqueadas.includes(h)) {
+            div.classList.add('disabled');
+        } else {
+            div.onclick = function() {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                div.classList.add('selected');
+                timeSelected = h;
             }
-            container.appendChild(div);
-        });
-    }
-
-    updateSchedule();
-
-    document.getElementById('bookingForm').onsubmit = async (e) => {
-        e.preventDefault();
-        if(!serviceSelected || !timeSelected) return alert("Selecciona servicio y hora.");
-        
-        const btn = document.getElementById('submitBtn');
-        btn.innerText = "BLOQUEANDO HORA...";
-        btn.disabled = true;
-
-        const reserva = {
-            clienteNombre: document.getElementById('nombre').value,
-            clienteTelefono: document.getElementById('telefono').value,
-            barberiaNombre: serviceSelected,
-            barbero: document.getElementById('barbero').value,
-            fecha: document.getElementById('fecha').value,
-            hora: timeSelected
-        };
-
-        try {
-            const res = await fetch('https://mis-barberias.onrender.com/reservar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(reserva)
-            });
-            if(res.ok) {
-                alert("✅ ¡Cita Agendada!");
-                location.reload();
-            } else { alert("Error"); btn.disabled = false; btn.innerText = "AGENDAR MI CITA"; }
-        } catch (err) { alert("Error de red"); btn.disabled = false; }
-    };
-</script>
-</body>
-</html>
+        }
+        container.appendChild(div);
+    });
+}

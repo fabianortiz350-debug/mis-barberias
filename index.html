@@ -3,277 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barbería | Reservas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <title>Barbería | Reserva tu Corte</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #f8f9fa;
-            --card-bg: #ffffff;
-            --accent-red: #c0392b;
-            --text-main: #2d3436;
-            --border-color: #e1e4e8;
+            --primary-red: #b32e2e;
+            --bg-body: #eeeeee; /* Gris claro de fondo como la imagen */
+            --card-white: #ffffff;
+            --text-dark: #333333;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Poppins', sans-serif;
             background-color: var(--bg-body);
-            color: var(--text-main);
             margin: 0;
-            padding: 0;
-            line-height: 1.6;
+            color: var(--text-dark);
         }
 
-        /* Header Estilo Imagen */
+        /* HEADER */
         header {
             background: white;
-            padding: 40px 10%;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #5d4037; /* Borde café sutil */
-        }
-
-        .brand h1 {
-            font-size: 2.2rem;
-            margin: 0;
-            letter-spacing: 1px;
-            font-weight: 800;
-            color: #1a1a1a;
-        }
-
-        .brand p {
-            margin: 0;
-            color: #636e72;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .header-icon { width: 50px; opacity: 0.8; }
-
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* Sección de Servicios Horizontales */
-        .services-container {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            padding: 10px 5px;
-            margin-bottom: 40px;
-            scrollbar-width: none;
-        }
-        .services-container::-webkit-scrollbar { display: none; }
-
-        .card-service {
-            flex: 0 0 170px;
-            background: var(--card-bg);
-            border-radius: 12px;
-            padding: 25px 15px;
+            padding: 20px;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .card-service img { width: 45px; margin-bottom: 15px; }
-
-        .card-service h4 {
-            font-size: 0.8rem;
-            margin: 5px 0;
-            font-weight: 700;
-            color: #444;
-            text-transform: uppercase;
-        }
-
-        .card-service span {
-            font-size: 0.95rem;
-            color: var(--accent-red);
-            font-weight: 700;
-        }
-
-        .card-service:hover, .card-service.selected {
-            transform: translateY(-5px);
-            border-color: var(--accent-red);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-        }
-
-        /* Formulario Limpio */
-        .info-panel {
-            background: white;
-            border-radius: 15px;
-            padding: 35px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 150px 1fr;
+            border-bottom: 4px solid #f4f4f4;
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
             gap: 20px;
         }
 
-        label {
-            font-weight: 500;
-            color: #636e72;
-            font-size: 0.95rem;
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            letter-spacing: 3px;
+            font-weight: 700;
         }
+
+        header p {
+            margin: 0;
+            color: #888;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .pole-icon { width: 50px; }
+
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        /* CAJAS BLANCAS CONTENEDORAS */
+        .white-box {
+            background: var(--card-white);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        /* SERVICIOS HORIZONTALES */
+        .services-wrapper {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding: 10px 0;
+            scrollbar-width: none;
+        }
+        .services-wrapper::-webkit-scrollbar { display: none; }
+
+        .service-card {
+            flex: 0 0 135px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .service-card img {
+            width: 45px;
+            height: 45px;
+            margin-bottom: 10px;
+            object-fit: contain;
+        }
+
+        .service-card h4 {
+            font-size: 0.75rem;
+            margin: 5px 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #555;
+        }
+
+        .service-card p {
+            font-size: 0.85rem;
+            color: var(--primary-red);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .service-card:hover, .service-card.selected {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 10px rgba(179, 46, 46, 0.2);
+        }
+
+        .selected-badge {
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            background: var(--primary-red);
+            color: white;
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .service-card.selected .selected-badge { display: block; }
+
+        /* FORMULARIO */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+
+        label { font-weight: 600; color: #666; font-size: 0.9rem; }
 
         input, select {
             width: 100%;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
+            padding: 12px;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            font-size: 1rem;
             background: #fafafa;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .flex-row { display: flex; gap: 10px; }
+
+        /* BOTÓN AGENDAR */
+        .btn-agendar {
+            grid-column: span 2;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0px #8a2424;
             transition: 0.2s;
         }
 
-        input:focus {
-            outline: none;
-            border-color: #adb5bd;
-            background: white;
-        }
+        .btn-agendar:active { transform: translateY(3px); box-shadow: none; }
 
-        .date-time-group { display: flex; gap: 10px; }
-
-        /* Botón Estilo Profesional */
-        .btn-confirm {
-            width: 100%;
-            padding: 18px;
-            background: #a93226;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 700;
-            font-size: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
-
-        .btn-confirm:hover { background: #922b21; transform: scale(1.01); }
-
-        @media (max-width: 650px) {
-            .form-row { grid-template-columns: 1fr; gap: 5px; }
-            header { padding: 30px 5%; }
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .btn-agendar { grid-column: span 1; }
         }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="brand">
-        <h1>BARBERÍA</h1>
-        <p>Reserva tu próximo corte</p>
+    <div class="header-logo">
+        <div>
+            <h1>BARBERÍA</h1>
+            <p>Reserva tu próximo corte</p>
+        </div>
+        <img src="https://cdn-icons-png.flaticon.com/512/3063/3063462.png" alt="Pole" class="pole-icon">
     </div>
-    <img src="https://cdn-icons-png.flaticon.com/512/3063/3063462.png" alt="Pole" class="header-icon">
 </header>
 
 <div class="container">
-    <h3>1. Elige tu Servicio</h3>
-    <div class="services-container">
-        <div class="card-service" onclick="selectSrv(this, 'Corte Clásico', '20.000')">
-            <img src="https://cdn-icons-png.flaticon.com/512/883/883907.png" alt="icon">
-            <h4>Corte Clásico</h4>
-            <span>$20.000 COP</span>
-        </div>
-        <div class="card-service" onclick="selectSrv(this, 'Arreglo Barba', '20.000')">
-            <img src="https://cdn-icons-png.flaticon.com/512/1070/1070566.png" alt="icon">
-            <h4>Arreglo Barba</h4>
-            <span>$20.000 COP</span>
-        </div>
-        <div class="card-service" onclick="selectSrv(this, 'Corte + Barba', '30.000')">
-            <img src="https://cdn-icons-png.flaticon.com/512/2921/2921434.png" alt="icon">
-            <h4>Corte + Barba</h4>
-            <span>$30.000 COP</span>
-        </div>
-        <div class="card-service" onclick="selectSrv(this, 'Corte Infantil', '15.000')">
-            <img src="https://cdn-icons-png.flaticon.com/512/2921/2921443.png" alt="icon">
-            <h4>Corte Infantil</h4>
-            <span>$15.000 COP</span>
+    
+    <div class="white-box">
+        <div class="section-title">1. Elige tu Servicio</div>
+        <div class="services-wrapper">
+            <div class="service-card" onclick="selectService(this, 'Corte Clásico', '$20.000')">
+                <div class="selected-badge">Selected</div>
+                <img src="https://cdn-icons-png.flaticon.com/512/883/883907.png" alt="corte">
+                <h4>Corte Clásico</h4>
+                <p>$20.000 COP</p>
+            </div>
+            <div class="service-card" onclick="selectService(this, 'Arreglo Barba', '$20.000')">
+                <div class="selected-badge">Selected</div>
+                <img src="https://cdn-icons-png.flaticon.com/512/1070/1070566.png" alt="barba">
+                <h4>Arreglo Barba</h4>
+                <p>$20.000 COP</p>
+            </div>
+            <div class="service-card" onclick="selectService(this, 'Corte + Barba', '$30.000')">
+                <div class="selected-badge">Selected</div>
+                <img src="https://cdn-icons-png.flaticon.com/512/2921/2921434.png" alt="combo">
+                <h4>Corte + Barba</h4>
+                <p>$30.000 COP</p>
+            </div>
+            <div class="service-card" onclick="selectService(this, 'Corte Infantil', '$15.000')">
+                <div class="selected-badge">Selected</div>
+                <img src="https://cdn-icons-png.flaticon.com/512/2921/2921443.png" alt="niños">
+                <h4>Corte Infantil</h4>
+                <p>$15.000 COP</p>
+            </div>
         </div>
     </div>
 
-    <div class="info-panel">
-        <h3>2. Tu Información</h3>
-        <form id="reservaForm">
-            <input type="hidden" id="servicio_hidden" required>
+    <div class="white-box">
+        <div class="section-title">2. Tu Información</div>
+        <form id="reservaForm" class="form-grid">
+            <input type="hidden" id="servicio_val" required>
             
-            <div class="form-row">
-                <label>Barbero</label>
-                <select id="barbero" required>
-                    <option value="Fabian Ortiz">Fabian Ortiz</option>
-                    <option value="Andrés Silva">Andrés Silva</option>
-                </select>
+            <label>Barbero</label>
+            <select id="barbero" required>
+                <option value="Fabian Ortiz">Fabian Ortiz</option>
+                <option value="Andrés Silva">Andrés Silva</option>
+            </select>
+
+            <label>Fecha</label>
+            <div class="flex-row">
+                <input type="date" id="fecha" required>
+                <input type="time" id="hora" required>
             </div>
 
-            <div class="form-row">
-                <label>Fecha y Hora</label>
-                <div class="date-time-group">
-                    <input type="date" id="fecha" required>
-                    <input type="time" id="hora" required>
-                </div>
-            </div>
+            <label>Nombre</label>
+            <input type="text" id="nombre" placeholder="Escribe tu nombre" required>
 
-            <div class="form-row">
-                <label>Nombre</label>
-                <input type="text" id="nombre" placeholder="Nombre completo" required>
-            </div>
+            <label>WhatsApp</label>
+            <input type="tel" id="telefono" placeholder="300 000 0000" required>
 
-            <div class="form-row">
-                <label>WhatsApp</label>
-                <input type="tel" id="telefono" placeholder="300 000 0000" required>
-            </div>
+            <label>Correo</label>
+            <input type="email" id="email" placeholder="Para enviarte el ticket" required>
 
-            <div class="form-row">
-                <label>Correo</label>
-                <input type="email" id="email" placeholder="Para enviarte el comprobante" required>
-            </div>
-
-            <button type="submit" id="btnAction" class="btn-confirm">Agendar mi Cita</button>
+            <button type="submit" id="btnS" class="btn-agendar">AGENDAR CITA</button>
         </form>
     </div>
+
 </div>
 
 <script>
-    let srvGlobal = "";
-    function selectSrv(element, name, price) {
-        document.querySelectorAll('.card-service').forEach(c => c.classList.remove('selected'));
-        element.classList.add('selected');
-        srvGlobal = name + " ($" + price + ")";
-        document.getElementById('servicio_hidden').value = srvGlobal;
+    let srv = "";
+    function selectService(el, name, price) {
+        document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        srv = name + " (" + price + ")";
+        document.getElementById('servicio_val').value = srv;
     }
 
     document.getElementById('reservaForm').onsubmit = async (e) => {
         e.preventDefault();
-        if(!srvGlobal) return alert("Por favor, selecciona un servicio arriba.");
+        if(!srv) return alert("Por favor selecciona un servicio");
         
-        const btn = document.getElementById('btnAction');
-        btn.innerText = "PROCESANDO RESERVA...";
-        btn.disabled = true;
+        const btn = document.getElementById('btnS');
+        btn.innerText = "PROCESANDO..."; btn.disabled = true;
 
-        const payload = {
+        const data = {
             clienteNombre: document.getElementById('nombre').value,
             clienteEmail: document.getElementById('email').value,
             clienteTelefono: document.getElementById('telefono').value,
-            barberiaNombre: srvGlobal,
+            barberiaNombre: srv,
             barbero: document.getElementById('barbero').value,
             fecha: document.getElementById('fecha').value,
             hora: document.getElementById('hora').value
@@ -283,13 +290,13 @@
             const res = await fetch('https://mis-barberias.onrender.com/reservar', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
+                body: JSON.stringify(data)
             });
             if(res.ok) {
-                alert("✅ ¡Cita Confirmada con éxito!");
+                alert("✅ ¡Cita Agendada!");
                 location.reload();
-            } else { alert("❌ Hubo un error"); btn.disabled = false; btn.innerText = "Agendar mi Cita"; }
-        } catch (err) { alert("❌ Error de red"); btn.disabled = false; btn.innerText = "Agendar mi Cita"; }
+            } else { alert("Error"); btn.disabled = false; btn.innerText = "AGENDAR CITA"; }
+        } catch (err) { alert("Error de red"); btn.disabled = false; btn.innerText = "AGENDAR CITA"; }
     };
 </script>
 </body>

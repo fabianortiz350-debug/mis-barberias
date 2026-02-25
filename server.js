@@ -3,54 +3,38 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
 
-// CONFIGURACIÓN DE PERMISOS (CORS) - Esto arregla tu error
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST'],
-    allowedHeaders: ['Content-Type']
-}));
+app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
 app.use(express.json());
 
-// Reemplaza con tu conexión de MongoDB Atlas
-const mongoURI = "TU_URL_DE_MONGODB_AQUI"; 
+// ⚠️ PEGA TU URL DE MONGO AQUÍ ABAJO
+const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP"; 
 
 mongoose.connect(mongoURI)
     .then(() => console.log("Conectado a MongoDB ✅"))
     .catch(err => console.log("Error de conexión:", err));
 
-// Modelos de datos
-const Reserva = mongoose.model('Reserva', {
-    clienteNombre: String, clienteTelefono: String, barbero: String, fecha: String, hora: String
-});
+const Reserva = mongoose.model('Reserva', { barbero: String, fecha: String, hora: String });
+const Bloqueo = mongoose.model('Bloqueo', { barbero: String, fecha: String, hora: String });
 
-const Bloqueo = mongoose.model('Bloqueo', {
-    barbero: String, fecha: String, hora: String
-});
+const HORAS_BASE = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
 
-// Ruta de inicio
-app.get('/', (req, res) => {
-    res.send("<h1>Servidor de Barbería Activo ✅</h1>");
-});
+app.get('/', (req, res) => res.send("Servidor Activo ✅"));
 
-// Ruta para ver disponibilidad
 app.get('/disponibilidad', async (req, res) => {
-    const { fecha, barbero } = req.query;
-    const ocupadas = await Reserva.find({ fecha, barbero });
-    const bloqueadas = await Bloqueo.find({ fecha, barbero });
-    res.json({
-        ocupadas: ocupadas.map(r => r.hora),
-        bloqueadas: bloqueadas.map(b => b.hora)
-    });
+    try {
+        const { fecha, barbero } = req.query;
+        const ocupadas = await Reserva.find({ fecha, barbero });
+        const bloqueadas = await Bloqueo.find({ fecha, barbero });
+        res.json({
+            ocupadas: ocupadas.map(r => r.hora),
+            bloqueadas: bloqueadas.map(b => b.hora)
+        });
+    } catch (e) {
+        // Si falla la base de datos, enviamos las horas vacías para que no se vea en blanco
+        res.json({ ocupadas: [], bloqueadas: [] });
+    }
 });
 
-// Ruta para reservar (Cliente)
-app.post('/reservar', async (req, res) => {
-    const nuevaReserva = new Reserva(req.body);
-    await nuevaReserva.save();
-    res.json({ message: "Reserva guardada" });
-});
-
-// RUTA PARA BLOQUEAR (Dueño) - IMPORTANTE
 app.post('/admin/bloquear', async (req, res) => {
     const { fecha, hora, barbero, estado } = req.body;
     if (estado === 'B') {
@@ -58,8 +42,8 @@ app.post('/admin/bloquear', async (req, res) => {
     } else {
         await Bloqueo.deleteOne({ fecha, hora, barbero });
     }
-    res.json({ message: "Estado actualizado" });
+    res.json({ message: "OK" });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Servidor corriendo"));
+app.listen(PORT, () => console.log("Corriendo"));

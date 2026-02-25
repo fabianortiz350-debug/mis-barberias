@@ -1,25 +1,30 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const { Resend } = require('resend');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// CONEXIÓN A MONGODB (Tu base de datos que ya funciona)
+// CONEXIÓN A MONGODB (Tu base de datos actual)
 const mongoURI = 'mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP'; 
 
 mongoose.connect(mongoURI)
   .then(() => console.log("✅ Base de Datos Conectada"))
   .catch(err => console.error("❌ Error DB:", err));
 
-// ESQUEMA DE LA CITA
+// CONFIGURACIÓN DE CORREO PROFESIONAL (Resend)
+// IMPORTANTE: Crea tu cuenta en resend.com y pega aquí tu API Key
+const resend = new Resend('TU_API_KEY_DE_RESEND_AQUÍ'); 
+
+// ESQUEMA DE LA CITA ACTUALIZADO
 const CitaSchema = new mongoose.Schema({
-  barberiaNombre: String,
   clienteNombre: String,
   clienteEmail: String,
+  clienteTelefono: String, // Nuevo campo para Colombia
+  barberiaNombre: String,
   barbero: String,
   fecha: String,
   hora: String,
@@ -31,70 +36,44 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// CONFIGURACIÓN GMAIL - PUERTO 465 (MÁS SEGURO)
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // true para puerto 465
-  auth: {
-    user: 'fabianortiz350@gmail.com',
-    pass: 'ndsirrxxjqgggssj' // Tu contraseña de aplicación
-  },
-  tls: {
-    rejectUnauthorized: false // Permite que Render conecte sin problemas
-  }
-});
-
-// RUTA PARA RESERVAR
+// RUTA DE RESERVAS PROFESIONAL
 app.post('/reservar', async (req, res) => {
   try {
-    const { clienteNombre, clienteEmail, barberiaNombre, barbero, fecha, hora } = req.body;
+    const { clienteNombre, clienteEmail, clienteTelefono, barberiaNombre, barbero, fecha, hora } = req.body;
 
-    // 1. Guardar en Base de Datos (Esto ya te funciona perfecto)
+    // 1. Guardar en Base de Datos
     const nuevaCita = new Cita({
-      clienteNombre,
-      clienteEmail,
-      barberiaNombre,
-      barbero,
-      fecha,
-      hora
+      clienteNombre, clienteEmail, clienteTelefono, barberiaNombre, barbero, fecha, hora
     });
     await nuevaCita.save();
-    console.log("📍 Cita guardada en DB");
+    console.log(`📍 Cita guardada: ${clienteNombre} - WhatsApp: ${clienteTelefono}`);
 
-    // 2. Responder de inmediato a la web (Para que no se quede "Procesando")
-    res.status(200).json({ mensaje: "Reserva exitosa" });
+    // 2. Respuesta Inmediata (Evita el "Procesando" infinito)
+    res.status(200).json({ mensaje: "Reserva recibida" });
 
-    // 3. Intentar enviar el correo en segundo plano
-    const mailOptions = {
-      from: '"BarberApp Pro 💈" <fabianortiz350@gmail.com>',
-      to: `${clienteEmail}, fabianortiz350@gmail.com`, 
-      subject: `✅ Confirmación: Cita con ${barbero}`,
+    // 3. Envío de Correo vía Resend (En segundo plano)
+    // Nota: Mientras no tengas dominio propio, usa 'onboarding@resend.dev'
+    await resend.emails.send({
+      from: 'BarberApp <onboarding@resend.dev>',
+      to: ['fabianortiz350@gmail.com', clienteEmail],
+      subject: `💈 Cita Confirmada - ${barberiaNombre}`,
       html: `
-        <div style="font-family: sans-serif; border: 2px solid #d4af37; padding: 20px; border-radius: 10px; max-width: 500px;">
-          <h2 style="color: #1a1a1a; text-align: center;">¡Cita Agendada!</h2>
-          <p>Hola <b>${clienteNombre}</b>, tu cita ha sido confirmada.</p>
-          <hr style="border: 0; border-top: 1px solid #eee;">
-          <p><b>🤵 Barbero:</b> ${barbero}</p>
-          <p><b>✂️ Servicio:</b> ${barberiaNombre}</p>
-          <p><b>📅 Fecha:</b> ${fecha}</p>
-          <p><b>⏰ Hora:</b> ${hora}</p>
-          <hr style="border: 0; border-top: 1px solid #eee;">
-          <p style="text-align: center; color: #888;">¡Te esperamos!</p>
-        </div>`
-    };
-
-    // Usamos un callback para que el error no tumbe el servidor
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log("❌ Error de envío de correo:", error.message);
-      } else {
-        console.log("📧 Correo enviado con éxito: " + info.response);
-      }
+        <div style="font-family: Arial, sans-serif; border: 1px solid #d4af37; padding: 20px; border-radius: 10px;">
+          <h2 style="color: #d4af37;">¡Hola ${clienteNombre}!</h2>
+          <p>Tu cita para <strong>${barberiaNombre}</strong> ha sido agendada con éxito.</p>
+          <hr>
+          <p><strong>🤵 Barbero:</strong> ${barbero}</p>
+          <p><strong>📅 Fecha:</strong> ${fecha}</p>
+          <p><strong>⏰ Hora:</strong> ${hora}</p>
+          <p><strong>📱 WhatsApp:</strong> +57 ${clienteTelefono}</p>
+          <hr>
+          <p style="font-size: 0.8em; color: #666;">Si necesitas cancelar, contáctanos por WhatsApp.</p>
+        </div>
+      `
     });
 
   } catch (error) {
-    console.error("❌ Error en el proceso:", error);
+    console.error("❌ Error en el servidor:", error);
     if (!res.headersSent) {
       res.status(500).json({ error: "Error interno" });
     }
@@ -102,4 +81,5 @@ app.post('/reservar', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Plataforma Profesional en puerto ${PORT}`));
+

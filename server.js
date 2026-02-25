@@ -43,21 +43,23 @@ app.post('/reservar', async (req, res) => {
     await nuevaCita.save();
 
     const mailOptions = {
+      // Usamos comillas simples afuera y dobles adentro para el nombre
       from: '"BarberApp Pro 💈" <fabianortiz350@gmail.com>',
-      to: `${clienteEmail}, fabianortiz350@gmail.com`,
+      to: `${clienteEmail}, fabianortiz350@gmail.com`, 
       subject: `✅ Cita Confirmada con ${barbero}`,
       html: `
-        <div style="font-family: sans-serif; border: 2px solid #d4af37; padding: 20px; border-radius: 10px; background-color: #f9f9f9;">
-          <h2 style="color: #1a1a1a;">¡Reserva Exitosa, ${clienteNombre}!</h2>
-          <p>Has agendado una cita en <b>BarberApp Pro</b>.</p>
+        <div style="font-family: sans-serif; border: 2px solid #d4af37; padding: 20px; border-radius: 10px;">
+          <h2 style="color: #1a1a1a;">¡Reserva Confirmada!</h2>
+          <p>Hola <b>${clienteNombre}</b>, tu cita ha sido agendada con éxito.</p>
           <hr>
           <p><b>Barbero:</b> ${barbero}</p>
           <p><b>Servicio:</b> ${barberiaNombre}</p>
-          <p><b>Día:</b> ${fecha}</p>
+          <p><b>Fecha:</b> ${fecha}</p>
           <p><b>Hora:</b> ${hora}</p>
           <hr>
-          <p style="font-size: 0.8rem;">Si necesitas cancelar, por favor avísanos con 2 horas de anticipación.</p>
-        </div>`
+          <p>Te esperamos para darte el mejor estilo.</p>
+        </div>
+      `
     };
 
     await transporter.sendMail(mailOptions);
@@ -70,6 +72,7 @@ app.post('/reservar', async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
+
 
 
 

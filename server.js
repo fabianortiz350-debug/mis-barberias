@@ -8,22 +8,21 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// CONEXIÓN A MONGODB (Tu base de datos actual)
+// CONEXIÓN A MONGODB
 const mongoURI = 'mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP'; 
 
 mongoose.connect(mongoURI)
   .then(() => console.log("✅ Base de Datos Conectada"))
   .catch(err => console.error("❌ Error DB:", err));
 
-// CONFIGURACIÓN DE CORREO PROFESIONAL (Resend)
-// IMPORTANTE: Crea tu cuenta en resend.com y pega aquí tu API Key
-const resend = new Resend('TU_API_KEY_DE_RESEND_AQUÍ'); 
+// MOTOR DE CORREOS PROFESIONAL
+// PEGA TU API KEY DE RESEND ABAJO
+const resend = new Resend('re_TU_CLAVE_AQUI'); 
 
-// ESQUEMA DE LA CITA ACTUALIZADO
 const CitaSchema = new mongoose.Schema({
   clienteNombre: String,
   clienteEmail: String,
-  clienteTelefono: String, // Nuevo campo para Colombia
+  clienteTelefono: String,
   barberiaNombre: String,
   barbero: String,
   fecha: String,
@@ -36,50 +35,43 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// RUTA DE RESERVAS PROFESIONAL
 app.post('/reservar', async (req, res) => {
   try {
     const { clienteNombre, clienteEmail, clienteTelefono, barberiaNombre, barbero, fecha, hora } = req.body;
 
-    // 1. Guardar en Base de Datos
     const nuevaCita = new Cita({
       clienteNombre, clienteEmail, clienteTelefono, barberiaNombre, barbero, fecha, hora
     });
     await nuevaCita.save();
-    console.log(`📍 Cita guardada: ${clienteNombre} - WhatsApp: ${clienteTelefono}`);
+    console.log(`📍 Cita guardada: ${clienteNombre}`);
 
-    // 2. Respuesta Inmediata (Evita el "Procesando" infinito)
+    // Respuesta inmediata para que la web no se quede "Procesando"
     res.status(200).json({ mensaje: "Reserva recibida" });
 
-    // 3. Envío de Correo vía Resend (En segundo plano)
-    // Nota: Mientras no tengas dominio propio, usa 'onboarding@resend.dev'
+    // Envío de correo profesional
     await resend.emails.send({
       from: 'BarberApp <onboarding@resend.dev>',
       to: ['fabianortiz350@gmail.com', clienteEmail],
-      subject: `💈 Cita Confirmada - ${barberiaNombre}`,
+      subject: `💈 Nueva Cita: ${clienteNombre}`,
       html: `
-        <div style="font-family: Arial, sans-serif; border: 1px solid #d4af37; padding: 20px; border-radius: 10px;">
-          <h2 style="color: #d4af37;">¡Hola ${clienteNombre}!</h2>
-          <p>Tu cita para <strong>${barberiaNombre}</strong> ha sido agendada con éxito.</p>
+        <div style="font-family: Arial, sans-serif; border: 2px solid #d4af37; padding: 20px; border-radius: 10px;">
+          <h2 style="color: #d4af37; text-align: center;">¡Cita Confirmada!</h2>
+          <p>Hola <b>${clienteNombre}</b>, estos son los datos de tu reserva:</p>
           <hr>
-          <p><strong>🤵 Barbero:</strong> ${barbero}</p>
-          <p><strong>📅 Fecha:</strong> ${fecha}</p>
-          <p><strong>⏰ Hora:</strong> ${hora}</p>
-          <p><strong>📱 WhatsApp:</strong> +57 ${clienteTelefono}</p>
+          <p><b>🤵 Barbero:</b> ${barbero}</p>
+          <p><b>✂️ Servicio:</b> ${barberiaNombre}</p>
+          <p><b>📅 Fecha:</b> ${fecha} | <b>⏰ Hora:</b> ${hora}</p>
+          <p><b>📱 WhatsApp:</b> +57 ${clienteTelefono}</p>
           <hr>
-          <p style="font-size: 0.8em; color: #666;">Si necesitas cancelar, contáctanos por WhatsApp.</p>
-        </div>
-      `
+          <p style="text-align: center;">¡Te esperamos para tu cambio de look!</p>
+        </div>`
     });
 
   } catch (error) {
-    console.error("❌ Error en el servidor:", error);
-    if (!res.headersSent) {
-      res.status(500).json({ error: "Error interno" });
-    }
+    console.error("❌ Error:", error);
+    if (!res.headersSent) res.status(500).json({ error: "Error interno" });
   }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Plataforma Profesional en puerto ${PORT}`));
-
+app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));

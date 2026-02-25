@@ -109,4 +109,205 @@
             font-size: 0.75rem;
             margin: 5px 0;
             font-weight: 700;
-            text-transform
+            text-transform: uppercase;
+            color: #555;
+        }
+
+        .service-card p {
+            font-size: 0.9rem;
+            color: var(--primary-red);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        /* Efecto al seleccionar */
+        .service-card:hover, .service-card.selected {
+            border-color: var(--primary-red);
+            box-shadow: 0 4px 15px rgba(179, 46, 46, 0.15);
+            transform: translateY(-5px);
+        }
+
+        .service-card.selected img {
+            filter: grayscale(0%);
+        }
+
+        .selected-badge {
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            background: var(--primary-red);
+            color: white;
+            font-size: 0.65rem;
+            padding: 4px 10px;
+            border-radius: 5px;
+            display: none;
+            font-weight: 700;
+        }
+
+        .service-card.selected .selected-badge { display: block; }
+
+        /* FORMULARIO */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 130px 1fr;
+            gap: 15px;
+            align-items: center;
+        }
+
+        label { font-weight: 600; color: #666; font-size: 0.9rem; }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+        }
+
+        .flex-row { display: flex; gap: 10px; }
+
+        .btn-agendar {
+            grid-column: span 2;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 0px #8a2424;
+            transition: 0.2s;
+        }
+
+        .btn-agendar:active { transform: translateY(3px); box-shadow: none; }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; gap: 5px; }
+            .btn-agendar { grid-column: span 1; }
+            header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-logo">
+        <div>
+            <h1>BARBERÍA</h1>
+            <p>Reserva tu próximo corte</p>
+        </div>
+        <img src="https://img.icons8.com/color/96/barber-pole.png" alt="Pole" class="pole-icon">
+    </div>
+</header>
+
+<div class="container">
+    
+    <div class="white-box">
+        <div class="section-title">1. Elige tu Servicio</div>
+        <div class="services-wrapper">
+            <div class="service-card" onclick="selectService(this, 'Corte Clásico', '$20.000')">
+                <div class="selected-badge">ELEGIDO</div>
+                <img src="https://img.icons8.com/ios-filled/100/737373/scissors.png" alt="corte">
+                <h4>Corte Clásico</h4>
+                <p>$20.000 COP</p>
+            </div>
+            <div class="service-card" onclick="selectService(this, 'Arreglo Barba', '$20.000')">
+                <div class="selected-badge">ELEGIDO</div>
+                <img src="https://img.icons8.com/ios-filled/100/737373/beard.png" alt="barba">
+                <h4>Arreglo Barba</h4>
+                <p>$20.000 COP</p>
+            </div>
+            <div class="service-card" onclick="selectService(this, 'Corte + Barba', '$30.000')">
+                <div class="selected-badge">ELEGIDO</div>
+                <img src="https://img.icons8.com/ios-filled/100/737373/barber-chair.png" alt="combo">
+                <h4>Corte + Barba</h4>
+                <p>$30.000 COP</p>
+            </div>
+            <div class="service-card" onclick="selectService(this, 'Corte Infantil', '$15.000')">
+                <div class="selected-badge">ELEGIDO</div>
+                <img src="https://img.icons8.com/ios-filled/100/737373/hair-clipper.png" alt="niños">
+                <h4>Corte Infantil</h4>
+                <p>$15.000 COP</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="white-box">
+        <div class="section-title">2. Tu Información</div>
+        <form id="reservaForm" class="form-grid">
+            <input type="hidden" id="servicio_val" required>
+            
+            <label>Barbero</label>
+            <select id="barbero" required>
+                <option value="Fabian Ortiz">Fabian Ortiz</option>
+                <option value="Andrés Silva">Andrés Silva</option>
+            </select>
+
+            <label>Fecha y Hora</label>
+            <div class="flex-row">
+                <input type="date" id="fecha" required>
+                <input type="time" id="hora" required>
+            </div>
+
+            <label>Nombre</label>
+            <input type="text" id="nombre" placeholder="Tu nombre completo" required>
+
+            <label>WhatsApp</label>
+            <input type="tel" id="telefono" placeholder="300 000 0000" required>
+
+            <label>Correo</label>
+            <input type="email" id="email" placeholder="ejemplo@correo.com" required>
+
+            <button type="submit" id="btnS" class="btn-agendar">AGENDAR MI CITA</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    let srv = "";
+    function selectService(el, name, price) {
+        document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        srv = name + " (" + price + ")";
+        document.getElementById('servicio_val').value = srv;
+    }
+
+    document.getElementById('reservaForm').onsubmit = async (e) => {
+        e.preventDefault();
+        if(!srv) return alert("Por favor selecciona un servicio");
+        
+        const btn = document.getElementById('btnS');
+        btn.innerText = "RESERVANDO..."; btn.disabled = true;
+
+        const data = {
+            clienteNombre: document.getElementById('nombre').value,
+            clienteEmail: document.getElementById('email').value,
+            clienteTelefono: document.getElementById('telefono').value,
+            barberiaNombre: srv,
+            barbero: document.getElementById('barbero').value,
+            fecha: document.getElementById('fecha').value,
+            hora: document.getElementById('hora').value
+        };
+
+        try {
+            const res = await fetch('https://mis-barberias.onrender.com/reservar', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) {
+                alert("✅ ¡Cita Agendada con éxito!");
+                location.reload();
+            } else { alert("Error al conectar"); btn.disabled = false; btn.innerText = "AGENDAR MI CITA"; }
+        } catch (err) { alert("Error de red"); btn.disabled = false; btn.innerText = "AGENDAR MI CITA"; }
+    };
+</script>
+</body>
+</html>

@@ -3,162 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp Pro | Luxury Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Barbería | Reserva tu Cita</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --gold: #d4af37; 
-            --gold-light: #f1d592;
-            --bg: #050505; 
-            --card: rgba(30, 30, 30, 0.6); 
+        :root {
+            --primary-red: #b32e2e;
+            --bg-light: #f4f7f6;
+            --text-dark: #333;
+            --shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
 
-        body { 
-            font-family: 'Poppins', sans-serif; 
-            background: var(--bg); 
-            background-image: radial-gradient(circle at 50% -20%, #222, #050505);
-            color: white; 
-            margin: 0; 
-            padding-bottom: 50px; 
-            overflow-x: hidden;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
         }
 
-        header { 
-            padding: 60px 20px; 
-            text-align: center; 
-            background: url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop') center/cover;
-            position: relative;
-            border-bottom: 3px solid var(--gold);
+        /* Encabezado Estilo Imagen */
+        header {
+            background: white;
+            padding: 30px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-bottom: 4px solid #634331; /* Color café del borde */
         }
 
-        header::before {
-            content: ""; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.7);
+        .header-text h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            letter-spacing: 2px;
+            color: #4a3427;
+            text-transform: uppercase;
         }
 
-        header h1 { 
-            position: relative; font-family: 'Cinzel', serif; font-size: 2.5rem; 
-            margin: 0; letter-spacing: 4px; color: var(--gold);
+        .header-text p {
+            margin: 0;
+            color: #888;
+            font-weight: 400;
         }
 
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; position: relative; }
-
-        /* Pestañas Horizontales Estilo Moderno */
-        .services-row { 
-            display: flex; gap: 15px; margin-bottom: 30px; 
-            overflow-x: auto; padding: 10px 5px; scrollbar-width: none;
-        }
-        
-        .service-card { 
-            flex: 0 0 160px; height: 220px; background: var(--card);
-            border: 1px solid #333; border-radius: 15px; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center; transition: 0.4s; cursor: pointer;
-            backdrop-filter: blur(10px);
+        .barber-pole {
+            width: 60px;
+            height: auto;
         }
 
-        .service-card img { width: 60px; height: 60px; margin-bottom: 15px; filter: sepia(1) saturate(5) hue-rotate(10deg); }
-        .service-card h4 { margin: 5px 0; font-size: 0.9rem; color: var(--gold); }
-        .service-card span { font-size: 1.1rem; font-weight: 600; }
-
-        .service-card:hover, .service-card.selected { 
-            border-color: var(--gold); transform: translateY(-10px);
-            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
-            background: rgba(212, 175, 55, 0.1);
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
-        /* Formulario Estilo Premium */
-        form { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid #222; }
-        label { color: var(--gold); font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
-        
-        input, select { 
-            width: 100%; padding: 15px; margin: 10px 0 25px 0; 
-            background: rgba(0,0,0,0.5); border: 1px solid #444; 
-            color: white; border-radius: 10px; font-size: 1rem;
+        /* Sección 1: Elige tu servicio */
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #444;
         }
 
-        input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
+        .services-scroll {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 5px;
+            scrollbar-width: none; /* Ocultar scroll en Firefox */
+        }
+        .services-scroll::-webkit-scrollbar { display: none; } /* Ocultar scroll en Chrome */
 
-        .btn-luxury { 
-            width: 100%; padding: 20px; 
-            background: linear-gradient(45deg, #af891a, #d4af37, #f1d592);
-            border: none; border-radius: 12px; color: #000;
-            font-weight: 700; font-size: 1.1rem; cursor: pointer;
-            text-transform: uppercase; letter-spacing: 2px;
+        .service-card {
+            flex: 0 0 150px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
             transition: 0.3s;
+            border: 2px solid transparent;
         }
 
-        .btn-luxury:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .service-card img {
+            width: 40px;
+            margin-bottom: 10px;
+        }
+
+        .service-card h4 {
+            font-size: 0.8rem;
+            margin: 5px 0;
+            text-transform: uppercase;
+        }
+
+        .service-card p {
+            font-size: 0.9rem;
+            color: var(--primary-red);
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .service-card:hover, .service-card.selected {
+            border-color: var(--primary-red);
+            transform: translateY(-5px);
+        }
+
+        /* Sección 2: Tu Información */
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            margin-top: 30px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: 500;
+            color: #666;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .row-flex {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Botón Estilo Imagen */
+        .btn-submit {
+            grid-column: span 2;
+            background: linear-gradient(to bottom, #b32e2e, #8a2424);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            text-transform: uppercase;
+        }
+
+        .btn-submit:hover {
+            filter: brightness(1.1);
+        }
+
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .btn-submit { grid-column: span 1; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>BARBERAPP</h1>
-    <p style="color: #fff; position: relative; z-index: 1;">EL ARTE DE LA EXCELENCIA</p>
+    <div class="header-text">
+        <h1>BARBERÍA</h1>
+        <p>RESERVA TU PRÓXIMO CORTE</p>
+    </div>
+    <img src="https://cdn-icons-png.flaticon.com/512/3063/3063462.png" alt="Pole" class="barber-pole">
 </header>
 
 <div class="container">
-    <h3 style="text-align: center; font-family: 'Cinzel'; margin-bottom: 30px;">Selecciona tu Experiencia</h3>
-    
-    <div class="services-row">
-        <div class="service-card" onclick="selectService(this, 'Corte Premium', '$25.000')">
-            <img src="https://cdn-icons-png.flaticon.com/512/2921/2921471.png" alt="Corte">
-            <h4>CORTE</h4>
-            <span>PREMIUM</span>
-            <p style="color: var(--gold);">$25.000</p>
+    <div class="section-title">1. Elige tu Servicio</div>
+    <div class="services-scroll">
+        <div class="service-card" onclick="selectService(this, 'Corte Clásico', '$20.000')">
+            <img src="https://cdn-icons-png.flaticon.com/512/883/883907.png" alt="Corte">
+            <h4>CORTE CLÁSICO</h4>
+            <p>$20.000 COP</p>
         </div>
-        <div class="service-card" onclick="selectService(this, 'Perfilado de Barba', '$15.000')">
-            <img src="https://cdn-icons-png.flaticon.com/512/2921/2921453.png" alt="Barba">
-            <h4>BARBA</h4>
-            <span>PERFILADO</span>
-            <p style="color: var(--gold);">$15.000</p>
+        <div class="service-card" onclick="selectService(this, 'Arreglo de Barba', '$20.000')">
+            <img src="https://cdn-icons-png.flaticon.com/512/1070/1070566.png" alt="Barba">
+            <h4>ARREGLO BARBA</h4>
+            <p>$20.000 COP</p>
         </div>
-        <div class="service-card" onclick="selectService(this, 'Combo VIP', '$35.000')">
+        <div class="service-card" onclick="selectService(this, 'Corte + Barba', '$30.000')">
             <img src="https://cdn-icons-png.flaticon.com/512/2921/2921434.png" alt="Combo">
-            <h4>COMBO</h4>
-            <span>VIP FULL</span>
-            <p style="color: var(--gold);">$35.000</p>
+            <h4>CORTE + BARBA</h4>
+            <p>$30.000 COP</p>
         </div>
-        <div class="service-card" onclick="selectService(this, 'Corte Infantil', '$18.000')">
+        <div class="service-card" onclick="selectService(this, 'Corte Infantil', '$15.000')">
             <img src="https://cdn-icons-png.flaticon.com/512/2921/2921443.png" alt="Niños">
-            <h4>NIÑOS</h4>
-            <span>CLÁSICO</span>
-            <p style="color: var(--gold);">$18.000</p>
+            <h4>CORTE INFANTIL</h4>
+            <p>$15.000 COP</p>
         </div>
     </div>
 
-    <form id="reservaForm">
-        <input type="hidden" id="servicio" required>
-        
-        <label>Maestro Barbero</label>
-        <select id="barbero" required>
-            <option value="Fabian Ortiz">Fabian Ortiz (Master)</option>
-            <option value="Andrés Silva">Andrés Silva (Senior)</option>
-        </select>
+    <div class="form-container">
+        <div class="section-title">2. Tu Información</div>
+        <form id="reservaForm" class="form-grid">
+            <input type="hidden" id="servicio" required>
+            
+            <label>Barbero</label>
+            <select id="barbero" required>
+                <option value="Fabian Ortiz">Fabian Ortiz</option>
+                <option value="Andrés Silva">Andrés Silva</option>
+            </select>
 
-        <div style="display: flex; gap: 15px;">
-            <div style="flex:1">
-                <label>Día</label>
+            <label>Fecha y Hora</label>
+            <div class="row-flex">
                 <input type="date" id="fecha" required>
-            </div>
-            <div style="flex:1">
-                <label>Hora</label>
                 <input type="time" id="hora" required>
             </div>
-        </div>
 
-        <label>Tu Nombre</label>
-        <input type="text" id="nombre" placeholder="Ej: Juan Pérez" required>
+            <label>Nombre</label>
+            <input type="text" id="nombre" placeholder="Tu nombre" required>
 
-        <label>WhatsApp</label>
-        <input type="tel" id="telefono" placeholder="300 123 4567" required>
+            <label>WhatsApp</label>
+            <input type="tel" id="telefono" placeholder="300 123 4567" required>
 
-        <label>Correo Electrónico</label>
-        <input type="email" id="email" placeholder="Para tu comprobante" required>
+            <label>Correo</label>
+            <input type="email" id="email" placeholder="Tu correo" required>
 
-        <button type="submit" id="btn" class="btn-luxury">Confirmar Reserva</button>
-    </form>
+            <button type="submit" id="btn" class="btn-submit">AGENDAR CITA</button>
+        </form>
+    </div>
 </div>
 
 <script>
@@ -172,7 +245,7 @@
 
     document.getElementById('reservaForm').onsubmit = async (e) => {
         e.preventDefault();
-        if(!selectedSrv) return alert("Por favor, selecciona un servicio primero.");
+        if(!selectedSrv) return alert("Por favor selecciona un servicio");
         
         const btn = document.getElementById('btn');
         btn.innerText = "PROCESANDO..."; btn.disabled = true;
@@ -194,10 +267,10 @@
                 body: JSON.stringify(data)
             });
             if(res.ok) {
-                alert("✅ ¡Reserva Exitosa! Te hemos enviado un correo.");
+                alert("✅ ¡Cita Agendada con éxito!");
                 location.reload();
-            } else { alert("❌ Error en el servidor."); btn.disabled = false; btn.innerText = "Confirmar Reserva"; }
-        } catch (err) { alert("❌ Error de conexión."); btn.disabled = false; btn.innerText = "Confirmar Reserva"; }
+            } else { alert("Error"); btn.disabled = false; btn.innerText = "AGENDAR CITA"; }
+        } catch (err) { alert("Error de red"); btn.disabled = false; btn.innerText = "AGENDAR CITA"; }
     };
 </script>
 </body>

@@ -34,16 +34,20 @@ app.get('/', (req, res) => {
 
 // CONFIGURACIÓN DE GMAIL (Nodemailer)
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // Usa SSL para evitar bloqueos
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // Usamos TLS para puerto 587
   auth: {
     user: 'fabianortiz350@gmail.com',
-    pass: 'ndsirrxxjqgggssj' // Tus 16 letras
+    pass: 'ndsirrxxjqgggssj'
   },
   tls: {
-    rejectUnauthorized: false // Ayuda a que la conexión no se cierre
-  }
+    // Esto es clave para que Render no bloquee la salida
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 10000, // 10 segundos de espera
+  greetingTimeout: 5000
 });
 
 // RUTA PARA RESERVAR
@@ -99,4 +103,5 @@ app.post('/reservar', async (req, res) => {
 // PUERTO DE RENDER
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));
+
 

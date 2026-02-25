@@ -43,7 +43,6 @@ app.post('/reservar', async (req, res) => {
     await nuevaCita.save();
 
     const mailOptions = {
-      // Usamos comillas simples afuera y dobles adentro para el nombre
       from: '"BarberApp Pro 💈" <fabianortiz350@gmail.com>',
       to: `${clienteEmail}, fabianortiz350@gmail.com`, 
       subject: `✅ Cita Confirmada con ${barbero}`,
@@ -72,6 +71,7 @@ app.post('/reservar', async (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
+
 
 
 

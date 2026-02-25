@@ -3,71 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp Pro | Reservas</title>
+    <title>BarberApp Pro | Emprendimiento</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --accent: #d4af37; --bg: #0f0f0f; --card: #252525; }
-        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; margin: 0; }
-        header { background: #000; padding: 40px; text-align: center; border-bottom: 3px solid var(--accent); }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .service-card { background: var(--card); padding: 15px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #333; cursor: pointer; }
-        .service-card.selected { border-color: var(--accent); background: #333; }
-        .booking-container { background: var(--card); padding: 25px; border-radius: 15px; margin-top: 20px; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #111; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background: var(--accent); border: none; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 10px; }
-        button:disabled { background: #555; }
+        :root { --accent: #d4af37; --bg: #0a0a0a; --card: #1a1a1a; --text: #ffffff; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding-bottom: 50px; }
+        header { background: #000; padding: 50px 20px; text-align: center; border-bottom: 2px solid var(--accent); }
+        .container { max-width: 500px; margin: 0 auto; padding: 20px; }
+        
+        /* Pestañas Desplegables Estilo Colombia */
+        .category-box { background: var(--card); border-radius: 12px; margin-bottom: 15px; overflow: hidden; border: 1px solid #333; }
+        .category-header { padding: 15px; background: #222; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; border-bottom: 1px solid #333; }
+        .category-content { display: none; padding: 10px; }
+        .category-content.active { display: block; }
+        
+        .service-item { padding: 12px; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; }
+        .service-item:hover { background: #333; }
+        .service-item.selected { background: var(--accent); color: #000; font-weight: bold; }
+
+        input, select { width: 100%; padding: 14px; margin: 10px 0; background: #111; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        .tel-group { display: flex; gap: 10px; align-items: center; }
+        .prefix { background: #333; padding: 14px; border-radius: 8px; font-weight: bold; color: var(--accent); }
+        
+        button { width: 100%; padding: 18px; background: var(--accent); border: none; font-weight: 700; border-radius: 8px; cursor: pointer; margin-top: 20px; font-size: 1.1rem; transition: 0.3s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3); }
+        button:disabled { background: #444; cursor: not-allowed; }
     </style>
 </head>
 <body>
-<header><h1>BARBERAPP PRO</h1></header>
-<div class="container">
-    <h3>1. Selecciona Servicio</h3>
-    <div class="service-card" onclick="selectService(this, 'Corte Premium ($18)')">Corte Premium - $18</div>
-    <div class="service-card" onclick="selectService(this, 'Combo Pro ($25)')">Combo Pro (Corte + Barba) - $25</div>
 
-    <div class="booking-container">
-        <h3>2. Tus Datos</h3>
-        <form id="reservaForm">
-            <input type="hidden" id="servicio" required>
-            <select id="barbero" required>
-                <option value="">Selecciona Barbero...</option>
-                <option value="Fabian Ortiz">Fabian Ortiz (Master)</option>
-                <option value="Andrés Silva">Andrés Silva (Pro)</option>
-            </select>
-            <input type="date" id="fecha" required>
-            <select id="hora" required>
-                <option value="">Selecciona Hora...</option>
-                <option value="09:00 AM">09:00 AM</option>
-                <option value="10:00 AM">10:00 AM</option>
-                <option value="15:00 PM">03:00 PM</option>
-            </select>
-            <input type="text" id="nombre" placeholder="Tu Nombre" required>
-            <input type="email" id="email" placeholder="Tu Email" required>
-            <button type="submit" id="btn">AGENDAR CITA</button>
-        </form>
+<header>
+    <h1 style="letter-spacing: 2px;">BARBERAPP PRO</h1>
+    <p style="color: var(--accent); font-size: 0.9rem;">RESERVA TU ESTILO EN LÍNEA</p>
+</header>
+
+<div class="container">
+    <h3 style="text-align: center; margin-bottom: 25px;">1. Selecciona tu Servicio</h3>
+    
+    <div class="category-box">
+        <div class="category-header" onclick="toggleCat(this)">✂️ CORTES DE CABELLO <span>▼</span></div>
+        <div class="category-content">
+            <div class="service-item" onclick="selectService(this, 'Corte Premium', '$18.000')">
+                <span>Corte Premium</span> <b>$18.000</b>
+            </div>
+            <div class="service-item" onclick="selectService(this, 'Corte Infantil', '$15.000')">
+                <span>Corte Infantil</span> <b>$15.000</b>
+            </div>
+        </div>
     </div>
+
+    <div class="category-box">
+        <div class="category-header" onclick="toggleCat(this)">🧔 BARBA Y AFILADO <span>▼</span></div>
+        <div class="category-content">
+            <div class="service-item" onclick="selectService(this, 'Perfilado de Barba', '$10.000')">
+                <span>Perfilado de Barba</span> <b>$10.000</b>
+            </div>
+            <div class="service-item" onclick="selectService(this, 'Combo Pro (Corte+Barba)', '$25.000')">
+                <span>Combo Pro</span> <b>$25.000</b>
+            </div>
+        </div>
+    </div>
+
+    <form id="reservaForm" style="margin-top: 30px;">
+        <h3 style="text-align: center;">2. Información de Contacto</h3>
+        <input type="hidden" id="servicio" required>
+        
+        <label>Barbero de preferencia</label>
+        <select id="barbero" required>
+            <option value="">Selecciona...</option>
+            <option value="Fabian Ortiz">Fabian Ortiz (Master)</option>
+            <option value="Andrés Silva">Andrés Silva (Pro)</option>
+        </select>
+
+        <div style="display: flex; gap: 10px;">
+            <div style="flex: 1;"><label>Fecha</label><input type="date" id="fecha" required></div>
+            <div style="flex: 1;"><label>Hora</label><input type="time" id="hora" required></div>
+        </div>
+
+        <label>Tu Nombre</label>
+        <input type="text" id="nombre" placeholder="Nombre completo" required>
+
+        <label>WhatsApp (Colombia)</label>
+        <div class="tel-group">
+            <span class="prefix">+57</span>
+            <input type="tel" id="telefono" placeholder="300 123 4567" pattern="[0-9]{10}" title="10 dígitos de celular" required>
+        </div>
+
+        <label>Correo Electrónico</label>
+        <input type="email" id="email" placeholder="para enviarte el comprobante" required>
+
+        <button type="submit" id="btn">RESERVAR CITA AHORA</button>
+    </form>
 </div>
 
 <script>
-    let srv = "";
-    function selectService(el, name) {
-        document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+    function toggleCat(el) {
+        el.nextElementSibling.classList.toggle('active');
+    }
+
+    let selectedSrv = "";
+    function selectService(el, name, price) {
+        document.querySelectorAll('.service-item').forEach(i => i.classList.remove('selected'));
         el.classList.add('selected');
-        srv = name;
-        document.getElementById('servicio').value = name;
+        selectedSrv = name + " (" + price + ")";
+        document.getElementById('servicio').value = selectedSrv;
     }
 
     document.getElementById('reservaForm').onsubmit = async (e) => {
         e.preventDefault();
-        if(!srv) return alert("Elige un servicio");
+        if(!selectedSrv) return alert("Por favor selecciona un servicio de la lista.");
+
         const btn = document.getElementById('btn');
-        btn.innerText = "PROCESANDO...";
+        btn.innerText = "PROCESANDO RESERVA...";
         btn.disabled = true;
 
         const data = {
             clienteNombre: document.getElementById('nombre').value,
             clienteEmail: document.getElementById('email').value,
-            barberiaNombre: srv,
+            clienteTelefono: document.getElementById('telefono').value,
+            barberiaNombre: selectedSrv,
             barbero: document.getElementById('barbero').value,
             fecha: document.getElementById('fecha').value,
             hora: document.getElementById('hora').value
@@ -79,18 +133,20 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
+
             if(res.ok) {
-                alert("✅ ¡Cita Confirmada con éxito!");
+                alert("✅ ¡Cita Agendada! Nos vemos pronto.");
                 location.reload();
             } else {
-                alert("❌ Error en la reserva.");
-                btn.innerText = "AGENDAR CITA"; btn.disabled = false;
+                alert("❌ Error al procesar. Intenta de nuevo.");
+                btn.innerText = "RESERVAR CITA AHORA"; btn.disabled = false;
             }
         } catch (err) {
-            alert("❌ Error de conexión.");
-            btn.innerText = "AGENDAR CITA"; btn.disabled = false;
+            alert("❌ Error de conexión con el servidor.");
+            btn.innerText = "RESERVAR CITA AHORA"; btn.disabled = false;
         }
     };
 </script>
 </body>
 </html>
+

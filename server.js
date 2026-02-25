@@ -1,49 +1,53 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Esta es nuestra "Base de Datos" temporal (en un entorno real usarías MongoDB o SQL)
-let db = {
-    reservas: [],
-    bloqueos: [] // Aquí guardaremos las horas que tú bloquees manualmente
-};
+// REEMPLAZA ESTA LÍNEA con el código que copiaste en el Paso 1
+const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP";
 
-// 1. Ruta para que el cliente reserve
-app.post('/reservar', (req, res) => {
-    const nuevaReserva = req.body;
-    db.reservas.push(nuevaReserva);
-    console.log("Nueva Reserva:", nuevaReserva);
-    res.status(200).send({ message: "Reserva guardada" });
+mongoose.connect(mongoURI)
+    .then(() => console.log("¡Conectado a BarberAPP en MongoDB! ✅"))
+    .catch(err => console.log("Error de conexión:", err));
+
+// Esquemas para guardar en la base de datos
+const Reserva = mongoose.model('Reserva', {
+    clienteNombre: String, clienteTelefono: String, barbero: String, 
+    fecha: String, hora: String, servicio: String
 });
 
-// 2. Ruta para que tú (Admin) bloquees/desbloquees horas
-app.post('/admin/bloquear', (req, res) => {
-    const { fecha, hora, barbero, estado } = req.body; 
-    // estado: 'B' para bloquear, 'L' para liberar
-    if (estado === 'B') {
-        db.bloqueos.push({ fecha, hora, barbero });
-    } else {
-        db.bloqueos = db.bloqueos.filter(b => !(b.fecha === fecha && b.hora === hora && b.barbero === barbero));
-    }
-    res.status(200).send({ message: "Disponibilidad actualizada" });
+const Bloqueo = mongoose.model('Bloqueo', {
+    barbero: String, fecha: String, hora: String
 });
 
-// 3. Ruta para que la web consulte qué horas están ocupadas o bloqueadas
-app.get('/disponibilidad', (req, res) => {
+// SOLUCIÓN AL ERROR "Cannot GET /": Esta línea dice qué mostrar al entrar al link
+app.get('/', (req, res) => {
+    res.send("<h1>Servidor de Barbería Activo</h1><p>La base de datos está conectada correctamente.</p>");
+});
+
+// Ruta para que el cliente agende
+app.post('/reservar', async (req, res) => {
+    try {
+        const nuevaReserva = new Reserva(req.body);
+        await nuevaReserva.save();
+        res.status(200).json({ message: "Reserva guardada" });
+    } catch (error) { res.status(500).send(error); }
+});
+
+// Ruta para ver qué horas NO mostrar (Ocupadas + Bloqueadas)
+app.get('/disponibilidad', async (req, res) => {
     const { fecha, barbero } = req.query;
-    const ocupadas = db.reservas
-        .filter(r => r.fecha === fecha && r.barbero === barbero)
-        .map(r => r.hora);
+    const ocupadas = await Reserva.find({ fecha, barbero });
+    const bloqueadas = await Bloqueo.find({ fecha, barbero });
     
-    const bloqueadas = db.bloqueos
-        .filter(b => b.fecha === fecha && b.barbero === barbero)
-        .map(b => b.hora);
-
-    res.json({ ocupadas, bloqueadas });
+    res.json({
+        ocupadas: ocupadas.map(r => r.hora),
+        bloqueadas: bloqueadas.map(b => b.hora)
+    });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor listo en puerto ${PORT}`));

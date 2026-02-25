@@ -1,16 +1,14 @@
 {
-  "name": "mis-barberias",
+  "name": "barberia-backend",
   "version": "1.0.0",
+  "description": "Sistema de reservas profesional",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "mongoose": "^8.0.0",
-    "resend": "^3.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "mongoose": "^7.0.0",
+    "cors": "^2.8.5"
   }
 }

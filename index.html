@@ -1,29 +1,112 @@
-<div class="services-wrapper">
-    <div class="service-card" onclick="selectService(this, 'Corte Clásico', '$20.000')">
-        <div class="selected-badge">Seleccionado</div>
-        <img src="https://img.icons8.com/ios-filled/100/737373/scissors.png" alt="Tijeras Reales">
-        <h4>Corte Clásico</h4>
-        <p>$20.000 COP</p>
-    </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbería | Reserva Profesional</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #b32e2e;
+            --bg-body: #eeeeee;
+            --card-white: #ffffff;
+            --text-dark: #333333;
+        }
 
-    <div class="service-card" onclick="selectService(this, 'Arreglo Barba', '$20.000')">
-        <div class="selected-badge">Seleccionado</div>
-        <img src="https://img.icons8.com/ios-filled/100/737373/beard.png" alt="Barba Real">
-        <h4>Arreglo Barba</h4>
-        <p>$20.000 COP</p>
-    </div>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            color: var(--text-dark);
+        }
 
-    <div class="service-card" onclick="selectService(this, 'Corte + Barba', '$30.000')">
-        <div class="selected-badge">Seleccionado</div>
-        <img src="https://img.icons8.com/ios-filled/100/737373/barber-chair.png" alt="Combo Real">
-        <h4>Corte + Barba</h4>
-        <p>$30.000 COP</p>
-    </div>
+        header {
+            background: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 4px solid #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    <div class="service-card" onclick="selectService(this, 'Corte Infantil', '$15.000')">
-        <div class="selected-badge">Seleccionado</div>
-        <img src="https://img.icons8.com/ios-filled/100/737373/hair-clipper.png" alt="Máquina Real">
-        <h4>Corte Infantil</h4>
-        <p>$15.000 COP</p>
-    </div>
-</div>
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            letter-spacing: 3px;
+            font-weight: 700;
+        }
+
+        header p {
+            margin: 0;
+            color: #888;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .pole-icon { width: 45px; }
+
+        .container {
+            max-width: 850px;
+            margin: 30px auto;
+            padding: 0 15px;
+        }
+
+        .white-box {
+            background: var(--card-white);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #444;
+        }
+
+        /* SERVICIOS CON ICONOS REALES */
+        .services-wrapper {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding: 10px 5px;
+            scrollbar-width: none;
+        }
+        .services-wrapper::-webkit-scrollbar { display: none; }
+
+        .service-card {
+            flex: 0 0 145px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Iconos de alta resolución */
+        .service-card img {
+            width: 55px;
+            height: 55px;
+            margin-bottom: 12px;
+            object-fit: contain;
+            filter: grayscale(100%);
+            transition: 0.3s;
+        }
+
+        .service-card h4 {
+            font-size: 0.75rem;
+            margin: 5px 0;
+            font-weight: 700;
+            text-transform

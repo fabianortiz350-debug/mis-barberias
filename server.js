@@ -30,14 +30,13 @@ const correosBarberos = {
     "Andrés Silva": "fa.ortizm@outlook.com" // ⚠️ CAMBIA ESTO POR EL REAL
 };
 
-// 2. Configuración del remitente (el que envía el correo)
+// 2.CONFIGURACIÓN DE CORREOS CON BREVO ---
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp-relay.brevo.com', // El que copiaste de Brevo
+    port: 587,
     auth: {
-        // ⚠️ CAMBIA ESTO POR EL CORREO QUE ENVÍA LOS AVISOS (Tuyo)
-        user: 'fabianortiz350@gmail.com', 
-        // ⚠️ CAMBIA ESTO POR LA CONTRASENA DE 16 LETRAS DE GOOGLE
-        pass: 'lesv kkes jheb dewf' 
+        user: 'fabianortiz350@gmail.com', // Pega aquí el Login de Brevo
+        pass: 'xsmtpsib-1b16312d919ac81a999fdf0ae8c0fe57b7ce49bf35a3a45c6efdbfdf7092532d-5co6y0CKB3YPCGlt' // Pega aquí la clave SMTP que generaste
     }
 });
 
@@ -98,6 +97,7 @@ app.post('/admin/bloquear', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
 
 
 

@@ -26,7 +26,7 @@ const Bloqueo = mongoose.model('Bloqueo', {
 // --- CONFIGURACIÓN DE CORREOS ---
 // Aquí pones el correo de cada barbero
 const correosBarberos = {
-    "Fabian Ortiz": "fabian.ortiz94@GMAIL.COM",
+    "Fabian Ortiz": "FA.ORTIZM94@GMAIL.COM",
     "Andrés Silva": "CORREO_DE_ANDRES@GMAIL.COM"
 };
 

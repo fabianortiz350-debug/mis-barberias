@@ -64,7 +64,7 @@ app.post('/reservar', async (req, res) => {
         // Enviar correo al barbero correspondiente
         const mailOptions = {
             // ⚠️ CAMBIA ESTO TAMBIÉN POR EL CORREO QUE ENVÍA
-            from: 'Master Barber VIP <tu-correo-remitente@gmail.com>', 
+            from: 'Master Barber VIP <fabianortiz350@gmail.com>', 
             to: correosBarberos[req.body.barbero],
             subject: `💈 Nueva Cita: ${req.body.clienteNombre}`,
             text: `Nueva reserva recibida:\n\n` +
@@ -98,3 +98,4 @@ app.post('/admin/bloquear', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+

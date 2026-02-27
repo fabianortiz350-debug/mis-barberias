@@ -1,0 +1,14 @@
+async function toggleHour(hora, checkbox) {
+    const fecha = document.getElementById('datePicker').value;
+    const barbero = document.getElementById('selectBarbero').value;
+    const estado = checkbox.checked ? 'B' : 'L';
+
+    // Enviamos el bloqueo al servidor
+    await fetch('https://tu-app-en-render.onrender.com/admin/bloquear', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ fecha, hora, barbero, estado })
+    });
+    
+    loadAdminSchedule(); // Refrescar vista
+}

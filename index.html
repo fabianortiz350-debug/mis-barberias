@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -63,3 +64,37 @@
     </script>
 </body>
 </html>
+=======
+async function updateSchedule() {
+    const fecha = document.getElementById('fecha').value;
+    const barbero = document.getElementById('barbero').value;
+    if(!fecha) return;
+
+    // Pedimos al servidor las horas ocupadas y bloqueadas
+    const res = await fetch(`https://tu-app-en-render.onrender.com/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
+    const data = await res.json();
+    
+    const container = document.getElementById('timeSlots');
+    container.innerHTML = "";
+    
+    const horasTodoElDia = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+    
+    horasTodoElDia.forEach(h => {
+        const div = document.createElement('div');
+        div.className = "slot";
+        div.innerText = h;
+        
+        // Si la hora está en ocupadas O en bloqueadas, se deshabilita
+        if(data.ocupadas.includes(h) || data.bloqueadas.includes(h)) {
+            div.classList.add('disabled');
+        } else {
+            div.onclick = function() {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                div.classList.add('selected');
+                timeSelected = h;
+            }
+        }
+        container.appendChild(div);
+    });
+}
+>>>>>>> 786bac372d486c4ab1d09a2712e705b1dacbf245

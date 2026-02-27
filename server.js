@@ -3,23 +3,38 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const app = express();
 
-app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
+// CONFIGURACIÓN DE SEGURIDAD (CORS) - Muy importante para el botón
+app.use(cors());
 app.use(express.json());
 
 // ⚠️ PEGA TU URL DE MONGO AQUÍ ABAJO
-const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP"; 
+const mongoURI = "TU_URL_DE_MONGODB_REAL_AQUI"; 
 
 mongoose.connect(mongoURI)
-    .then(() => console.log("Conectado a MongoDB ✅"))
+    .then(() => console.log("MongoDB Conectado ✅"))
     .catch(err => console.log("Error de conexión:", err));
 
-const Reserva = mongoose.model('Reserva', { barbero: String, fecha: String, hora: String });
-const Bloqueo = mongoose.model('Bloqueo', { barbero: String, fecha: String, hora: String });
+// Esquemas de datos
+const Reserva = mongoose.model('Reserva', { 
+    clienteNombre: String, 
+    clienteTelefono: String, 
+    barbero: String, 
+    fecha: String, 
+    hora: String 
+});
 
-const HORAS_BASE = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+const Bloqueo = mongoose.model('Bloqueo', { 
+    barbero: String, 
+    fecha: String, 
+    hora: String 
+});
 
-app.get('/', (req, res) => res.send("Servidor Activo ✅"));
+// Ruta para ver si el servidor está vivo
+app.get('/', (req, res) => {
+    res.send("<h1>Servidor Master Barber Activo ✅</h1>");
+});
 
+// Ruta para ver disponibilidad
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
@@ -30,11 +45,22 @@ app.get('/disponibilidad', async (req, res) => {
             bloqueadas: bloqueadas.map(b => b.hora)
         });
     } catch (e) {
-        // Si falla la base de datos, enviamos las horas vacías para que no se vea en blanco
-        res.json({ ocupadas: [], bloqueadas: [] });
+        res.status(500).json({ error: "Error en el servidor" });
     }
 });
 
+// Ruta para guardar la reserva (EL BOTÓN QUE FALLA)
+app.post('/reservar', async (req, res) => {
+    try {
+        const nuevaReserva = new Reserva(req.body);
+        await nuevaReserva.save();
+        res.json({ message: "Reserva guardada con éxito" });
+    } catch (e) {
+        res.status(500).json({ error: "No se pudo guardar" });
+    }
+});
+
+// Ruta para el Admin
 app.post('/admin/bloquear', async (req, res) => {
     const { fecha, hora, barbero, estado } = req.body;
     if (estado === 'B') {
@@ -46,4 +72,4 @@ app.post('/admin/bloquear', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Corriendo"));
+app.listen(PORT, () => console.log("Servidor corriendo"));

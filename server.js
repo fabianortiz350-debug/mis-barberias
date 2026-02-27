@@ -31,16 +31,17 @@ const correosBarberos = {
 };
 
 // 2.CONFIGURACIÓN DE CORREOS CON BREVO ---
+// --- CONFIGURACIÓN DEFINITIVA (PUERTO SEGURO 465) ---
 const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.sendinblue.com', // Probemos con el host alternativo de Brevo
-    port: 587,
-    secure: false, // Importante: false para el puerto 587
+    host: 'smtp-relay.brevo.com', 
+    port: 465,                   // Cambiamos de 587 a 465
+    secure: true,                // Cambiamos de false a true
     auth: {
-        user: 'fabianortiz350@gmail.com', // Tu login de Brevo
-        pass: 'xsmtpsib-1b16312d919ac81a999fdf0ae8c0fe57b7ce49bf35a3a45c6efdbfdf7092532d-5co6y0CKB3YPCGlt' // Asegúrate de que no tenga espacios
+        user: 'fabianortiz350@gmail.com', 
+        pass: 'xsmtpsib-1b16312d919ac81a999fdf0ae8c0fe57b7ce49bf35a3a45c6efdbfdf7092532d-5co6y0CKB3YPCGlt' // Asegúrate de que sea la clave larga de Brevo
     },
     tls: {
-        rejectUnauthorized: false // Esto evita que la conexión se bloquee por certificados
+        rejectUnauthorized: false
     }
 });
 
@@ -101,6 +102,7 @@ app.post('/admin/bloquear', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
 
 
 

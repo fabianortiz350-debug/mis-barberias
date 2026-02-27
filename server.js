@@ -1,12 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// --- TU CONEXIÓN REAL A MONGODB ---
+// --- CONEXIÓN A MONGODB ---
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP"; 
 
 mongoose.connect(mongoURI)
@@ -20,6 +21,22 @@ const Reserva = mongoose.model('Reserva', {
 
 const Bloqueo = mongoose.model('Bloqueo', { 
     barbero: String, fecha: String, hora: String 
+});
+
+// --- CONFIGURACIÓN DE CORREOS ---
+// Aquí pones el correo de cada barbero
+const correosBarberos = {
+    "Fabian Ortiz": "fabian.ortiz94@GMAIL.COM",
+    "Andrés Silva": "CORREO_DE_ANDRES@GMAIL.COM"
+};
+
+// Configuración del transporte (Usa una "Contraseña de Aplicación" de Gmail)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: 'tu-correo-remitente@gmail.com', // El correo que enviará las notificaciones
+        pass: 'abcd efgh ijkl mnop'           // Las 16 letras de la contraseña de aplicación
+    }
 });
 
 // Rutas
@@ -41,6 +58,25 @@ app.post('/reservar', async (req, res) => {
     try {
         const nuevaReserva = new Reserva(req.body);
         await nuevaReserva.save();
+
+        // Enviar correo al barbero correspondiente
+        const mailOptions = {
+            from: 'Master Barber VIP <tu-correo-remitente@gmail.com>',
+            to: correosBarberos[req.body.barbero],
+            subject: `💈 Nueva Cita: ${req.body.clienteNombre}`,
+            text: `Nueva reserva recibida:\n\n` +
+                  `Cliente: ${req.body.clienteNombre}\n` +
+                  `Teléfono: ${req.body.clienteTelefono}\n` +
+                  `Fecha: ${req.body.fecha}\n` +
+                  `Hora: ${req.body.hora}\n\n` +
+                  `¡Prepárate para el servicio!`
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+            if (err) console.log("Error enviando correo:", err);
+            else console.log("Correo enviado ✅");
+        });
+
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -58,4 +94,4 @@ app.post('/admin/bloquear', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));

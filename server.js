@@ -6,8 +6,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- CONFIGURACIÓN DE MONGODB ---
-const mongoURI = "TU_URL_DE_MONGODB_AQUI"; 
+// --- TU CONEXIÓN REAL A MONGODB ---
+const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP"; 
 
 mongoose.connect(mongoURI)
     .then(() => console.log("Base de datos conectada ✅"))
@@ -23,7 +23,7 @@ const Bloqueo = mongoose.model('Bloqueo', {
 });
 
 // Rutas
-app.get('/', (req, res) => res.send("Servidor Master Barber Activo ✅"));
+app.get('/', (req, res) => res.send("<h1>Servidor Master Barber Activo ✅</h1>"));
 
 app.get('/disponibilidad', async (req, res) => {
     try {
@@ -34,7 +34,7 @@ app.get('/disponibilidad', async (req, res) => {
             ocupadas: ocupadas.map(r => r.hora),
             bloqueadas: bloqueadas.map(b => b.hora)
         });
-    } catch (e) { res.status(500).json([]); }
+    } catch (e) { res.status(500).json({ocupadas:[], bloqueadas:[]}); }
 });
 
 app.post('/reservar', async (req, res) => {

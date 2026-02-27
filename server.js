@@ -24,18 +24,20 @@ const Bloqueo = mongoose.model('Bloqueo', {
 });
 
 // --- CONFIGURACIÓN DE CORREOS ---
-// Aquí pones el correo de cada barbero
+// 1. Pones el correo real de cada barbero aquí
 const correosBarberos = {
-    "Fabian Ortiz": "FA.ORTIZM94@GMAIL.COM",
-    "Andrés Silva": "CORREO_DE_ANDRES@GMAIL.COM"
+    "Fabian Ortiz": "FA.ORTIZM94@GMAIL.COM", // ✅ YA ESTÁ CORRECTO
+    "Andrés Silva": "oa.orregocetina@GMAIL.COM" // ⚠️ CAMBIA ESTO POR EL REAL
 };
 
-// Configuración del transporte (Usa una "Contraseña de Aplicación" de Gmail)
+// 2. Configuración del remitente (el que envía el correo)
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'tu-correo-remitente@gmail.com', // El correo que enviará las notificaciones
-        pass: 'abcd efgh ijkl mnop'           // Las 16 letras de la contraseña de aplicación
+        // ⚠️ CAMBIA ESTO POR EL CORREO QUE ENVÍA LOS AVISOS (Tuyo)
+        user: 'fabianortiz350@gmail.com', 
+        // ⚠️ CAMBIA ESTO POR LA CONTRASENA DE 16 LETRAS DE GOOGLE
+        pass: 'mrar xyjn iziw ruzc' 
     }
 });
 
@@ -61,7 +63,8 @@ app.post('/reservar', async (req, res) => {
 
         // Enviar correo al barbero correspondiente
         const mailOptions = {
-            from: 'Master Barber VIP <tu-correo-remitente@gmail.com>',
+            // ⚠️ CAMBIA ESTO TAMBIÉN POR EL CORREO QUE ENVÍA
+            from: 'Master Barber VIP <tu-correo-remitente@gmail.com>', 
             to: correosBarberos[req.body.barbero],
             subject: `💈 Nueva Cita: ${req.body.clienteNombre}`,
             text: `Nueva reserva recibida:\n\n` +

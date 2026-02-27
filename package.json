@@ -2,8 +2,7 @@
   "name": "mis-barberias",
   "version": "1.0.0",
   "description": "",
-<<<<<<< HEAD
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -13,22 +12,11 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "body-parser": "^2.2.2",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "googleapis": "^171.4.0",
-    "mongoose": "^9.2.2",
-    "nodemailer": "^8.0.1"
-=======
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "axios": "^1.6.0",
+    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "mongoose": "^7.1.0"
->>>>>>> 786bac372d486c4ab1d09a2712e705b1dacbf245
+    "express": "^4.21.2",
+    "googleapis": "^144.0.0",
+    "mongoose": "^8.10.1",
+    "nodemailer": "^6.10.0"
   }
 }

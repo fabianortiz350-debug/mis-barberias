@@ -1,101 +1,81 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const axios = require('axios'); 
+const nodemailer = require('nodemailer');
+const { google } = require('googleapis'); // 🚀 IMPORTANTE: Nueva librería
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// --- 1. CONEXIÓN A MONGODB ---
-const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP"; 
+// --- CONEXIÓN A MONGODB (Ya lo tenías) ---
+const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
+mongoose.connect(mongoURI);
 
-mongoose.connect(mongoURI)
-    .then(() => console.log("Base de datos conectada ✅"))
-    .catch(err => console.error("Error de conexión MongoDB:", err));
-
-// Esquemas
-const Reserva = mongoose.model('Reserva', { 
-    clienteNombre: String, clienteTelefono: String, barbero: String, fecha: String, hora: String 
+// Esquema (Ya lo tenías)
+const Cita = mongoose.model('Cita', {
+    clienteNombre: String,
+    clienteEmail: String,
+    barberoEmail: String,
+    fecha: String,
+    hora: String,
+    barberiaNombre: String
 });
 
-const Bloqueo = mongoose.model('Bloqueo', { 
-    barbero: String, fecha: String, hora: String 
+// --- 2. CONFIGURACIÓN GOOGLE CALENDAR ---
+// 🚀 Usamos la API KEY que creamos en Google Cloud y pusimos en Render
+const calendar = google.calendar({
+    version: 'v3',
+    auth: process.env.GOOGLE_CALENDAR_API_KEY
 });
 
-const correosBarberos = {
-    "Fabian Ortiz": "FA.ORTIZM94@GMAIL.COM",
-    "Andrés Silva": "oa.orregocetina@GMAIL.COM"
-};
-
-// --- 2. RUTA PARA RESERVAR (Envío por API) ---
+// --- 3. RUTA PARA RESERVAR ---
 app.post('/reservar', async (req, res) => {
     try {
-        const { clienteNombre, clienteTelefono, barbero, fecha, hora } = req.body;
+        const { clienteEmail, barberoEmail, clienteNombre, fecha, hora, barberiaNombre } = req.body;
         
-        // 1. Guardar en la base de datos
-        const nuevaReserva = new Reserva(req.body);
-        await nuevaReserva.save();
-        console.log("Reserva guardada en DB ✅");
+        // A. Guardar en la base de datos
+        const nuevaCita = new Cita(req.body);
+        await nuevaCita.save();
+        console.log("Cita guardada en DB ✅");
 
-        // 2. CONFIGURACIÓN DE BREVO API
-        // ⚠️ PEGA TU CLAVE DE BREVO AQUÍ ABAJO (la que empieza con xkeysib...):
-        const BREVO_API_KEY = process.env.BREVO_API_KEY; 
+        // B. CREAR EVENTO EN GOOGLE CALENDAR
+        try {
+            // Formatear fecha y hora para Google: YYYY-MM-DDTHH:mm:ss
+            const startDateTime = new Date(`${fecha}T${hora}:00`);
+            const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hora después
 
-        // 3. Enviar correo usando AXIOS (Puerto 443 - No se bloquea)
-        await axios.post('https://api.brevo.com/v3/smtp/email', {
-            sender: { name: "Master Barber VIP", email: "fabianortiz350@gmail.com" },
-            to: [{ email: correosBarberos[barbero] }],
-            subject: `💈 Nueva Cita: ${clienteNombre}`,
-            htmlContent: `
-                <div style="font-family: Arial, sans-serif; border: 1px solid #ddd; padding: 20px;">
-                    <h2 style="color: #333;">¡Nueva reserva recibida!</h2>
-                    <p><strong>Cliente:</strong> ${clienteNombre}</p>
-                    <p><strong>Teléfono:</strong> ${clienteTelefono}</p>
-                    <p><strong>Fecha:</strong> ${fecha}</p>
-                    <p><strong>Hora:</strong> ${hora}</p>
-                </div>
-            `
-        }, {
-            headers: { 
-                'api-key': BREVO_API_KEY,
-                'Content-Type': 'application/json' 
-            }
-        });
+            await calendar.events.insert({
+                calendarId: 'primary', // Tu calendario principal
+                resource: {
+                    summary: `💈 Cita: ${clienteNombre} - ${barberiaNombre}`,
+                    location: 'Master Barber VIP',
+                    description: `Cliente: ${clienteNombre}\nEmail: ${clienteEmail}`,
+                    start: {
+                        dateTime: startDateTime.toISOString(),
+                        timeZone: 'America/Bogota', // 🔥 AJUSTA TU ZONA HORARIA AQUÍ
+                    },
+                    end: {
+                        dateTime: endDateTime.toISOString(),
+                        timeZone: 'America/Bogota',
+                    },
+                },
+            });
+            console.log("Evento creado en Google Calendar ✅");
+        } catch (calError) {
+            console.error("Error creando evento en Google Calendar:", calError);
+        }
 
-        console.log(`Correo enviado a ${barbero} vía API ✅`);
-        res.json({ success: true });
+        // C. Enviar correo de confirmación (Ya lo tenías)
+        // ... (Aquí iría tu configuración de nodemailer actual) ...
+
+        res.status(200).send("Cita guardada y eventos creados");
 
     } catch (e) {
-        console.error("Error al procesar reserva:", e.response ? e.response.data : e.message);
-        res.status(500).json({ error: "Error al procesar reserva" });
+        console.error("Error al procesar reserva:", e);
+        res.status(500).send("Error en el servidor");
     }
 });
 
-// --- 3. RUTA PARA DISPONIBILIDAD (¡Aquí están las horas!) ---
-app.get('/disponibilidad', async (req, res) => {
-    try {
-        const { fecha, barbero } = req.query;
-        const ocupadas = await Reserva.find({ fecha, barbero });
-        const bloqueadas = await Bloqueo.find({ fecha, barbero });
-        
-        // El frontend espera campos llamados "ocupadas" y "bloqueadas"
-        res.json({ 
-            ocupadas: ocupadas.map(r => r.hora), 
-            bloqueadas: bloqueadas.map(b => b.hora) 
-        });
-    } catch (e) {
-        console.error("Error disponibilidad:", e.message);
-        res.status(500).json({ ocupadas: [], bloqueadas: [] });
-    }
-});
-
-app.get('/', (req, res) => res.send("<h1>Servidor Activo ✅</h1>"));
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
-
-
-
-
-
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor listo en puerto ${PORT}`));

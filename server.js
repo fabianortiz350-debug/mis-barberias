@@ -37,7 +37,7 @@ const transporter = nodemailer.createTransport({
         // ⚠️ CAMBIA ESTO POR EL CORREO QUE ENVÍA LOS AVISOS (Tuyo)
         user: 'fabianortiz350@gmail.com', 
         // ⚠️ CAMBIA ESTO POR LA CONTRASENA DE 16 LETRAS DE GOOGLE
-        pass: 'mrar xyjn iziw ruzc' 
+        pass: 'lesv kkes jheb dewf' 
     }
 });
 
@@ -98,4 +98,5 @@ app.post('/admin/bloquear', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
 

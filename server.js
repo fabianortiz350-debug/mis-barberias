@@ -40,7 +40,7 @@ app.post('/reservar', async (req, res) => {
 
         // 2. CONFIGURACIÓN DE BREVO API
         // ⚠️ PEGA TU CLAVE DE BREVO AQUÍ ABAJO (la que empieza con xkeysib...):
-        const BREVO_API_KEY = 'xsmtpsib-1b16312d919ac81a999fdf0ae8c0fe57b7ce49bf35a3a45c6efdbfdf7092532d-lNeqh14jDx4kPiI9'; 
+        const BREVO_API_KEY = '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'; 
 
         // 3. Enviar correo usando AXIOS (Puerto 443 - No se bloquea)
         await axios.post('https://api.brevo.com/v3/smtp/email', {
@@ -94,3 +94,4 @@ app.get('/', (req, res) => res.send("<h1>Servidor Activo ✅</h1>"));
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+

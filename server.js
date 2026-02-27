@@ -1,85 +1,22 @@
-<<<<<<< HEAD
 const express = require('express');
-const nodemailer = require('nodemailer');
-const cors = require('cors');
 const mongoose = require('mongoose');
-
+const cors = require('cors');
+const { google } = require('googleapis'); // 🚀 IMPORTANTE: Librería para Calendar
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Servir archivos estáticos (para que cargue tus fotos o estilos si tienes)
+// Servir archivos estáticos (index.html, css, etc.)
 app.use(express.static(__dirname));
 
-const mongoURI = 'mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/?appName=BarberAPP'; 
-
+// --- CONEXIÓN A MONGODB ---
+const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
 mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
-  .catch(err => console.error("❌ Error de conexión:", err));
+    .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
+    .catch(err => console.error("❌ Error de conexión:", err));
 
 // Esquema para guardar las citas
-const CitaSchema = new mongoose.Schema({
-  barberiaNombre: String,
-  clienteNombre: String,
-  clienteEmail: String,
-  fecha: String,
-  hora: String,
-  creadoEn: { type: Date, default: Date.now }
-});
-const Cita = mongoose.model('Cita', CitaSchema);
-
-// --- ESTO ES LO NUEVO: MOSTRAR TU PÁGINA ---
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
-});
-
-// CONFIGURACIÓN DE TU GMAIL
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'fabianortiz350@gmail.com',
-    pass: 'lcpfyayysewetkoy' 
-  }
-});
-
-app.post('/reservar', async (req, res) => {
-  try {
-    const nuevaCita = new Cita(req.body);
-    await nuevaCita.save();
-
-    const { clienteEmail, barberoEmail, clienteNombre, fecha, hora, barberiaNombre } = req.body;
-    await transporter.sendMail({
-      from: '"BarberApp Pro" <fabianortiz350@gmail.com>',
-      to: `${clienteEmail}, ${barberoEmail}`,
-      subject: `💈 Cita Confirmada - ${barberiaNombre}`,
-      html: `<h1>¡Hola ${clienteNombre}!</h1><p>Tu cita en <b>${barberiaNombre}</b> está lista para el ${fecha} a las ${hora}.</p>`
-    });
-
-    res.status(200).send("Cita guardada y correos enviados");
-  } catch (error) {
-    console.log(error);
-    res.status(500).send("Error en el servidor");
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));
-=======
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const nodemailer = require('nodemailer');
-const { google } = require('googleapis'); // 🚀 IMPORTANTE: Nueva librería
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-
-// --- CONEXIÓN A MONGODB (Ya lo tenías) ---
-const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
-mongoose.connect(mongoURI);
-
-// Esquema (Ya lo tenías)
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteEmail: String,
@@ -89,14 +26,19 @@ const Cita = mongoose.model('Cita', {
     barberiaNombre: String
 });
 
-// --- 2. CONFIGURACIÓN GOOGLE CALENDAR ---
-// 🚀 Usamos la API KEY que creamos en Google Cloud y pusimos en Render
+// --- CONFIGURACIÓN GOOGLE CALENDAR ---
+// 🚀 Usamos la API KEY que creamos en Google Cloud y configuramos en Render
 const calendar = google.calendar({
     version: 'v3',
     auth: process.env.GOOGLE_CALENDAR_API_KEY
 });
 
-// --- 3. RUTA PARA RESERVAR ---
+// --- RUTA PARA MOSTRAR TU PÁGINA ---
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
+
+// --- RUTA PARA RESERVAR ---
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteEmail, barberoEmail, clienteNombre, fecha, hora, barberiaNombre } = req.body;
@@ -133,9 +75,6 @@ app.post('/reservar', async (req, res) => {
             console.error("Error creando evento en Google Calendar:", calError);
         }
 
-        // C. Enviar correo de confirmación (Ya lo tenías)
-        // ... (Aquí iría tu configuración de nodemailer actual) ...
-
         res.status(200).send("Cita guardada y eventos creados");
 
     } catch (e) {
@@ -145,5 +84,4 @@ app.post('/reservar', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor listo en puerto ${PORT}`));
->>>>>>> 786bac372d486c4ab1d09a2712e705b1dacbf245
+app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));

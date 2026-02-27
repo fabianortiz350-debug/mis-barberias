@@ -27,7 +27,7 @@ const Bloqueo = mongoose.model('Bloqueo', {
 // 1. Pones el correo real de cada barbero aquí
 const correosBarberos = {
     "Fabian Ortiz": "FA.ORTIZM94@GMAIL.COM", // ✅ YA ESTÁ CORRECTO
-    "Andrés Silva": "fa.ortizm@outlook.com" // ⚠️ CAMBIA ESTO POR EL REAL
+    "Andrés Silva": "oa.orregocetina@gmail.com" // ⚠️ CAMBIA ESTO POR EL REAL
 };
 
 // 2.CONFIGURACIÓN DE CORREOS CON BREVO ---
@@ -97,6 +97,7 @@ app.post('/admin/bloquear', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
 
 
 

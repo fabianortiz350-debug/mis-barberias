@@ -38,6 +38,18 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
+// --- ✅ RUTA NUEVA: CARGAR HORAS DISPONIBLES ---
+app.get('/horas-disponibles', async (req, res) => {
+    try {
+        // Por ahora, simulamos horas disponibles.
+        const horasSimuladas = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
+        res.json(horasSimuladas);
+    } catch (error) {
+        console.error("Error al cargar horas:", error);
+        res.status(500).json({ error: "Error cargando horas" });
+    }
+});
+
 // --- RUTA PARA RESERVAR ---
 app.post('/reservar', async (req, res) => {
     try {

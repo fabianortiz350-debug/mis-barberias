@@ -1,101 +1,49 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Master Barber VIP | Reservas</title>
-    <style>
-        body { background: #050505; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .gold-card { background: #111; border: 1px solid #d4af37; padding: 40px; border-radius: 15px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); width: 350px; text-align: center; }
-        h1 { color: #d4af37; text-transform: uppercase; letter-spacing: 4px; font-size: 1.5rem; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
-        .grid-horas { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 15px 0; }
-        .hora { padding: 10px; border: 1px solid #d4af37; cursor: pointer; border-radius: 5px; font-size: 12px; transition: 0.3s; }
-        .hora:hover { background: #d4af37; color: black; }
-        .ocupada { background: #333; border-color: #333; color: #666; cursor: not-allowed; }
-        .seleccionada { background: #d4af37; color: black; font-weight: bold; }
-        .btn-main { background: #d4af37; color: black; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 20px; text-transform: uppercase; }
-        #btnCal { display: none; background: #fff; color: #000; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class="gold-card">
-        <h1>Master Barber</h1>
-        <p>RESERVA DE LUJO</p>
+<button class="btn-main" onclick="confirmar()">Confirmar Cita Now</button>
+        <button id="btnCal" class="btn-main" style="display:none; background:#fff; color:#000;" onclick="agregarCalendario()">📅 Agregar a mi Agenda</button>
         
-        <select id="barbero" onchange="cargarHoras()">
-            <option value="Fabian Ortiz">Fabian Ortiz</option>
-            <option value="Andrés Silva">Andrés Silva</option>
-        </select>
+        <hr style="border: 0.5px solid #333; margin: 20px 0;">
         
-        <input type="date" id="fecha" onchange="cargarHoras()">
-        <div id="horas" class="grid-horas"></div>
-        
-        <input type="text" id="nombre" placeholder="Nombre completo">
-        <input type="email" id="email" placeholder="Tu correo electrónico">
-        <input type="tel" id="tel" placeholder="Tu celular">
-        
-        <button class="btn-main" onclick="confirmar()">Confirmar Cita Now</button>
-        <button id="btnCal" class="btn-main" onclick="agregarCalendario()">📅 Agregar a mi Agenda</button>
+        <p style="font-size: 10px; color: #666;">¿NECESITAS CANCELAR?</p>
+        <input type="text" id="codCancel" placeholder="Ingresa tu código R-0000" style="font-size: 10px; padding: 5px;">
+        <button onclick="cancelarReserva()" style="background:none; border:1px solid red; color:red; font-size:10px; cursor:pointer; padding:5px; width:100%;">CANCELAR CITA</button>
     </div>
 
     <script>
-        let selectedTime = "";
-        const api = "https://mis-barberias.onrender.com";
-
-        async function cargarHoras() {
-            const f = document.getElementById('fecha').value;
-            const b = document.getElementById('barbero').value;
-            if(!f) return;
-            const res = await fetch(`${api}/disponibilidad?fecha=${f}&barbero=${b}`);
-            const { ocupadas } = await res.json();
-            
-            const horas = ["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00","18:00"];
-            const div = document.getElementById('horas');
-            div.innerHTML = "";
-            
-            horas.forEach(h => {
-                const btn = document.createElement('div');
-                btn.className = ocupadas.includes(h) ? "hora ocupada" : "hora";
-                btn.innerText = h;
-                if(!ocupadas.includes(h)) {
-                    btn.onclick = () => {
-                        document.querySelectorAll('.hora').forEach(x => x.classList.remove('seleccionada'));
-                        btn.classList.add('seleccionada');
-                        selectedTime = h;
-                    };
-                }
-                div.appendChild(btn);
-            });
-        }
+        // ... (Mantén tus funciones cargarHoras y agregarCalendario igual) ...
 
         async function confirmar() {
-            const data = {
-                barbero: document.getElementById('barbero').value,
-                fecha: document.getElementById('fecha').value,
-                hora: selectedTime,
-                clienteNombre: document.getElementById('nombre').value,
-                clienteEmail: document.getElementById('email').value,
-                clienteTelefono: document.getElementById('tel').value
-            };
-            
+            // ... (Asegúrate de capturar todos los campos) ...
             const res = await fetch(`${api}/reservar`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(data)
             });
             
+            const result = await res.json();
             if(res.ok) {
-                alert("✅ ¡Cita Confirmada! Revisa tu correo.");
+                alert(`✅ ¡Cita Confirmada!\nTu código de cancelación es: ${result.codigo}\nSe ha enviado un correo al barbero.`);
                 document.getElementById('btnCal').style.display = "block";
+                cargarHoras(); // Recarga para bloquear la hora recién tomada
+            } else {
+                alert("❌ " + result.error);
             }
         }
 
-        function agregarCalendario() {
-            const f = document.getElementById('fecha').value.replace(/-/g, '');
-            const h = selectedTime.replace(':','') + "00";
-            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Barberia&dates=${f}T${h}/${f}T${h}&details=Cita+con+${document.getElementById('barbero').value}`;
-            window.open(url, '_blank');
+        async function cancelarReserva() {
+            const cod = document.getElementById('codCancel').value;
+            if(!cod) return alert("Escribe el código.");
+            
+            const res = await fetch(`${api}/cancelar`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ codigo: cod })
+            });
+
+            if(res.ok) {
+                alert("🗑️ Cita cancelada con éxito. La hora vuelve a estar libre.");
+                location.reload();
+            } else {
+                alert("❌ Código incorrecto o cita no encontrada.");
+            }
         }
     </script>
-</body>
-</html>

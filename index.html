@@ -64,10 +64,11 @@
 
 <script>
     let horaElegida = "";
-    // IMPORTANTE: Esta URL debe ser la de tu servidor en Render
+    // Asegúrate de que esta URL sea la correcta de tu Render
     const URL_API = "https://mis-barberias.onrender.com"; 
 
     async function cargarHoras() {
+        console.log("Cargando horas para la fecha seleccionada...");
         const fecha = document.getElementById('fechaSeleccionada').value;
         const barbero = document.getElementById('barbero').value;
         if(!fecha) return;
@@ -99,6 +100,7 @@
                 contenedor.appendChild(div);
             });
         } catch(e) { 
+            console.error("Error al cargar horas:", e);
             contenedor.innerHTML = "Error al conectar con el servidor";
         }
     }
@@ -115,3 +117,28 @@
 
         try {
             const res = await fetch(`${URL_API}/reservar`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    clienteNombre: nombre,                
+                    clienteTelefono: tel,
+                    barbero: barbero,
+                    fecha: fecha,
+                    hora: horaElegida
+                })
+            });
+
+            if(res.ok) {
+                alert("✅ ¡Cita guardada con éxito!");
+                location.reload();
+            } else {
+                alert("❌ Error al guardar la cita.");
+            }
+        } catch(e) { 
+            console.error("Error en reserva:", e);
+            alert("Error de conexión");
+        }
+    }
+</script>
+</body>
+</html>

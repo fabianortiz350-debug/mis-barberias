@@ -1,37 +1,118 @@
-<button class="btn-main" onclick="confirmar()">Confirmar Cita Now</button>
-        <button id="btnCal" class="btn-main" style="display:none; background:#fff; color:#000;" onclick="agregarCalendario()">📅 Agregar a mi Agenda</button>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Barber VIP | Reservas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #d4af37; --bg: #0a0a0a; --glass: rgba(26, 26, 26, 0.95); }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: white; margin: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .card { background: var(--glass); border: 1px solid #333; padding: 40px; border-radius: 20px; width: 90%; max-width: 400px; box-shadow: 0 0 30px rgba(0,0,0,0.5); text-align: center; }
+        h1 { color: var(--gold); letter-spacing: 5px; text-transform: uppercase; margin-bottom: 5px; }
+        label { display: block; margin-top: 15px; font-size: 10px; color: #888; text-transform: uppercase; font-weight: bold; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
+        .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .hora { padding: 10px; border: 1px solid var(--gold); border-radius: 5px; font-size: 12px; cursor: pointer; transition: 0.3s; }
+        .hora:hover { background: var(--gold); color: black; }
+        .hora.ocupada { background: #333; border-color: #333; color: #666; cursor: not-allowed; text-decoration: line-through; }
+        .hora.seleccionada { background: var(--gold); color: black; font-weight: bold; }
+        .btn-confirm { width: 100%; background: var(--gold); color: black; padding: 15px; border: none; border-radius: 10px; font-weight: 900; margin-top: 25px; cursor: pointer; text-transform: uppercase; }
+        .cancel-section { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
+        .btn-cancel { background: none; border: 1px solid #ff4444; color: #ff4444; padding: 8px; width: 100%; margin-top: 10px; cursor: pointer; font-size: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Master Barber</h1>
+        <p style="color:var(--gold); font-size:12px; font-weight:700;">RESERVA TU EXPERIENCIA</p>
         
-        <hr style="border: 0.5px solid #333; margin: 20px 0;">
-        
-        <p style="font-size: 10px; color: #666;">¿NECESITAS CANCELAR?</p>
-        <input type="text" id="codCancel" placeholder="Ingresa tu código R-0000" style="font-size: 10px; padding: 5px;">
-        <button onclick="cancelarReserva()" style="background:none; border:1px solid red; color:red; font-size:10px; cursor:pointer; padding:5px; width:100%;">CANCELAR CITA</button>
+        <label>Barbero</label>
+        <select id="barbero" onchange="cargarHoras()">
+            <option value="Fabian Ortiz">Fabian Ortiz</option>
+            <option value="Andrés Silva">Andrés Silva</option>
+        </select>
+
+        <label>Fecha</label>
+        <input type="date" id="fecha" onchange="cargarHoras()">
+
+        <label>Horas Disponibles</label>
+        <div id="gridHoras" class="grid-horas"></div>
+
+        <input type="text" id="nombre" placeholder="Nombre completo" style="margin-top:20px;">
+        <input type="email" id="email" placeholder="Tu correo electrónico">
+        <input type="tel" id="tel" placeholder="Tu celular (WhatsApp)">
+
+        <button class="btn-confirm" onclick="confirmar()">Confirmar Cita Now</button>
+
+        <div class="cancel-section">
+            <label>¿Deseas cancelar?</label>
+            <input type="text" id="codCancel" placeholder="Ingresa tu código R-XXXX">
+            <button class="btn-cancel" onclick="cancelar()">CANCELAR MI CITA</button>
+        </div>
     </div>
 
     <script>
-        // ... (Mantén tus funciones cargarHoras y agregarCalendario igual) ...
+        let selectedTime = "";
+        const api = "https://mis-barberias.onrender.com";
+
+        async function cargarHoras() {
+            const f = document.getElementById('fecha').value;
+            const b = document.getElementById('barbero').value;
+            if(!f) return;
+            
+            const res = await fetch(`${api}/disponibilidad?fecha=${f}&barbero=${b}`);
+            const { ocupadas } = await res.json();
+            
+            const horas = ["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00","18:00"];
+            const div = document.getElementById('gridHoras');
+            div.innerHTML = "";
+            
+            horas.forEach(h => {
+                const btn = document.createElement('div');
+                btn.className = ocupadas.includes(h) ? "hora ocupada" : "hora";
+                btn.innerText = h;
+                if(!ocupadas.includes(h)) {
+                    btn.onclick = () => {
+                        document.querySelectorAll('.hora').forEach(x => x.classList.remove('seleccionada'));
+                        btn.classList.add('seleccionada');
+                        selectedTime = h;
+                    };
+                }
+                div.appendChild(btn);
+            });
+        }
 
         async function confirmar() {
-            // ... (Asegúrate de capturar todos los campos) ...
+            const n = document.getElementById('nombre').value;
+            const e = document.getElementById('email').value;
+            const t = document.getElementById('tel').value;
+            const f = document.getElementById('fecha').value;
+            const b = document.getElementById('barbero').value;
+
+            if(!f || !selectedTime || !n || !e || !t) return alert("Completa todos los datos.");
+
             const res = await fetch(`${api}/reservar`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
+                body: JSON.stringify({
+                    clienteNombre: n, clienteEmail: e, clienteTelefono: t,
+                    fecha: f, hora: selectedTime, barbero: b
+                })
             });
-            
+
             const result = await res.json();
             if(res.ok) {
-                alert(`✅ ¡Cita Confirmada!\nTu código de cancelación es: ${result.codigo}\nSe ha enviado un correo al barbero.`);
-                document.getElementById('btnCal').style.display = "block";
-                cargarHoras(); // Recarga para bloquear la hora recién tomada
+                alert(`✅ ¡Cita Confirmada!\nTu código es: ${result.codigo}\nSe ha enviado un correo con los detalles.`);
+                location.reload();
             } else {
                 alert("❌ " + result.error);
             }
         }
 
-        async function cancelarReserva() {
+        async function cancelar() {
             const cod = document.getElementById('codCancel').value;
-            if(!cod) return alert("Escribe el código.");
+            if(!cod) return alert("Escribe el código R-XXXX.");
             
             const res = await fetch(`${api}/cancelar`, {
                 method: 'POST',
@@ -40,10 +121,12 @@
             });
 
             if(res.ok) {
-                alert("🗑️ Cita cancelada con éxito. La hora vuelve a estar libre.");
+                alert("🗑️ Cita cancelada. La hora vuelve a estar disponible.");
                 location.reload();
             } else {
-                alert("❌ Código incorrecto o cita no encontrada.");
+                alert("❌ Código no válido.");
             }
         }
     </script>
+</body>
+</html>

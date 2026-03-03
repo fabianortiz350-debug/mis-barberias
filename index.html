@@ -2,68 +2,100 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Barber - Agenda Privada</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Master Barber VIP | Reservas</title>
     <style>
-        body { font-family: 'Montserrat', sans-serif; background: #0a0a0a; color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { color: #d4af37; text-align: center; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #d4af37; padding-bottom: 10px; }
-        .btn-refresh { background: #d4af37; color: #000; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; display: block; margin: 20px auto; transition: 0.3s; }
-        .btn-refresh:hover { background: #fff; transform: scale(1.05); }
-        .card-container { display: grid; gap: 15px; margin-top: 20px; }
-        .cita-card { background: #1a1a1a; border-left: 5px solid #d4af37; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .cita-info b { color: #d4af37; display: block; font-size: 1.1rem; }
-        .cita-info span { color: #aaa; font-size: 0.9rem; }
-        .btn-whatsapp { background: #25d366; color: white; text-decoration: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; }
-        @media (max-width: 600px) { .cita-card { flex-direction: column; text-align: center; gap: 15px; } }
+        body { background: #050505; color: white; font-family: 'Montserrat', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .gold-card { background: #111; border: 1px solid #d4af37; padding: 40px; border-radius: 15px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); width: 350px; text-align: center; }
+        h1 { color: #d4af37; text-transform: uppercase; letter-spacing: 4px; font-size: 1.5rem; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+        .grid-horas { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 15px 0; }
+        .hora { padding: 10px; border: 1px solid #d4af37; cursor: pointer; border-radius: 5px; font-size: 12px; transition: 0.3s; }
+        .hora:hover { background: #d4af37; color: black; }
+        .ocupada { background: #333; border-color: #333; color: #666; cursor: not-allowed; }
+        .seleccionada { background: #d4af37; color: black; font-weight: bold; }
+        .btn-main { background: #d4af37; color: black; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 20px; text-transform: uppercase; }
+        #btnCal { display: none; background: #fff; color: #000; margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>💈 Mi Agenda VIP</h1>
-        <button class="btn-refresh" onclick="cargarAgenda()">🔄 Actualizar Citas</button>
-        <div id="listaCitas" class="card-container">
-            </div>
+    <div class="gold-card">
+        <h1>Master Barber</h1>
+        <p>RESERVA DE LUJO</p>
+        
+        <select id="barbero" onchange="cargarHoras()">
+            <option value="Fabian Ortiz">Fabian Ortiz</option>
+            <option value="Andrés Silva">Andrés Silva</option>
+        </select>
+        
+        <input type="date" id="fecha" onchange="cargarHoras()">
+        <div id="horas" class="grid-horas"></div>
+        
+        <input type="text" id="nombre" placeholder="Nombre completo">
+        <input type="email" id="email" placeholder="Tu correo electrónico">
+        <input type="tel" id="tel" placeholder="Tu celular">
+        
+        <button class="btn-main" onclick="confirmar()">Confirmar Cita Now</button>
+        <button id="btnCal" class="btn-main" onclick="agregarCalendario()">📅 Agregar a mi Agenda</button>
     </div>
 
     <script>
-        async function cargarAgenda() {
-            const lista = document.getElementById('listaCitas');
-            lista.innerHTML = "<p style='text-align:center;'>Cargando citas...</p>";
+        let selectedTime = "";
+        const api = "https://mis-barberias.onrender.com";
 
-            try {
-                // Como este archivo vive en el mismo servidor de Render, usamos la ruta relativa
-                const res = await fetch('/ver-agenda');
-                const citas = await res.json();
-
-                lista.innerHTML = "";
-                if (citas.length === 0) {
-                    lista.innerHTML = "<p style='text-align:center;'>No hay citas todavía. ¡A trabajar!</p>";
-                    return;
+        async function cargarHoras() {
+            const f = document.getElementById('fecha').value;
+            const b = document.getElementById('barbero').value;
+            if(!f) return;
+            const res = await fetch(`${api}/disponibilidad?fecha=${f}&barbero=${b}`);
+            const { ocupadas } = await res.json();
+            
+            const horas = ["08:00","09:00","10:00","11:00","14:00","15:00","16:00","17:00","18:00"];
+            const div = document.getElementById('horas');
+            div.innerHTML = "";
+            
+            horas.forEach(h => {
+                const btn = document.createElement('div');
+                btn.className = ocupadas.includes(h) ? "hora ocupada" : "hora";
+                btn.innerText = h;
+                if(!ocupadas.includes(h)) {
+                    btn.onclick = () => {
+                        document.querySelectorAll('.hora').forEach(x => x.classList.remove('seleccionada'));
+                        btn.classList.add('seleccionada');
+                        selectedTime = h;
+                    };
                 }
+                div.appendChild(btn);
+            });
+        }
 
-                citas.forEach(cita => {
-                    const card = document.createElement('div');
-                    card.className = 'cita-card';
-                    card.innerHTML = `
-                        <div class="cita-info">
-                            <b>${cita.fecha} — ${cita.hora}</b>
-                            <span>Cliente: ${cita.clienteNombre}</span>
-                            <span>Barbero: ${cita.barbero}</span>
-                        </div>
-                        <a href="https://wa.me/${cita.clienteTelefono}" target="_blank" class="btn-whatsapp">
-                            📱 WHATSAPP
-                        </a>
-                    `;
-                    lista.appendChild(card);
-                });
-            } catch (e) {
-                lista.innerHTML = "<p style='text-align:center; color:red;'>Error al conectar con el servidor.</p>";
+        async function confirmar() {
+            const data = {
+                barbero: document.getElementById('barbero').value,
+                fecha: document.getElementById('fecha').value,
+                hora: selectedTime,
+                clienteNombre: document.getElementById('nombre').value,
+                clienteEmail: document.getElementById('email').value,
+                clienteTelefono: document.getElementById('tel').value
+            };
+            
+            const res = await fetch(`${api}/reservar`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            
+            if(res.ok) {
+                alert("✅ ¡Cita Confirmada! Revisa tu correo.");
+                document.getElementById('btnCal').style.display = "block";
             }
         }
-        // Cargar automáticamente al abrir
-        cargarAgenda();
+
+        function agregarCalendario() {
+            const f = document.getElementById('fecha').value.replace(/-/g, '');
+            const h = selectedTime.replace(':','') + "00";
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Barberia&dates=${f}T${h}/${f}T${h}&details=Cita+con+${document.getElementById('barbero').value}`;
+            window.open(url, '_blank');
+        }
     </script>
 </body>
 </html>

@@ -3,142 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Barber VIP</title>
+    <title>Master Barber - Agenda Privada</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root { --gold: #d4af37; --glass: rgba(255, 255, 255, 0.95); }
-        body { 
-            font-family: 'Montserrat', sans-serif; margin: 0; 
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                        url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop');
-            background-size: cover; background-position: center; background-attachment: fixed;
-            min-height: 100vh; display: flex; flex-direction: column; color: white;
-        }
-        header { padding: 40px 20px; text-align: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
-        .booking-card {
-            max-width: 420px; margin: 0 auto 50px; background: var(--glass);
-            backdrop-filter: blur(10px); border-radius: 25px; padding: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.3); color: #333;
-        }
-        .section-title { text-align: center; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; border-bottom: 3px solid var(--gold); padding-bottom: 8px; }
-        label { font-weight: 800; font-size: 0.7rem; text-transform: uppercase; color: #444; margin-top: 15px; display: block; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 10px; font-family: inherit; box-sizing: border-box; }
-        .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
-        .slot { padding: 12px 5px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-weight: 800; cursor: pointer; background: white; transition: 0.2s; }
-        .slot.selected { background: #111 !important; color: var(--gold) !important; border-color: var(--gold); }
-        .slot.disabled { background: #eee; color: #bbb; text-decoration: line-through; cursor: not-allowed; }
-        .btn-confirm { 
-            width: 100%; background: #111; color: var(--gold); padding: 18px; border: 2px solid var(--gold); 
-            border-radius: 12px; font-weight: 900; margin-top: 25px; cursor: pointer; text-transform: uppercase;
-        }
+        body { font-family: 'Montserrat', sans-serif; background: #0a0a0a; color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #d4af37; text-align: center; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #d4af37; padding-bottom: 10px; }
+        .btn-refresh { background: #d4af37; color: #000; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; display: block; margin: 20px auto; transition: 0.3s; }
+        .btn-refresh:hover { background: #fff; transform: scale(1.05); }
+        .card-container { display: grid; gap: 15px; margin-top: 20px; }
+        .cita-card { background: #1a1a1a; border-left: 5px solid #d4af37; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .cita-info b { color: #d4af37; display: block; font-size: 1.1rem; }
+        .cita-info span { color: #aaa; font-size: 0.9rem; }
+        .btn-whatsapp { background: #25d366; color: white; text-decoration: none; padding: 10px 15px; border-radius: 5px; font-weight: bold; font-size: 0.8rem; }
+        @media (max-width: 600px) { .cita-card { flex-direction: column; text-align: center; gap: 15px; } }
     </style>
 </head>
 <body>
-    <header>
-        <h1>MASTER BARBER VIP</h1>
-        <p style="color:var(--gold); font-weight:700; letter-spacing:3px;">SISTEMA DE RESERVAS</p>
-    </header>
-    <div class="booking-card">
-        <div class="section-title">Reserva tu Cupo</div>
-        
-        <label>Barbero</label>
-        <select id="barbero" onchange="cargarHoras()">
-            <option value="Fabian Ortiz">Fabian Ortiz</option>
-            <option value="Andrés Silva">Andrés Silva</option>
-        </select>
-
-        <label>Seleccionar Fecha</label>
-        <input type="date" id="fechaSeleccionada" onchange="cargarHoras()">
-
-        <label>Horas Disponibles</label>
-        <div class="grid-horas" id="contenedorHoras">
-            <p style="font-size: 12px; color: #999;">Selecciona una fecha primero...</p>
-        </div>
-
-        <label>Tu Información</label>
-        <input type="text" id="nombreCliente" placeholder="Tu nombre">
-        <input type="tel" id="telefonoCliente" placeholder="Tu celular">
-
-        <button class="btn-confirm" onclick="confirmar()">Confirmar Cita Now</button>
+    <div class="container">
+        <h1>💈 Mi Agenda VIP</h1>
+        <button class="btn-refresh" onclick="cargarAgenda()">🔄 Actualizar Citas</button>
+        <div id="listaCitas" class="card-container">
+            </div>
     </div>
 
-<script>
-    let horaElegida = "";
-    // Asegúrate de que esta URL sea la correcta de tu Render
-    const URL_API = "https://mis-barberias.onrender.com"; 
+    <script>
+        async function cargarAgenda() {
+            const lista = document.getElementById('listaCitas');
+            lista.innerHTML = "<p style='text-align:center;'>Cargando citas...</p>";
 
-    async function cargarHoras() {
-        console.log("Cargando horas para la fecha seleccionada...");
-        const fecha = document.getElementById('fechaSeleccionada').value;
-        const barbero = document.getElementById('barbero').value;
-        if(!fecha) return;
+            try {
+                // Como este archivo vive en el mismo servidor de Render, usamos la ruta relativa
+                const res = await fetch('/ver-agenda');
+                const citas = await res.json();
 
-        const contenedor = document.getElementById('contenedorHoras');
-        contenedor.innerHTML = "Cargando...";
-
-        try {
-            const res = await fetch(`${URL_API}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
-            const data = await res.json();
-            
-            const lista = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
-            
-            contenedor.innerHTML = "";
-            lista.forEach(h => {
-                const div = document.createElement('div');
-                div.className = "slot";
-                div.innerText = h;
-                
-                if(data.ocupadas && data.ocupadas.includes(h)) {
-                    div.classList.add('disabled');
-                } else {
-                    div.onclick = () => {
-                        document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                        div.classList.add('selected');
-                        horaElegida = h;
-                    };
+                lista.innerHTML = "";
+                if (citas.length === 0) {
+                    lista.innerHTML = "<p style='text-align:center;'>No hay citas todavía. ¡A trabajar!</p>";
+                    return;
                 }
-                contenedor.appendChild(div);
-            });
-        } catch(e) { 
-            console.error("Error al cargar horas:", e);
-            contenedor.innerHTML = "Error al conectar con el servidor";
-        }
-    }
 
-    async function confirmar() {
-        const nombre = document.getElementById('nombreCliente').value;
-        const fecha = document.getElementById('fechaSeleccionada').value;
-        const tel = document.getElementById('telefonoCliente').value;
-        const barbero = document.getElementById('barbero').value;
-
-        if(!fecha || !horaElegida || !nombre || !tel) {
-            return alert("⚠️ Por favor, rellena todos los datos.");
-        }
-
-        try {
-            const res = await fetch(`${URL_API}/reservar`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    clienteNombre: nombre,                
-                    clienteTelefono: tel,
-                    barbero: barbero,
-                    fecha: fecha,
-                    hora: horaElegida
-                })
-            });
-
-            if(res.ok) {
-                alert("✅ ¡Cita guardada con éxito!");
-                location.reload();
-            } else {
-                alert("❌ Error al guardar la cita.");
+                citas.forEach(cita => {
+                    const card = document.createElement('div');
+                    card.className = 'cita-card';
+                    card.innerHTML = `
+                        <div class="cita-info">
+                            <b>${cita.fecha} — ${cita.hora}</b>
+                            <span>Cliente: ${cita.clienteNombre}</span>
+                            <span>Barbero: ${cita.barbero}</span>
+                        </div>
+                        <a href="https://wa.me/${cita.clienteTelefono}" target="_blank" class="btn-whatsapp">
+                            📱 WHATSAPP
+                        </a>
+                    `;
+                    lista.appendChild(card);
+                });
+            } catch (e) {
+                lista.innerHTML = "<p style='text-align:center; color:red;'>Error al conectar con el servidor.</p>";
             }
-        } catch(e) { 
-            console.error("Error en reserva:", e);
-            alert("Error de conexión");
         }
-    }
-</script>
+        // Cargar automáticamente al abrir
+        cargarAgenda();
+    </script>
 </body>
 </html>

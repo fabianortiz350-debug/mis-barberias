@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 
 app.use(cors());
@@ -11,8 +12,8 @@ app.use(express.static(__dirname));
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
 
 mongoose.connect(mongoURI)
-    .then(() => console.log("✅ Conexión exitosa a MongoDB"))
-    .catch(err => console.error("❌ Error de conexión a MongoDB:", err));
+    .then(() => console.log("✅ Conectado a MongoDB"))
+    .catch(err => console.error("❌ Error DB:", err));
 
 // Esquema de la Cita
 const Cita = mongoose.model('Cita', {
@@ -23,41 +24,49 @@ const Cita = mongoose.model('Cita', {
     hora: String
 });
 
-// Ruta principal
+// Ruta para la página de clientes
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// --- ✅ RUTA: DISPONIBILIDAD (Basada en tu DB) ---
+// Ruta para tu Agenda Privada
+app.get('/agenda', (req, res) => {
+    res.sendFile(path.join(__dirname, 'agenda.html'));
+});
+
+// --- API: CONSULTAR DISPONIBILIDAD ---
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
-        // Buscamos las citas que ya existen para ese día y ese barbero
-        const citasExistentes = await Cita.find({ fecha, barbero });
-        const horasOcupadas = citasExistentes.map(c => c.hora);
-
-        res.json({
-            ocupadas: horasOcupadas,
-            bloqueadas: [] // Aquí podrías añadir horas de almuerzo si quisieras
-        });
+        const ocupadas = await Cita.find({ fecha, barbero });
+        const horasOcupadas = ocupadas.map(c => c.hora);
+        res.json({ ocupadas: horasOcupadas });
     } catch (error) {
-        console.error("Error al consultar disponibilidad:", error);
-        res.status(500).json({ error: "Error en el servidor" });
+        res.status(500).json({ error: "Error al consultar" });
     }
 });
 
-// --- ✅ RUTA: RESERVAR ---
+// --- API: GUARDAR RESERVA ---
 app.post('/reservar', async (req, res) => {
     try {
         const nuevaCita = new Cita(req.body);
         await nuevaCita.save();
-        console.log("✅ Nueva cita guardada:", req.body);
         res.status(200).json({ success: true });
     } catch (error) {
-        console.error("Error al guardar cita:", error);
-        res.status(500).json({ error: "No se pudo guardar la reserva" });
+        res.status(500).json({ error: "Error al guardar" });
+    }
+});
+
+// --- API: VER TODA LA AGENDA (Para el barbero) ---
+app.get('/ver-agenda', async (req, res) => {
+    try {
+        // Ordena por fecha y luego por hora
+        const citas = await Cita.find().sort({ fecha: 1, hora: 1 });
+        res.json(citas);
+    } catch (error) {
+        res.status(500).json({ error: "Error al obtener agenda" });
     }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));

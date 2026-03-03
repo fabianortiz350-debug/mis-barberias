@@ -3,52 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Barber VIP | Reservas</title>
+    <title>Master Barber VIP</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --gold: #d4af37; --bg: #0a0a0a; }
-        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: white; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .card { background: #111; border: 1px solid #333; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 0 30px rgba(0,0,0,0.8); text-align: center; }
-        h1 { color: var(--gold); letter-spacing: 5px; text-transform: uppercase; margin: 0; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--bg); color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .card { background: #111; border: 1px solid #333; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        h1 { color: var(--gold); letter-spacing: 5px; text-transform: uppercase; }
         label { display: block; margin-top: 15px; font-size: 10px; color: #888; text-transform: uppercase; font-weight: 700; }
         input, select { width: 100%; padding: 12px; margin-top: 5px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; }
         .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
         .hora { padding: 10px; border: 1px solid var(--gold); border-radius: 5px; font-size: 12px; cursor: pointer; transition: 0.3s; }
-        .hora:hover { background: var(--gold); color: black; }
         .hora.ocupada { background: #333; border-color: #333; color: #666; cursor: not-allowed; text-decoration: line-through; }
         .hora.seleccionada { background: var(--gold); color: black; font-weight: bold; }
         .btn-confirm { width: 100%; background: var(--gold); color: black; padding: 15px; border: none; border-radius: 10px; font-weight: 900; margin-top: 25px; cursor: pointer; text-transform: uppercase; }
+        #btnCal { width: 100%; background: white; color: black; padding: 12px; border: none; border-radius: 10px; font-weight: 700; margin-top: 15px; display: none; cursor: pointer; }
         .cancel-section { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; }
-        .btn-cancel { background: none; border: 1px solid #ff4444; color: #ff4444; padding: 8px; width: 100%; margin-top: 10px; cursor: pointer; font-size: 10px; border-radius: 5px; text-transform: uppercase; }
+        .btn-cancel { background: none; border: 1px solid #ff4444; color: #ff4444; padding: 8px; width: 100%; margin-top: 10px; cursor: pointer; font-size: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h1>Master Barber</h1>
-        <p style="color:var(--gold); font-size:11px; font-weight:700; letter-spacing: 2px;">BARBERÍA DE LUJO</p>
+        <p style="color:var(--gold); font-size:11px; font-weight:700;">RESERVA TU CUPO VIP</p>
         
-        <label>Elige tu Barbero</label>
+        <label>Barbero</label>
         <select id="barbero" onchange="cargarHoras()">
             <option value="Fabian Ortiz">Fabian Ortiz</option>
             <option value="Andrés Silva">Andrés Silva</option>
         </select>
 
-        <label>Fecha de la Cita</label>
+        <label>Seleccionar Fecha</label>
         <input type="date" id="fecha" onchange="cargarHoras()">
 
-        <label>Horarios Disponibles</label>
+        <label>Horas Disponibles</label>
         <div id="gridHoras" class="grid-horas"></div>
 
-        <input type="text" id="nombre" placeholder="Tu nombre completo" style="margin-top:20px;">
+        <input type="text" id="nombre" placeholder="Nombre completo" style="margin-top:20px;">
         <input type="email" id="email" placeholder="Tu correo electrónico">
-        <input type="tel" id="tel" placeholder="Tu celular (WhatsApp)">
+        <input type="tel" id="tel" placeholder="Tu celular">
 
         <button class="btn-confirm" onclick="confirmar()">Confirmar Reserva</button>
+        <button id="btnCal" onclick="agregarCalendario()">📅 Agregar a mi Agenda</button>
 
         <div class="cancel-section">
-            <p style="font-size: 10px; color: #666;">¿DESEAS CANCELAR?</p>
-            <input type="email" id="emailCancel" placeholder="Correo usado en la reserva">
-            <button class="btn-cancel" onclick="cancelar()">Cancelar Reserva</button>
+            <label>¿Deseas cancelar?</label>
+            <input type="email" id="emailCancel" placeholder="Correo de la reserva">
+            <button class="btn-cancel" onclick="cancelar()">CANCELAR RESERVA</button>
         </div>
     </div>
 
@@ -81,44 +82,46 @@
         }
 
         async function confirmar() {
-            const n = document.getElementById('nombre').value;
-            const e = document.getElementById('email').value;
-            const t = document.getElementById('tel').value;
-            const f = document.getElementById('fecha').value;
-            const b = document.getElementById('barbero').value;
+            const data = {
+                clienteNombre: document.getElementById('nombre').value,
+                clienteEmail: document.getElementById('email').value,
+                clienteTelefono: document.getElementById('tel').value,
+                fecha: document.getElementById('fecha').value,
+                hora: selectedTime,
+                barbero: document.getElementById('barbero').value
+            };
 
-            if(!f || !selectedTime || !n || !e || !t) return alert("Por favor rellena todos los campos.");
+            if(!data.fecha || !selectedTime || !data.clienteNombre) return alert("Completa los datos.");
 
             const res = await fetch(`${api}/reservar`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ clienteNombre: n, clienteEmail: e, clienteTelefono: t, fecha: f, hora: selectedTime, barbero: b })
+                body: JSON.stringify(data)
             });
 
-            const result = await res.json();
             if(res.ok) {
-                alert(`✅ ¡Éxito!\nTu código es: ${result.codigo}\nRevisa tu correo para los detalles.`);
-                location.reload();
-            } else { alert("❌ Error: " + result.error); }
+                alert("✅ Reserva Confirmada.");
+                document.getElementById('btnCal').style.display = "block";
+            } else { alert("❌ Error en reserva"); }
+        }
+
+        function agregarCalendario() {
+            const f = document.getElementById('fecha').value.replace(/-/g, '');
+            const h = selectedTime.replace(':','') + "00";
+            const b = document.getElementById('barbero').value;
+            const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+Master+Barber&dates=${f}T${h}/${f}T${h}&details=Cita+con+${b}`;
+            window.open(url, '_blank');
         }
 
         async function cancelar() {
             const email = document.getElementById('emailCancel').value;
-            if(!email) return alert("Escribe tu correo.");
-            
             const res = await fetch(`${api}/cancelar`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email: email })
+                body: JSON.stringify({ email })
             });
-
-            if(res.ok) {
-                alert("Reserva cancelada");
-                location.reload();
-            } else {
-                const err = await res.json();
-                alert("❌ " + err.error);
-            }
+            if(res.ok) { alert("Reserva cancelada"); location.reload(); }
+            else { alert("No se encontró la reserva."); }
         }
     </script>
 </body>

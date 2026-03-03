@@ -1,100 +1,117 @@
-<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BarberApp Premium</title>
+    <title>Master Barber VIP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #0f0f0f; color: #e0e0e0; display: flex; justify-content: center; padding: 20px; }
-        .card { background: #1a1a1a; padding: 30px; border-radius: 20px; width: 100%; max-width: 400px; border: 1px solid #333; box-shadow: 0 15px 35px rgba(0,0,0,0.8); }
-        h2 { text-align: center; color: #d4af37; letter-spacing: 2px; text-transform: uppercase; }
-        label { display: block; margin-top: 15px; font-size: 13px; color: #888; text-transform: uppercase; font-weight: bold; }
-        input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #333; background: #222; color: white; box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus, select:focus { border-color: #d4af37; }
-        button { width: 100%; padding: 15px; margin-top: 30px; background: linear-gradient(45deg, #d4af37, #f0ad4e); border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #000; cursor: pointer; transition: 0.4s; }
-        button:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        :root { --gold: #d4af37; --glass: rgba(255, 255, 255, 0.95); }
+        body { 
+            font-family: 'Montserrat', sans-serif; margin: 0; 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            min-height: 100vh; display: flex; flex-direction: column; color: white;
+        }
+        header { padding: 40px 20px; text-align: center; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.7); }
+        .booking-card {
+            max-width: 420px; margin: 0 auto 50px; background: var(--glass);
+            backdrop-filter: blur(10px); border-radius: 25px; padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.3); color: #333;
+        }
+        .section-title { text-align: center; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; border-bottom: 3px solid var(--gold); padding-bottom: 8px; }
+        label { font-weight: 800; font-size: 0.7rem; text-transform: uppercase; color: #444; margin-top: 15px; display: block; }
+        input, select { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 10px; font-family: inherit; box-sizing: border-box; }
+        .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .slot { padding: 12px 5px; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-weight: 800; cursor: pointer; background: white; transition: 0.2s; }
+        .slot.selected { background: #111 !important; color: var(--gold) !important; border-color: var(--gold); }
+        .slot.disabled { background: #eee; color: #bbb; text-decoration: line-through; cursor: not-allowed; }
+        .btn-confirm { 
+            width: 100%; background: #111; color: var(--gold); padding: 18px; border: 2px solid var(--gold); 
+            border-radius: 12px; font-weight: 900; margin-top: 25px; cursor: pointer; text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>BarberApp Pro</h2>
+    <header>
+        <h1>MASTER BARBER VIP</h1>
+        <p style="color:var(--gold); font-weight:700; letter-spacing:3px;">SISTEMA DE RESERVAS</p>
+    </header>
+    <div class="booking-card">
+        <div class="section-title">Reserva tu Cupo</div>
         
-        <label>Elige tu Barbería</label>
-        <select id="barberia">
-            <option value="fabianortiz350@gmail.com" data-name="Barbería El Estilo">💈 Barbería El Estilo</option>
-            <option value="otro_correo@gmail.com" data-name="Cortes VIP">✂️ Cortes VIP</option>
+        <label>Barbero</label>
+        <select id="barbero" onchange="cargarHoras()">
+            <option value="Fabian Ortiz">Fabian Ortiz</option>
+            <option value="Andrés Silva">Andrés Silva</option>
         </select>
 
-        <label>Nombre del Cliente</label>
-        <input type="text" id="nombre" placeholder="Tu nombre">
-        
-        <label>Tu Correo</label>
-        <input type="email" id="email" placeholder="ejemplo@correo.com">
-        
-        <label>Fecha y Hora</label>
-        <div style="display: flex; gap: 10px;">
-            <input type="date" id="fecha">
-            <input type="time" id="hora">
+        <label>Seleccionar Fecha</label>
+        <input type="date" id="fechaSeleccionada" onchange="cargarHoras()">
+
+        <label>Horas Disponibles</label>
+        <div class="grid-horas" id="contenedorHoras">
+            <p style="font-size: 12px; color: #999;">Selecciona una fecha primero...</p>
         </div>
-        
-        <button onclick="enviarReserva()">AGENDAR CITA</button>
+
+        <label>Tu Información</label>
+        <input type="text" id="nombreCliente" placeholder="Tu nombre">
+        <input type="tel" id="telefonoCliente" placeholder="Tu celular">
+
+        <button class="btn-confirm" onclick="confirmar()">Confirmar Cita Now</button>
     </div>
 
-    <script>
-        async function enviarReserva() {
-            const selector = document.getElementById('barberia');
-            const datos = {
-                barberiaNombre: selector.options[selector.selectedIndex].getAttribute('data-name'),
-                barberoEmail: selector.value,
-                clienteNombre: document.getElementById('nombre').value,
-                clienteEmail: document.getElementById('email').value,
-                fecha: document.getElementById('fecha').value,
-                hora: document.getElementById('hora').value
-            };
+<script>
+    let horaElegida = "";
+    // IMPORTANTE: Esta URL debe ser la de tu servidor en Render
+    const URL_API = "https://mis-barberias.onrender.com"; 
 
-            const res = await fetch('http://localhost:3000/reservar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(datos)
+    async function cargarHoras() {
+        const fecha = document.getElementById('fechaSeleccionada').value;
+        const barbero = document.getElementById('barbero').value;
+        if(!fecha) return;
+
+        const contenedor = document.getElementById('contenedorHoras');
+        contenedor.innerHTML = "Cargando...";
+
+        try {
+            const res = await fetch(`${URL_API}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
+            const data = await res.json();
+            
+            const lista = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+            
+            contenedor.innerHTML = "";
+            lista.forEach(h => {
+                const div = document.createElement('div');
+                div.className = "slot";
+                div.innerText = h;
+                
+                if(data.ocupadas && data.ocupadas.includes(h)) {
+                    div.classList.add('disabled');
+                } else {
+                    div.onclick = () => {
+                        document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                        div.classList.add('selected');
+                        horaElegida = h;
+                    };
+                }
+                contenedor.appendChild(div);
             });
-
-            if(res.ok) alert("¡Cita confirmada! El barbero y tú han sido notificados.");
+        } catch(e) { 
+            contenedor.innerHTML = "Error al conectar con el servidor";
         }
-    </script>
-</body>
-</html>
-=======
-async function updateSchedule() {
-    const fecha = document.getElementById('fecha').value;
-    const barbero = document.getElementById('barbero').value;
-    if(!fecha) return;
+    }
 
-    // Pedimos al servidor las horas ocupadas y bloqueadas
-    const res = await fetch(`https://tu-app-en-render.onrender.com/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
-    const data = await res.json();
-    
-    const container = document.getElementById('timeSlots');
-    container.innerHTML = "";
-    
-    const horasTodoElDia = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
-    
-    horasTodoElDia.forEach(h => {
-        const div = document.createElement('div');
-        div.className = "slot";
-        div.innerText = h;
-        
-        // Si la hora está en ocupadas O en bloqueadas, se deshabilita
-        if(data.ocupadas.includes(h) || data.bloqueadas.includes(h)) {
-            div.classList.add('disabled');
-        } else {
-            div.onclick = function() {
-                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-                div.classList.add('selected');
-                timeSelected = h;
-            }
+    async function confirmar() {
+        const nombre = document.getElementById('nombreCliente').value;
+        const fecha = document.getElementById('fechaSeleccionada').value;
+        const tel = document.getElementById('telefonoCliente').value;
+        const barbero = document.getElementById('barbero').value;
+
+        if(!fecha || !horaElegida || !nombre || !tel) {
+            return alert("⚠️ Por favor, rellena todos los datos.");
         }
-        container.appendChild(div);
-    });
-}
->>>>>>> 786bac372d486c4ab1d09a2712e705b1dacbf245
+
+        try {
+            const res = await fetch(`${URL_API}/reservar`, {

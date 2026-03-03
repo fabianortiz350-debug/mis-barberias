@@ -27,7 +27,7 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'fabianortiz350@gmail.com', // Tu correo
-        pass: 'TU_CONTRASEÑA_DE_APLICACION' // Debes generarla en Google -> Seguridad
+        pass: 'gscs leli fiva kzdp' // Debes generarla en Google -> Seguridad
     }
 });
 

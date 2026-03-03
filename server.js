@@ -21,15 +21,15 @@ const Cita = mongoose.model('Cita', {
     barbero: String,
     fecha: String,
     hora: String,
-    codigoCancelacion: String
+    codigoReserva: String
 });
 
-// --- CONFIGURACIÓN DE CORREO ---
+// --- CONFIGURACIÓN DE CORREO (Gmail Profesional) ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'gscs leli fiva kzdp' // <--- PEGA AQUÍ TUS 16 LETRAS DE GOOGLE
+        pass: 'gscslelifivakzdp' // <-- Las 16 letras que generaste en Google
     }
 });
 
@@ -42,59 +42,62 @@ app.get('/disponibilidad', async (req, res) => {
     } catch (e) { res.status(500).send(e); }
 });
 
-// --- API: RESERVAR (Bloquea duplicados y genera código) ---
+// --- API: RESERVAR (Envía correo a Fabian y Cliente) ---
 app.post('/reservar', async (req, res) => {
     try {
         const { fecha, hora, barbero, clienteEmail, clienteNombre } = req.body;
 
-        // 1. Verificar si la hora ya se ocupó
         const existe = await Cita.findOne({ fecha, hora, barbero });
-        if (existe) return res.status(400).json({ error: "Esta hora ya fue reservada por alguien más." });
+        if (existe) return res.status(400).json({ error: "Esta hora ya fue reservada." });
 
-        // 2. Generar código R-XXXX
         const codigo = "R-" + Math.floor(1000 + Math.random() * 9000);
-        
-        const nuevaCita = new Cita({ ...req.body, codigoCancelacion: codigo });
+        const nuevaCita = new Cita({ ...req.body, codigoReserva: codigo });
         await nuevaCita.save();
 
-        // 3. Enviar Correo a Cliente y Barbero
+        // Configuración del Correo
         const mailOptions = {
             from: '"Master Barber VIP" <fabianortiz350@gmail.com>',
-            to: `${clienteEmail}, fabianortiz350@gmail.com`,
-            subject: `✅ Cita Confirmada [${codigo}]`,
+            to: `${clienteEmail}, fabianortiz350@gmail.com`, // Se envía a ambos
+            subject: `Reserva Confirmada [${codigo}]`,
             html: `
-                <div style="font-family: sans-serif; border: 2px solid #d4af37; padding: 20px; border-radius: 10px; background: #fafafa;">
-                    <h2 style="color: #d4af37; text-align: center;">¡Reserva Exitosa!</h2>
-                    <p>Hola <b>${clienteNombre}</b>, tu cita ha sido agendada con éxito.</p>
-                    <p><b>Barbero:</b> ${barbero}</p>
-                    <p><b>Fecha:</b> ${fecha} | <b>Hora:</b> ${hora}</p>
-                    <div style="background: #000; color: #d4af37; padding: 10px; text-align: center; font-weight: bold; border-radius: 5px;">
-                        CÓDIGO DE CANCELACIÓN: ${codigo}
+                <div style="font-family: Arial, sans-serif; border: 2px solid #d4af37; padding: 20px; text-align: center; background-color: #000; color: #fff; border-radius: 15px;">
+                    <h1 style="color: #d4af37;">MASTER BARBER VIP</h1>
+                    <p>¡Hola <b>${clienteNombre.toUpperCase()}</b>!</p>
+                    <p>Tu cita ha sido agendada correctamente.</p>
+                    <div style="background: #1a1a1a; border: 1px solid #d4af37; padding: 15px; margin: 20px auto; width: 80%; border-radius: 10px;">
+                        <p style="margin: 5px 0;"><b>Código:</b> <span style="color:#d4af37;">${codigo}</span></p>
+                        <p style="margin: 5px 0;"><b>Barbero:</b> ${barbero}</p>
+                        <p style="margin: 5px 0;"><b>Fecha:</b> ${fecha}</p>
+                        <p style="margin: 5px 0;"><b>Hora:</b> ${hora}</p>
                     </div>
-                    <p style="font-size: 11px; margin-top: 15px;">Si necesitas cancelar, usa este código en nuestra página web.</p>
+                    <p style="font-size: 12px; color: #888;">Para cancelar, usa tu correo en nuestra web.</p>
                 </div>`
         };
 
-        transporter.sendMail(mailOptions);
-        res.json({ success: true, codigo });
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) console.log("❌ Error enviando correo:", error);
+            else console.log("📧 Correo enviado con éxito");
+        });
 
+        res.json({ success: true, codigo });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- API: CANCELAR ---
+// --- API: CANCELAR (Ahora por Correo) ---
 app.post('/cancelar', async (req, res) => {
     try {
-        const { codigo } = req.body;
-        const borrado = await Cita.findOneAndDelete({ codigoCancelacion: codigo });
+        const { email } = req.body;
+        const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
+        
         if (borrado) {
-            res.json({ success: true, message: "Cita cancelada correctamente." });
+            res.json({ success: true, message: "Reserva cancelada" });
         } else {
-            res.status(404).json({ error: "Código no encontrado." });
+            res.status(404).json({ error: "No se encontró ninguna reserva activa con este correo." });
         }
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- API: VER AGENDA ---
+// --- API: VER AGENDA (Panel del Barbero) ---
 app.get('/ver-agenda', async (req, res) => {
     const { barbero } = req.query;
     const filtro = barbero ? { barbero } : {};

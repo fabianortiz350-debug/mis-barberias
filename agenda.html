@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Agenda Master Barber</title>
+    <style>
+        body { background: #000; color: #d4af37; font-family: sans-serif; padding: 20px; }
+        .filtro { margin-bottom: 20px; text-align: center; }
+        select { padding: 10px; background: #111; color: gold; border: 1px solid gold; }
+        .cita { background: #111; border: 1px solid #333; padding: 15px; margin: 10px auto; max-width: 500px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-wa { background: #25d366; color: white; padding: 8px; text-decoration: none; border-radius: 5px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">📋 AGENDA VIP</h1>
+    <div class="filtro">
+        <label>Ver agenda de:</label>
+        <select id="filtroBarbero" onchange="cargar()">
+            <option value="">Todos</option>
+            <option value="Fabian Ortiz">Fabian Ortiz</option>
+            <option value="Andrés Silva">Andrés Silva</option>
+        </select>
+    </div>
+    <div id="lista"></div>
+
+    <script>
+        async function cargar() {
+            const b = document.getElementById('filtroBarbero').value;
+            const res = await fetch(`/ver-agenda?barbero=${b}`);
+            const citas = await res.json();
+            const lista = document.getElementById('lista');
+            lista.innerHTML = "";
+            
+            citas.forEach(c => {
+                lista.innerHTML += `
+                    <div class="cita">
+                        <div>
+                            <b>${c.fecha} - ${c.hora}</b><br>
+                            <small>${c.clienteNombre}</small>
+                        </div>
+                        <a href="https://wa.me/${c.clienteTelefono}" class="btn-wa">WhatsApp</a>
+                    </div>
+                `;
+            });
+        }
+        cargar();
+    </script>
+</body>
+</html>

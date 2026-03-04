@@ -26,7 +26,7 @@ const Cita = mongoose.model('Cita', {
 // Render buscará la llave en su sección de "Environment Variables"
 const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
-    port: 587,
+    port: 2525,
     auth: {
         user: 'fabianortiz350@gmail.com',
         pass: process.env.BREVO_KEY // <--- NO CAMBIES ESTO, déjalo así tal cual.

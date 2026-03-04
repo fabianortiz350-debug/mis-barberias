@@ -22,13 +22,18 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- TRANSPORTADOR SENCILLO ---
+// --- TRANSPORTADOR SIN FILTROS ---
+// Usamos directamente el host de Gmail con el puerto 465 (Seguridad Total)
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, 
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'TU_CLAVE_DE_16_LETRAS' // <--- Usa la clave de 16 letras que creaste hoy
-    }
+        pass: 'veiuhqgfqtbbtzyt' // <--- ASEGÚRATE QUE SEA LA NUEVA SIN ESPACIOS
+    },
+    debug: true, // Esto nos dirá exactamente qué pasa en el log
+    logger: true // Esto mostrará toda la conversación con Gmail
 });
 
 app.get('/disponibilidad', async (req, res) => {
@@ -49,25 +54,20 @@ app.post('/reservar', async (req, res) => {
         const nuevaCita = new Cita({ ...req.body, codigoReserva: codigo });
         await nuevaCita.save();
 
-        // CORREO EN FORMATO TEXTO (Como el de tu captura del 24 de feb)
         const mailOptions = {
             from: 'fabianortiz350@gmail.com',
             to: `fabianortiz350@gmail.com, ${clienteEmail}`,
-            subject: `Confirmación de Cita: ${fecha} a las ${hora}`,
-            text: `¡Hola! Tienes una nueva cita.
-
-Cliente: ${clienteNombre}
-Barbero: ${barbero}
-Hora: ${hora}
-Fecha: ${fecha}
-Código de Reserva: ${codigo}
-
-Si necesitas cancelar, usa tu correo en la web.`
+            subject: `Cita Confirmada: ${fecha}`,
+            text: `Nueva reserva en Master Barber:\n\nCliente: ${clienteNombre}\nBarbero: ${barbero}\nHora: ${hora}\nFecha: ${fecha}\nCódigo: ${codigo}\n\nPara cancelar, usa tu correo en la web.`
         };
 
-        transporter.sendMail(mailOptions, (error) => {
-            if (error) console.log("❌ Error:", error.message);
-            else console.log("📧 Correo enviado");
+        // Enviamos y capturamos el log detallado
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("❌ DETALLE DEL ERROR:", error);
+            } else {
+                console.log("📧 ¡LOGRADO! Respuesta de Gmail:", info.response);
+            }
         });
 
         res.json({ success: true, codigo });
@@ -84,4 +84,4 @@ app.post('/cancelar', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor Online`));
+app.listen(PORT, () => console.log(`🚀 Servidor VIP Online`));

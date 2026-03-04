@@ -22,16 +22,27 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- CONFIGURACIÓN DE BREVO (Sustituye a Gmail) ---
+// --- CONFIGURACIÓN DE BREVO SEGURA ---
+// Render buscará la llave en su sección de "Environment Variables"
 const transporter = nodemailer.createTransport({
     host: "smtp-relay.brevo.com",
     port: 587,
     auth: {
-        user: 'fabianortiz350@gmail.com', // Tu correo de registro en Brevo
-        pass: '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' // <--- AQUÍ PEGAS LA LLAVE LARGA (xkeysib...)
+        user: 'fabianortiz350@gmail.com',
+        pass: process.env.BREVO_KEY // <--- NO CAMBIES ESTO, déjalo así tal cual.
     }
 });
 
+// --- API: DISPONIBILIDAD ---
+app.get('/disponibilidad', async (req, res) => {
+    try {
+        const { fecha, barbero } = req.query;
+        const ocupadas = await Cita.find({ fecha, barbero });
+        res.json({ ocupadas: ocupadas.map(c => c.hora) });
+    } catch (e) { res.status(500).send(e); }
+});
+
+// --- API: RESERVAR ---
 app.post('/reservar', async (req, res) => {
     try {
         const { fecha, hora, barbero, clienteEmail, clienteNombre } = req.body;
@@ -42,35 +53,39 @@ app.post('/reservar', async (req, res) => {
         const nuevaCita = new Cita({ ...req.body, codigoReserva: codigo });
         await nuevaCita.save();
 
+        // Formato de texto simple (Como el que te funcionaba el 24 de feb)
         const mailOptions = {
             from: 'fabianortiz350@gmail.com',
             to: `fabianortiz350@gmail.com, ${clienteEmail}`,
-            subject: `Reserva Master Barber VIP: ${codigo}`,
-            text: `¡Hola ${clienteNombre}! Tu cita con ${barbero} está confirmada para el ${fecha} a las ${hora}.`
+            subject: `Reserva Confirmada: ${codigo}`,
+            text: `¡Hola ${clienteNombre}! 
+            
+Tu cita con ${barbero} ha sido agendada con éxito.
+Fecha: ${fecha}
+Hora: ${hora}
+Código de reserva: ${codigo}
+
+¡Te esperamos en Master Barber VIP!`
         };
 
-        transporter.sendMail(mailOptions, (error) => {
-            if (error) console.log("❌ Error Brevo:", error.message);
-            else console.log("📧 ¡CORREO ENVIADO CON BREVO!");
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) console.log("❌ Error enviando:", error.message);
+            else console.log("📧 ¡Correo enviado con éxito!");
         });
 
         res.json({ success: true, codigo });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// Mantén el resto igual (disponibilidad, cancelar, etc.)
-app.get('/disponibilidad', async (req, res) => {
-    const { fecha, barbero } = req.query;
-    const ocupadas = await Cita.find({ fecha, barbero });
-    res.json({ ocupadas: ocupadas.map(c => c.hora) });
-});
-
+// --- API: CANCELAR ---
 app.post('/cancelar', async (req, res) => {
-    const { email } = req.body;
-    const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
-    if (borrado) res.json({ success: true, message: "Reserva cancelada" });
-    else res.status(404).json({ error: "No se encontró la reserva." });
+    try {
+        const { email } = req.body;
+        const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
+        if (borrado) res.json({ success: true, message: "Reserva cancelada" });
+        else res.status(404).json({ error: "No se encontró la reserva." });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor con Brevo Activo`));
+app.listen(PORT, () => console.log(`🚀 Servidor Master Barber Online`));

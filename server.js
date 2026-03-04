@@ -22,18 +22,18 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- TRANSPORTADOR SIN FILTROS ---
-// Usamos directamente el host de Gmail con el puerto 465 (Seguridad Total)
+// --- TRANSPORTADOR PUERTO 587 (Anti-Bloqueo Render) ---
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 465,
-    secure: true, 
+    port: 587,
+    secure: false, // IMPORTANTE: false para puerto 587
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'veiuhqgfqtbbtzyt' // <--- ASEGÚRATE QUE SEA LA NUEVA SIN ESPACIOS
+        pass: 'veiuhqgfqtbbtzyt' 
     },
-    debug: true, // Esto nos dirá exactamente qué pasa en el log
-    logger: true // Esto mostrará toda la conversación con Gmail
+    tls: {
+        rejectUnauthorized: false // Salta validaciones de seguridad que causan el timeout
+    }
 });
 
 app.get('/disponibilidad', async (req, res) => {
@@ -55,19 +55,15 @@ app.post('/reservar', async (req, res) => {
         await nuevaCita.save();
 
         const mailOptions = {
-            from: 'fabianortiz350@gmail.com',
+            from: '"Master Barber VIP" <fabianortiz350@gmail.com>',
             to: `fabianortiz350@gmail.com, ${clienteEmail}`,
             subject: `Cita Confirmada: ${fecha}`,
-            text: `Nueva reserva en Master Barber:\n\nCliente: ${clienteNombre}\nBarbero: ${barbero}\nHora: ${hora}\nFecha: ${fecha}\nCódigo: ${codigo}\n\nPara cancelar, usa tu correo en la web.`
+            text: `Nueva reserva:\nCliente: ${clienteNombre}\nBarbero: ${barbero}\nHora: ${hora}\nFecha: ${fecha}\nCódigo: ${codigo}`
         };
 
-        // Enviamos y capturamos el log detallado
         transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log("❌ DETALLE DEL ERROR:", error);
-            } else {
-                console.log("📧 ¡LOGRADO! Respuesta de Gmail:", info.response);
-            }
+            if (error) console.log("❌ Sigue el error:", error.message);
+            else console.log("📧 ¡LOGRADO! Correo enviado!");
         });
 
         res.json({ success: true, codigo });

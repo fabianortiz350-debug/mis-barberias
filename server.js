@@ -23,17 +23,14 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- CONFIGURACIÓN DE CORREO REFORZADA ---
+// --- CONFIGURACIÓN DE CORREO (MODO SEGURO 465) ---
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // true para 465, false para otros puertos
+    port: 465,
+    secure: true, // TRUE para puerto 465
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'gscslelifivakzdp' // <--- ASEGÚRATE QUE NO TENGA ESPACIOS
-    },
-    tls: {
-        rejectUnauthorized: false // Esto ayuda a evitar bloqueos en servidores externos
+        pass: 'wnqezueeqqhryjcj' // <--- ASEGÚRATE QUE NO TENGA ESPACIOS
     }
 });
 
@@ -64,24 +61,22 @@ app.post('/reservar', async (req, res) => {
             subject: `Confirmación de Reserva [${codigo}]`,
             html: `
                 <div style="font-family: Arial, sans-serif; border: 2px solid #d4af37; padding: 20px; background-color: #000; color: #fff; border-radius: 15px; text-align: center;">
-                    <h1 style="color: #d4af37;">MASTER BARBER</h1>
-                    <p>¡Hola <b>${clienteNombre}</b>!</p>
-                    <p>Tu cita con <b>${barbero}</b> ha sido confirmada.</p>
-                    <div style="border: 1px solid #d4af37; padding: 10px; margin: 20px 0;">
-                        <p>FECHA: ${fecha} | HORA: ${hora}</p>
-                        <p style="font-size: 20px; font-weight: bold; color: #d4af37;">CÓDIGO: ${codigo}</p>
+                    <h1 style="color: #d4af37; letter-spacing: 5px;">MASTER BARBER</h1>
+                    <p>¡Hola <b>${clienteNombre.toUpperCase()}</b>!</p>
+                    <p>Tu cita ha sido confirmada con éxito.</p>
+                    <div style="border: 1px solid #d4af37; padding: 15px; margin: 20px auto; width: 80%;">
+                        <p><b>BARBERO:</b> ${barbero}</p>
+                        <p><b>FECHA:</b> ${fecha} | <b>HORA:</b> ${hora}</p>
+                        <p style="font-size: 22px; font-weight: bold; color: #d4af37; margin-top: 10px;">CÓDIGO: ${codigo}</p>
                     </div>
-                    <p style="font-size: 12px; color: #888;">Si necesitas cancelar, usa tu correo en nuestra web.</p>
+                    <p style="font-size: 11px; color: #888;">Si necesitas cancelar, usa tu correo en nuestra web oficial.</p>
                 </div>`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log("❌ Error de correo detallado:", error.message);
-            } else {
-                console.log("📧 Correo enviado con éxito:", info.response);
-            }
-        });
+        // Enviando el correo de forma asíncrona pero rastreable
+        transporter.sendMail(mailOptions)
+            .then(info => console.log("📧 Correo enviado:", info.response))
+            .catch(err => console.log("❌ Error persistente de correo:", err.message));
 
         res.json({ success: true, codigo });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -93,7 +88,7 @@ app.post('/cancelar', async (req, res) => {
         const { email } = req.body;
         const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
         if (borrado) res.json({ success: true, message: "Reserva cancelada" });
-        else res.status(404).json({ error: "No se encontró la reserva." });
+        else res.status(404).json({ error: "Correo no encontrado." });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

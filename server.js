@@ -2,7 +2,6 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
-const path = require('path');
 const app = express();
 
 app.use(cors());
@@ -23,16 +22,15 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- CONFIGURACIÓN CLÁSICA (La que funcionó antes) ---
+// --- TRANSPORTADOR SENCILLO ---
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'wnqezueeqqhryjcj' // <--- PEGA AQUÍ LA NUEVA QUE CREASTE
+        pass: 'TU_CLAVE_DE_16_LETRAS' // <--- Usa la clave de 16 letras que creaste hoy
     }
 });
 
-// --- API: DISPONIBILIDAD ---
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
@@ -41,7 +39,6 @@ app.get('/disponibilidad', async (req, res) => {
     } catch (e) { res.status(500).send(e); }
 });
 
-// --- API: RESERVAR ---
 app.post('/reservar', async (req, res) => {
     try {
         const { fecha, hora, barbero, clienteEmail, clienteNombre } = req.body;
@@ -52,39 +49,37 @@ app.post('/reservar', async (req, res) => {
         const nuevaCita = new Cita({ ...req.body, codigoReserva: codigo });
         await nuevaCita.save();
 
+        // CORREO EN FORMATO TEXTO (Como el de tu captura del 24 de feb)
         const mailOptions = {
-            from: 'Master Barber VIP <fabianortiz350@gmail.com>',
-            to: `${clienteEmail}, fabianortiz350@gmail.com`,
-            subject: `Reserva Confirmada [${codigo}]`,
-            html: `
-                <div style="font-family: sans-serif; border: 2px solid #d4af37; padding: 20px; text-align: center; background: #000; color: #fff; border-radius: 10px;">
-                    <h1 style="color: #d4af37;">MASTER BARBER VIP</h1>
-                    <p>¡Hola <b>${clienteNombre}</b>!</p>
-                    <p>Tu cita con <b>${barbero}</b> ha sido confirmada.</p>
-                    <div style="background: #1a1a1a; padding: 15px; border: 1px solid #d4af37; margin: 15px 0;">
-                        <p>FECHA: ${fecha} | HORA: ${hora}</p>
-                        <p style="font-size: 20px; font-weight: bold; color: #d4af37;">CÓDIGO: ${codigo}</p>
-                    </div>
-                    <p style="font-size: 11px; color: #888;">Para cancelar, ingresa tu correo en nuestra web.</p>
-                </div>`
+            from: 'fabianortiz350@gmail.com',
+            to: `fabianortiz350@gmail.com, ${clienteEmail}`,
+            subject: `Confirmación de Cita: ${fecha} a las ${hora}`,
+            text: `¡Hola! Tienes una nueva cita.
+
+Cliente: ${clienteNombre}
+Barbero: ${barbero}
+Hora: ${hora}
+Fecha: ${fecha}
+Código de Reserva: ${codigo}
+
+Si necesitas cancelar, usa tu correo en la web.`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) console.log("❌ Error de correo:", error.message);
-            else console.log("📧 Correo enviado con éxito!");
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) console.log("❌ Error:", error.message);
+            else console.log("📧 Correo enviado");
         });
 
         res.json({ success: true, codigo });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- API: CANCELAR ---
 app.post('/cancelar', async (req, res) => {
     try {
         const { email } = req.body;
         const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
         if (borrado) res.json({ success: true, message: "Reserva cancelada" });
-        else res.status(404).json({ error: "Correo no encontrado." });
+        else res.status(404).json({ error: "No se encontró la reserva." });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

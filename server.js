@@ -22,26 +22,14 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- TRANSPORTADOR PUERTO 587 (Anti-Bloqueo Render) ---
+// --- CONFIGURACIÓN DE BREVO (Sustituye a Gmail) ---
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
+    host: "smtp-relay.brevo.com",
     port: 587,
-    secure: false, // IMPORTANTE: false para puerto 587
     auth: {
-        user: 'fabianortiz350@gmail.com',
-        pass: 'veiuhqgfqtbbtzyt' 
-    },
-    tls: {
-        rejectUnauthorized: false // Salta validaciones de seguridad que causan el timeout
+        user: 'fabianortiz350@gmail.com', // Tu correo de registro en Brevo
+        pass: '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' // <--- AQUÍ PEGAS LA LLAVE LARGA (xkeysib...)
     }
-});
-
-app.get('/disponibilidad', async (req, res) => {
-    try {
-        const { fecha, barbero } = req.query;
-        const ocupadas = await Cita.find({ fecha, barbero });
-        res.json({ ocupadas: ocupadas.map(c => c.hora) });
-    } catch (e) { res.status(500).send(e); }
 });
 
 app.post('/reservar', async (req, res) => {
@@ -55,29 +43,34 @@ app.post('/reservar', async (req, res) => {
         await nuevaCita.save();
 
         const mailOptions = {
-            from: '"Master Barber VIP" <fabianortiz350@gmail.com>',
+            from: 'fabianortiz350@gmail.com',
             to: `fabianortiz350@gmail.com, ${clienteEmail}`,
-            subject: `Cita Confirmada: ${fecha}`,
-            text: `Nueva reserva:\nCliente: ${clienteNombre}\nBarbero: ${barbero}\nHora: ${hora}\nFecha: ${fecha}\nCódigo: ${codigo}`
+            subject: `Reserva Master Barber VIP: ${codigo}`,
+            text: `¡Hola ${clienteNombre}! Tu cita con ${barbero} está confirmada para el ${fecha} a las ${hora}.`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) console.log("❌ Sigue el error:", error.message);
-            else console.log("📧 ¡LOGRADO! Correo enviado!");
+        transporter.sendMail(mailOptions, (error) => {
+            if (error) console.log("❌ Error Brevo:", error.message);
+            else console.log("📧 ¡CORREO ENVIADO CON BREVO!");
         });
 
         res.json({ success: true, codigo });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// Mantén el resto igual (disponibilidad, cancelar, etc.)
+app.get('/disponibilidad', async (req, res) => {
+    const { fecha, barbero } = req.query;
+    const ocupadas = await Cita.find({ fecha, barbero });
+    res.json({ ocupadas: ocupadas.map(c => c.hora) });
+});
+
 app.post('/cancelar', async (req, res) => {
-    try {
-        const { email } = req.body;
-        const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
-        if (borrado) res.json({ success: true, message: "Reserva cancelada" });
-        else res.status(404).json({ error: "No se encontró la reserva." });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+    const { email } = req.body;
+    const borrado = await Cita.findOneAndDelete({ clienteEmail: email });
+    if (borrado) res.json({ success: true, message: "Reserva cancelada" });
+    else res.status(404).json({ error: "No se encontró la reserva." });
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor VIP Online`));
+app.listen(PORT, () => console.log(`🚀 Servidor con Brevo Activo`));

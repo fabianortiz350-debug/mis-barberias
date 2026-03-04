@@ -30,7 +30,7 @@ const transporter = nodemailer.createTransport({
     secure: false, // true para 465, false para otros puertos
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'TU_CLAVE_DE_16_LETRAS' // <--- ASEGÚRATE QUE NO TENGA ESPACIOS
+        pass: 'gscslelifivakzdp' // <--- ASEGÚRATE QUE NO TENGA ESPACIOS
     },
     tls: {
         rejectUnauthorized: false // Esto ayuda a evitar bloqueos en servidores externos

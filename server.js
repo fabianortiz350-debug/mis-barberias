@@ -23,14 +23,12 @@ const Cita = mongoose.model('Cita', {
     codigoReserva: String
 });
 
-// --- CONFIGURACIÓN DE CORREO (MODO SEGURO 465) ---
+// --- CONFIGURACIÓN CLÁSICA (La que funcionó antes) ---
 const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true, // TRUE para puerto 465
+    service: 'gmail',
     auth: {
         user: 'fabianortiz350@gmail.com',
-        pass: 'wnqezueeqqhryjcj' // <--- ASEGÚRATE QUE NO TENGA ESPACIOS
+        pass: 'wnqezueeqqhryjcj' // <--- PEGA AQUÍ LA NUEVA QUE CREASTE
     }
 });
 
@@ -54,29 +52,27 @@ app.post('/reservar', async (req, res) => {
         const nuevaCita = new Cita({ ...req.body, codigoReserva: codigo });
         await nuevaCita.save();
 
-        // Estructura del Correo
         const mailOptions = {
-            from: '"Master Barber VIP" <fabianortiz350@gmail.com>',
+            from: 'Master Barber VIP <fabianortiz350@gmail.com>',
             to: `${clienteEmail}, fabianortiz350@gmail.com`,
-            subject: `Confirmación de Reserva [${codigo}]`,
+            subject: `Reserva Confirmada [${codigo}]`,
             html: `
-                <div style="font-family: Arial, sans-serif; border: 2px solid #d4af37; padding: 20px; background-color: #000; color: #fff; border-radius: 15px; text-align: center;">
-                    <h1 style="color: #d4af37; letter-spacing: 5px;">MASTER BARBER</h1>
-                    <p>¡Hola <b>${clienteNombre.toUpperCase()}</b>!</p>
-                    <p>Tu cita ha sido confirmada con éxito.</p>
-                    <div style="border: 1px solid #d4af37; padding: 15px; margin: 20px auto; width: 80%;">
-                        <p><b>BARBERO:</b> ${barbero}</p>
-                        <p><b>FECHA:</b> ${fecha} | <b>HORA:</b> ${hora}</p>
-                        <p style="font-size: 22px; font-weight: bold; color: #d4af37; margin-top: 10px;">CÓDIGO: ${codigo}</p>
+                <div style="font-family: sans-serif; border: 2px solid #d4af37; padding: 20px; text-align: center; background: #000; color: #fff; border-radius: 10px;">
+                    <h1 style="color: #d4af37;">MASTER BARBER VIP</h1>
+                    <p>¡Hola <b>${clienteNombre}</b>!</p>
+                    <p>Tu cita con <b>${barbero}</b> ha sido confirmada.</p>
+                    <div style="background: #1a1a1a; padding: 15px; border: 1px solid #d4af37; margin: 15px 0;">
+                        <p>FECHA: ${fecha} | HORA: ${hora}</p>
+                        <p style="font-size: 20px; font-weight: bold; color: #d4af37;">CÓDIGO: ${codigo}</p>
                     </div>
-                    <p style="font-size: 11px; color: #888;">Si necesitas cancelar, usa tu correo en nuestra web oficial.</p>
+                    <p style="font-size: 11px; color: #888;">Para cancelar, ingresa tu correo en nuestra web.</p>
                 </div>`
         };
 
-        // Enviando el correo de forma asíncrona pero rastreable
-        transporter.sendMail(mailOptions)
-            .then(info => console.log("📧 Correo enviado:", info.response))
-            .catch(err => console.log("❌ Error persistente de correo:", err.message));
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) console.log("❌ Error de correo:", error.message);
+            else console.log("📧 Correo enviado con éxito!");
+        });
 
         res.json({ success: true, codigo });
     } catch (e) { res.status(500).json({ error: e.message }); }
@@ -93,4 +89,4 @@ app.post('/cancelar', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor Online en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor Online`));

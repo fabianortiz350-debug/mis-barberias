@@ -28,7 +28,7 @@ const transporter = nodemailer.createTransport({
     port: 587,
     auth: {
         user: 'fabianortiz350@gmail.com', // Tu correo de registro en Brevo
-        pass: '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' // <--- AQUÍ PEGAS LA LLAVE LARGA (xkeysib...)
+        pass: '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' // <--- AQUÍ PEGAS LA LLAVE LARGA (xkeysib...)
     }
 });
 

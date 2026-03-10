@@ -1,7 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 const { google } = require('googleapis'); 
+const Brevo = require('@getbrevo/brevo'); // NUEVO: Importar Brevo
 const app = express();
 
 app.use(cors());
@@ -25,26 +27,64 @@ const Cita = mongoose.model('Cita', {
     hora: String
 });
 
+// NUEVO: Esquema para Usuarios y Códigos de verificación
+const Usuario = mongoose.model('Usuario', {
+    correo: String,
+    codigoVerificacion: String,
+    verificado: { type: Boolean, default: false }
+});
+
 // --- CONFIGURACIÓN GOOGLE CALENDAR ---
-// ⚠️ Nota: Para escribir en el calendario necesitas credenciales JSON (OAuth2), 
-// no solo una API Key simple. Asegúrate de tener la variable de entorno correcta.
 const calendar = google.calendar({
     version: 'v3',
     auth: process.env.GOOGLE_CALENDAR_API_KEY
 });
+
+// --- NUEVA: CONFIGURACIÓN DE API BREVO ---
+let apiInstance = new Brevo.TransactionalEmailsApi();
+let apiKey = apiInstance.authentications['apiKey'];
+apiKey.apiKey = process.env.BREVO_KEY; // Usa tu variable de Render
 
 // --- RUTA PARA MOSTRAR TU PÁGINA ---
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
+// --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO (BREVO API) ---
+app.post('/api/auth/enviar-codigo', async (req, res) => {
+    const { correo } = req.body;
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+
+    try {
+        // Guardar código en la base de datos
+        await Usuario.findOneAndUpdate(
+            { correo }, 
+            { codigoVerificacion: codigo }, 
+            { upsert: true }
+        );
+
+        // Configurar el envío vía API de Brevo
+        let sendSmtpEmail = new Brevo.SendSmtpEmail();
+        sendSmtpEmail.subject = "Tu código de seguridad - Agendate Live";
+        sendSmtpEmail.htmlContent = `<h3>Bienvenido</h3><p>Tu código de verificación es: <b>${codigo}</b></p>`;
+        sendSmtpEmail.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
+        sendSmtpEmail.to = [{ "email": correo }];
+
+        await apiInstance.sendTransacEmail(sendSmtpEmail);
+        
+        console.log(`✅ Correo enviado con éxito a: ${correo}`);
+        res.json({ mensaje: "Código enviado" });
+
+    } catch (error) {
+        console.error("❌ Error API Brevo:", error.response ? error.response.body : error);
+        res.status(500).json({ mensaje: "Error al enviar el correo" });
+    }
+});
+
 // --- ✅ RUTA: CARGAR HORAS DISPONIBLES ---
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
-        console.log(`Consultando disponibilidad para ${barbero} el ${fecha}`);
-
-        // Por ahora simulamos sin citas ocupadas para que funcione.
         res.json({
             ocupadas: [],
             bloqueadas: []
@@ -60,15 +100,12 @@ app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, barbero, fecha, hora } = req.body;
         
-        // A. Guardar en la base de datos
         const nuevaCita = new Cita(req.body);
         await nuevaCita.save();
-        console.log("Cita guardada en DB ✅");
 
-        // B. CREAR EVENTO EN GOOGLE CALENDAR
         try {
             const startDateTime = new Date(`${fecha}T${hora}:00`);
-            const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000); // 1 hora después
+            const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
 
             await calendar.events.insert({
                 calendarId: 'primary',
@@ -76,19 +113,12 @@ app.post('/reservar', async (req, res) => {
                     summary: `💈 Cita: ${clienteNombre} - ${barbero}`,
                     location: 'Master Barber VIP',
                     description: `Teléfono: ${clienteTelefono}`,
-                    start: {
-                        dateTime: startDateTime.toISOString(),
-                        timeZone: 'America/Bogota',
-                    },
-                    end: {
-                        dateTime: endDateTime.toISOString(),
-                        timeZone: 'America/Bogota',
-                    },
+                    start: { dateTime: startDateTime.toISOString(), timeZone: 'America/Bogota' },
+                    end: { dateTime: endDateTime.toISOString(), timeZone: 'America/Bogota' },
                 },
             });
             console.log("Evento creado en Google Calendar ✅");
         } catch (calError) {
-            // 🔥 LOG DETALLADO PARA DEPURAR
             console.error("❌ ERROR CRÍTICO EN CALENDAR:", JSON.stringify(calError, null, 2));
         }
 
@@ -100,5 +130,5 @@ app.post('/reservar', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000; // Ajustado a 10000 para Render
 app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));

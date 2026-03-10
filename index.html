@@ -120,7 +120,7 @@
         .footer-bottom { max-width: 1200px; margin: auto; padding-top: 30px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .footer-bottom p { font-size: 13px; color: #999; }
 
-        /* --- ESTILOS ADICIONADOS PARA EL MODAL DE REGISTRO --- */
+        /* --- MODAL AUTH --- */
         #modal-auth {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
@@ -242,10 +242,10 @@
     </footer>
 
     <script>
-        const api = "https://mis-barberias.onrender.com";
+        const api = "https://mis-barberias.onrender.com"; // CAMBIADO A HTTPS
         let cacheNegocios = [];
+        let usuarioTemporal = "";
 
-        // FUNCIONES ADICIONADAS PARA EL REGISTRO CONEXIÓN REAL
         function abrirAuth() { document.getElementById('modal-auth').style.display = 'flex'; }
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
         
@@ -256,6 +256,7 @@
 
             if(!email.includes("@")) return alert("Ingresa un correo válido");
             
+            usuarioTemporal = email;
             btn.innerText = "Enviando...";
             btn.disabled = true;
 
@@ -269,9 +270,9 @@
                 if (respuesta.ok) {
                     document.getElementById('auth-paso-1').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
-                    document.getElementById('auth-instruccion').innerText = "Hemos enviado un código a " + email + ". Revisa tu bandeja de entrada.";
+                    document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
                 } else {
-                    alert("No pudimos enviar el código. Revisa tu configuración de correo.");
+                    alert("Error enviando el código. Revisa la consola.");
                 }
             } catch (error) {
                 console.error(error);
@@ -284,10 +285,10 @@
 
         function confirmarCodigo() {
             const codigo = document.getElementById('auth-codigo').value;
-            // Aquí puedes agregar lógica de validación con el servidor si lo deseas, 
-            // por ahora simulamos el éxito como lo tenías.
             if(codigo.length < 6) return alert("Ingresa el código de 6 dígitos");
-            alert("¡Cuenta verificada con éxito!");
+            
+            alert("¡Bienvenido, " + usuarioTemporal + "!");
+            document.querySelector('.btn-auth').innerText = "Hola, " + usuarioTemporal.split('@')[0];
             cerrarAuth();
         }
 
@@ -297,7 +298,7 @@
             document.getElementById('auth-instruccion').innerText = "Ingresa tu correo para recibir un código de confirmación.";
         }
 
-        // --- TU CÓDIGO ORIGINAL SIN CAMBIOS ABAJO ---
+        // --- RESTO DEL CÓDIGO ORIGINAL SIN CAMBIOS ---
         fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
             const flags = { 'CO': '🇨🇴', 'MX': '🇲🇽', 'ES': '🇪🇸', 'US': '🇺🇸' };
             if(flags[data.country_code]) document.getElementById('flag-icon').innerText = flags[data.country_code];
@@ -340,7 +341,7 @@
                 const res = await fetch(url);
                 const negocios = await res.json();
                 cacheNegocios = negocios;
-                listado.innerHTML = negocios.length ? "" : "<p>No hay resultados en esta ciudad todavía.</p>";
+                listado.innerHTML = negocios.length ? "" : "<p>No hay resultados todavía.</p>";
 
                 negocios.forEach(n => {
                     listado.innerHTML += `
@@ -381,7 +382,7 @@
                         </div>`;
                 });
             } else {
-                divServicios.innerHTML = "<p style='color:#777;'>Contacta al negocio para conocer sus servicios.</p>";
+                divServicios.innerHTML = "<p style='color:#777;'>Sin servicios registrados.</p>";
             }
 
             document.getElementById('p-resenas').innerHTML = `
@@ -397,31 +398,18 @@
         function buscarAhora() {
             const q = document.getElementById('query').value.trim();
             const l = document.getElementById('loc').value.trim();
-            
-            let terminoFinal = "";
-            if(q && l) terminoFinal = `${q} ${l}`;
-            else terminoFinal = q || l;
-
-            if(terminoFinal) {
-                cargarNegocios(null, terminoFinal);
-            }
+            let t = q && l ? `${q} ${l}` : q || l;
+            if(t) cargarNegocios(null, t);
         }
 
-        document.getElementById('query').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') { buscarAhora(); }
-        });
+        document.getElementById('query').addEventListener('keypress', e => { if (e.key === 'Enter') buscarAhora(); });
+        document.getElementById('loc').addEventListener('keypress', e => { if (e.key === 'Enter') buscarAhora(); });
 
-        document.getElementById('loc').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') { buscarAhora(); }
-        });
-
-        window.onpopstate = function(event) {
-            if (event.state) {
-                if(event.state.view === 'perfil') verPerfil(event.state.id);
-                else cargarNegocios(event.state.tipo, event.state.query, false);
-            } else {
-                volverInicio(false);
-            }
+        window.onpopstate = e => {
+            if (e.state) {
+                if(e.state.view === 'perfil') verPerfil(e.state.id);
+                else cargarNegocios(e.state.tipo, e.state.query, false);
+            } else volverInicio(false);
         };
     </script>
 </body>

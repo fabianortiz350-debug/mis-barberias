@@ -28,9 +28,21 @@
         .logo { font-weight: 800; font-size: 20px; cursor: pointer; color: var(--primary); text-decoration: none; }
         .logo span { color: var(--accent); }
 
-        .nav-actions { display: flex; align-items: center; gap: 12px; }
+        .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
         .lang-selector { font-size: 22px; cursor: pointer; }
         .btn-auth { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 11px; cursor: pointer; white-space: nowrap; }
+
+        /* --- MENU DESPLEGABLE --- */
+        .user-menu {
+            position: absolute; top: 110%; right: 0; background: white; 
+            min-width: 180px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            display: none; flex-direction: column; overflow: hidden; border: 1px solid #eee; z-index: 2001;
+        }
+        .user-menu.active { display: flex; animation: slideDown 0.3s ease; }
+        .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f5f5f5; }
+        .user-menu-item:hover { background: #f9f9f9; color: var(--accent); }
+        .user-menu-item:last-child { border-bottom: none; color: #ff4444; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- BUSCADOR --- */
         .search-container {
@@ -140,7 +152,13 @@
             <div class="logo" onclick="volverInicio(true)">AGENDATE<span>LIVE</span></div>
             <div class="nav-actions">
                 <span id="flag-icon" class="lang-selector">🇨🇴</span>
-                <button class="btn-auth" onclick="abrirAuth()">Iniciar sesión o Regístrate</button>
+                <button class="btn-auth" id="btn-auth-main" onclick="abrirAuth()">Iniciar sesión o Regístrate</button>
+                
+                <div class="user-menu" id="user-menu-dropdown">
+                    <div class="user-menu-item">👤 Mi Perfil</div>
+                    <div class="user-menu-item">📅 Mis Citas</div>
+                    <div class="user-menu-item" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
+                </div>
             </div>
         </div>
         
@@ -242,11 +260,19 @@
     </footer>
 
     <script>
-        const api = "https://mis-barberias.onrender.com"; // CAMBIADO A HTTPS
+        const api = "https://mis-barberias.onrender.com"; 
         let cacheNegocios = [];
         let usuarioTemporal = "";
+        let usuarioLogueado = false;
 
-        function abrirAuth() { document.getElementById('modal-auth').style.display = 'flex'; }
+        function abrirAuth() { 
+            if(usuarioLogueado) {
+                document.getElementById('user-menu-dropdown').classList.toggle('active');
+            } else {
+                document.getElementById('modal-auth').style.display = 'flex'; 
+            }
+        }
+        
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
         
         async function solicitarCodigo() {
@@ -287,10 +313,33 @@
             const codigo = document.getElementById('auth-codigo').value;
             if(codigo.length < 6) return alert("Ingresa el código de 6 dígitos");
             
-            alert("¡Bienvenido, " + usuarioTemporal + "!");
-            document.querySelector('.btn-auth').innerText = "Hola, " + usuarioTemporal.split('@')[0];
+            usuarioLogueado = true;
+            const nombreMostrar = usuarioTemporal.split('@')[0];
+            const btnAuth = document.getElementById('btn-auth-main');
+            
+            btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
+            btnAuth.style.background = "var(--accent)";
+            
             cerrarAuth();
+            alert("¡Bienvenido!");
         }
+
+        function cerrarSesion() {
+            usuarioLogueado = false;
+            usuarioTemporal = "";
+            const btnAuth = document.getElementById('btn-auth-main');
+            btnAuth.innerText = "Iniciar sesión o Regístrate";
+            btnAuth.style.background = "var(--primary)";
+            document.getElementById('user-menu-dropdown').classList.remove('active');
+            alert("Sesión cerrada");
+        }
+
+        // Cerrar menú al hacer clic fuera
+        window.addEventListener('click', (e) => {
+            if (!e.target.matches('#btn-auth-main')) {
+                document.getElementById('user-menu-dropdown').classList.remove('active');
+            }
+        });
 
         function regresarPaso1() {
             document.getElementById('auth-paso-1').style.display = 'block';
@@ -298,7 +347,6 @@
             document.getElementById('auth-instruccion').innerText = "Ingresa tu correo para recibir un código de confirmación.";
         }
 
-        // --- RESTO DEL CÓDIGO ORIGINAL SIN CAMBIOS ---
         fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
             const flags = { 'CO': '🇨🇴', 'MX': '🇲🇽', 'ES': '🇪🇸', 'US': '🇺🇸' };
             if(flags[data.country_code]) document.getElementById('flag-icon').innerText = flags[data.country_code];

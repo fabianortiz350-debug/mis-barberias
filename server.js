@@ -3,22 +3,19 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const { google } = require('googleapis'); 
-const Brevo = require('@getbrevo/brevo'); // NUEVO: Importar Brevo
+const Brevo = require('@getbrevo/brevo'); 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Servir archivos estáticos
 app.use(express.static(__dirname));
 
-// --- CONEXIÓN A MONGODB ---
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
 mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
     .catch(err => console.error("❌ Error de conexión:", err));
 
-// Esquema para guardar las citas
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
@@ -27,46 +24,46 @@ const Cita = mongoose.model('Cita', {
     hora: String
 });
 
-// NUEVO: Esquema para Usuarios y Códigos de verificación
+// MODIFICADO: Añadimos fechaExpiracion para que el código muera a los 5 min
 const Usuario = mongoose.model('Usuario', {
     correo: String,
     codigoVerificacion: String,
+    fechaExpiracion: Date, // NUEVO
     verificado: { type: Boolean, default: false }
 });
 
-// --- CONFIGURACIÓN GOOGLE CALENDAR ---
 const calendar = google.calendar({
     version: 'v3',
     auth: process.env.GOOGLE_CALENDAR_API_KEY
 });
 
-// --- NUEVA: CONFIGURACIÓN DE API BREVO ---
 let apiInstance = new Brevo.TransactionalEmailsApi();
 let apiKey = apiInstance.authentications['apiKey'];
-apiKey.apiKey = process.env.BREVO_KEY; // Usa tu variable de Render
+apiKey.apiKey = process.env.BREVO_KEY; 
 
-// --- RUTA PARA MOSTRAR TU PÁGINA ---
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO (BREVO API) ---
+// --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO (MODIFICADA CON EXPIRACIÓN) ---
 app.post('/api/auth/enviar-codigo', async (req, res) => {
     const { correo } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiracion = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos desde ahora
 
     try {
-        // Guardar código en la base de datos
         await Usuario.findOneAndUpdate(
             { correo }, 
-            { codigoVerificacion: codigo }, 
+            { 
+                codigoVerificacion: codigo,
+                fechaExpiracion: expiracion // Guardamos cuando vence
+            }, 
             { upsert: true }
         );
 
-        // Configurar el envío vía API de Brevo
         let sendSmtpEmail = new Brevo.SendSmtpEmail();
         sendSmtpEmail.subject = "Tu código de seguridad - Agendate Live";
-        sendSmtpEmail.htmlContent = `<h3>Bienvenido</h3><p>Tu código de verificación es: <b>${codigo}</b></p>`;
+        sendSmtpEmail.htmlContent = `<h3>Bienvenido</h3><p>Tu código de verificación es: <b>${codigo}</b></p><p>Este código expirará en 5 minutos.</p>`;
         sendSmtpEmail.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         sendSmtpEmail.to = [{ "email": correo }];
 
@@ -81,7 +78,37 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: CARGAR HORAS DISPONIBLES ---
+// --- ✅ NUEVA RUTA: VERIFICAR CÓDIGO (ESTA NO ESTABA EN TU CÓDIGO) ---
+app.post('/api/auth/verificar', async (req, res) => {
+    const { correo, codigo } = req.body;
+
+    try {
+        const usuario = await Usuario.findOne({ correo });
+
+        if (!usuario || !usuario.codigoVerificacion) {
+            return res.status(400).json({ success: false, mensaje: "No hay un código activo. Pide uno nuevo." });
+        }
+
+        // 1. Verificar si ya expiró por tiempo
+        if (new Date() > usuario.fechaExpiracion) {
+            await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null }); // Limpiar código vencido
+            return res.status(400).json({ success: false, mensaje: "El código ha expirado (5 min). Pide otro." });
+        }
+
+        // 2. Verificar si el código coincide
+        if (usuario.codigoVerificacion === codigo) {
+            // EXITO: Borramos el código para que sea DE UN SOLO USO
+            await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null }); 
+            res.json({ success: true, mensaje: "Acceso concedido" });
+        } else {
+            res.status(400).json({ success: false, mensaje: "Código incorrecto." });
+        }
+
+    } catch (error) {
+        res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+    }
+});
+
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
@@ -95,7 +122,6 @@ app.get('/disponibilidad', async (req, res) => {
     }
 });
 
-// --- RUTA PARA RESERVAR ---
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, barbero, fecha, hora } = req.body;
@@ -130,5 +156,5 @@ app.post('/reservar', async (req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 10000; // Ajustado a 10000 para Render
+const PORT = process.env.PORT || 10000; 
 app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));

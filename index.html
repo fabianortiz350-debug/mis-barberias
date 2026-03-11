@@ -229,7 +229,10 @@
             <div id="auth-paso-2" style="display:none;">
                 <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
                 <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Cambiar correo</p>
+                <p style="font-size: 12px; margin-top: 15px; color: #888;">
+                    ¿No recibiste el código? <span onclick="solicitarCodigo()" style="color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline;">Reenviar ahora</span>
+                </p>
+                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Cambiar correo</p>
             </div>
         </div>
     </div>
@@ -309,19 +312,39 @@
             }
         }
 
-        function confirmarCodigo() {
-            const codigo = document.getElementById('auth-codigo').value;
+        async function confirmarCodigo() {
+            const codigoInput = document.getElementById('auth-codigo');
+            const codigo = codigoInput.value.trim();
+
             if(codigo.length < 6) return alert("Ingresa el código de 6 dígitos");
-            
-            usuarioLogueado = true;
-            const nombreMostrar = usuarioTemporal.split('@')[0];
-            const btnAuth = document.getElementById('btn-auth-main');
-            
-            btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
-            btnAuth.style.background = "var(--accent)";
-            
-            cerrarAuth();
-            alert("¡Bienvenido!");
+
+            try {
+                const respuesta = await fetch(`${api}/api/auth/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: usuarioTemporal, codigo: codigo })
+                });
+
+                const data = await respuesta.json();
+
+                if (data.success) {
+                    usuarioLogueado = true;
+                    const nombreMostrar = usuarioTemporal.split('@')[0];
+                    const btnAuth = document.getElementById('btn-auth-main');
+                    
+                    btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
+                    btnAuth.style.background = "var(--accent)";
+                    
+                    codigoInput.value = "";
+                    cerrarAuth();
+                    alert("¡Bienvenido!");
+                } else {
+                    alert(data.mensaje || "Código incorrecto o expirado.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión con el servidor.");
+            }
         }
 
         function cerrarSesion() {
@@ -334,7 +357,6 @@
             alert("Sesión cerrada");
         }
 
-        // Cerrar menú al hacer clic fuera
         window.addEventListener('click', (e) => {
             if (!e.target.matches('#btn-auth-main')) {
                 document.getElementById('user-menu-dropdown').classList.remove('active');

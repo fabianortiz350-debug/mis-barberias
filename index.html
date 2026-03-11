@@ -110,13 +110,20 @@
         .biz-info { padding: 20px; }
         .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 
-        #perfil-detalle { display: none; animation: fadeIn 0.4s ease; }
+        #perfil-detalle, #seccion-mis-citas { display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
         .servicio-item:hover { border-color: var(--accent); background: white; }
         
+        /* Estilos para las tarjetas de cita en el historial */
+        .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .status-asignada { background: var(--pastel-blue); color: #007bff; }
+        .status-asistida { background: var(--pastel-green); color: #28a745; }
+        .status-cancelada { background: #ffebee; color: #dc3545; }
+
         .resenas-container { margin-top: 50px; padding-top: 30px; border-top: 1px solid #eee; }
         .resena-card { background: var(--pastel-blue); padding: 20px; border-radius: 25px; margin-bottom: 15px; font-size: 14px; border: 1px solid rgba(0,0,0,0.02); }
         .rating-stars { color: var(--accent); font-size: 14px; margin-bottom: 8px; display: block; }
@@ -145,7 +152,7 @@
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
     </style>
 </head>
-<body>
+<body onload="verificarSesionAlCargar()">
 
     <nav>
         <div class="nav-top-row">
@@ -156,7 +163,7 @@
                 
                 <div class="user-menu" id="user-menu-dropdown">
                     <div class="user-menu-item">👤 Mi Perfil</div>
-                    <div class="user-menu-item">📅 Mis Citas</div>
+                    <div class="user-menu-item" onclick="mostrarMisCitas()">📅 Mis Citas</div>
                     <div class="user-menu-item" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
                 </div>
             </div>
@@ -202,24 +209,26 @@
             <img id="p-imagen" class="foto-perfil" src="" alt="Negocio">
             <h1 id="p-nombre" style="font-weight: 800; margin: 0 0 10px 0; font-size: 32px;"></h1>
             <p id="p-ubicacion" style="color: #666; font-size: 16px; margin-bottom: 30px;"></p>
-            
             <h3 style="font-weight: 800; margin-bottom: 20px;">Servicios Disponibles</h3>
             <div id="p-servicios" style="margin-bottom: 30px;"></div>
-
             <button class="btn-book" style="background: var(--primary); height: 60px; font-size: 18px; margin-bottom: 40px; border-radius: 20px;">AGENDAR UNA CITA</button>
-
             <div class="resenas-container">
                 <h3 style="font-weight: 800; margin-bottom: 20px;">Opiniones de nuestros clientes</h3>
                 <div id="p-resenas"></div>
             </div>
+        </div>
+
+        <div id="seccion-mis-citas">
+            <div id="contenedor-citas">
+                </div>
         </div>
     </div>
 
     <div id="modal-auth">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
-            <h2 id="auth-titulo" style="font-weight: 800;">Crear Cuenta</h2>
-            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tu correo para recibir un código de confirmación.</p>
+            <h2 id="auth-titulo" style="font-weight: 800;">Acceso Seguro</h2>
+            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Tu historial se guardará con tu correo.</p>
             
             <div id="auth-paso-1">
                 <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
@@ -265,8 +274,26 @@
     <script>
         const api = "https://mis-barberias.onrender.com"; 
         let cacheNegocios = [];
-        let usuarioTemporal = "";
+        let usuarioEmail = ""; // Cambiado de usuarioTemporal para mayor claridad
         let usuarioLogueado = false;
+
+        // --- LÓGICA DE PERSISTENCIA ---
+        function verificarSesionAlCargar() {
+            const emailGuardado = localStorage.getItem('agendate_user_email');
+            if(emailGuardado) {
+                loguearUsuarioGlobal(emailGuardado);
+            }
+        }
+
+        function loguearUsuarioGlobal(email) {
+            usuarioEmail = email;
+            usuarioLogueado = true;
+            localStorage.setItem('agendate_user_email', email);
+            const nombreMostrar = email.split('@')[0];
+            const btnAuth = document.getElementById('btn-auth-main');
+            btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
+            btnAuth.style.background = "var(--accent)";
+        }
 
         function abrirAuth() { 
             if(usuarioLogueado) {
@@ -282,12 +309,10 @@
             const emailInput = document.getElementById('auth-email');
             const email = emailInput.value.trim();
             const btn = document.getElementById('btn-enviar-codigo');
-
             if(!email.includes("@")) return alert("Ingresa un correo válido");
             
-            usuarioTemporal = email;
-            btn.innerText = "Enviando...";
-            btn.disabled = true;
+            usuarioEmail = email;
+            btn.innerText = "Enviando..."; btn.disabled = true;
 
             try {
                 const respuesta = await fetch(`${api}/api/auth/enviar-codigo`, {
@@ -295,98 +320,87 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ correo: email })
                 });
-
                 if (respuesta.ok) {
                     document.getElementById('auth-paso-1').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
                     document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
-                } else {
-                    alert("Error enviando el código. Revisa la consola.");
                 }
-            } catch (error) {
-                console.error(error);
-                alert("Error de conexión con el servidor.");
-            } finally {
-                btn.innerText = "Enviar Código";
-                btn.disabled = false;
-            }
+            } catch (error) { alert("Error de conexión"); }
+            finally { btn.innerText = "Enviar Código"; btn.disabled = false; }
         }
 
         async function confirmarCodigo() {
             const codigoInput = document.getElementById('auth-codigo');
             const codigo = codigoInput.value.trim();
-
-            if(codigo.length < 6) return alert("Ingresa el código de 6 dígitos");
-
             try {
-                const respuesta = await fetch(`${api}/api/auth/verificar`, {
+                const res = await fetch(`${api}/api/auth/verificar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: usuarioTemporal, codigo: codigo })
+                    body: JSON.stringify({ correo: usuarioEmail, codigo: codigo })
                 });
-
-                const data = await respuesta.json();
-
+                const data = await res.json();
                 if (data.success) {
-                    usuarioLogueado = true;
-                    const nombreMostrar = usuarioTemporal.split('@')[0];
-                    const btnAuth = document.getElementById('btn-auth-main');
-                    
-                    btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
-                    btnAuth.style.background = "var(--accent)";
-                    
+                    loguearUsuarioGlobal(usuarioEmail);
                     codigoInput.value = "";
                     cerrarAuth();
-                    alert("¡Bienvenido!");
-                } else {
-                    alert(data.mensaje || "Código incorrecto o expirado.");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Error de conexión con el servidor.");
-            }
+                } else { alert("Código incorrecto"); }
+            } catch (e) { alert("Error al verificar"); }
         }
 
         function cerrarSesion() {
-            usuarioLogueado = false;
-            usuarioTemporal = "";
-            const btnAuth = document.getElementById('btn-auth-main');
-            btnAuth.innerText = "Iniciar sesión o Regístrate";
-            btnAuth.style.background = "var(--primary)";
-            document.getElementById('user-menu-dropdown').classList.remove('active');
-            alert("Sesión cerrada");
+            localStorage.removeItem('agendate_user_email');
+            location.reload();
         }
-
-        window.addEventListener('click', (e) => {
-            if (!e.target.matches('#btn-auth-main')) {
-                document.getElementById('user-menu-dropdown').classList.remove('active');
-            }
-        });
 
         function regresarPaso1() {
             document.getElementById('auth-paso-1').style.display = 'block';
             document.getElementById('auth-paso-2').style.display = 'none';
-            document.getElementById('auth-instruccion').innerText = "Ingresa tu correo para recibir un código de confirmación.";
         }
 
-        fetch('https://ipapi.co/json/').then(res => res.json()).then(data => {
-            const flags = { 'CO': '🇨🇴', 'MX': '🇲🇽', 'ES': '🇪🇸', 'US': '🇺🇸' };
-            if(flags[data.country_code]) document.getElementById('flag-icon').innerText = flags[data.country_code];
-        });
+        // --- LÓGICA DE HISTORIAL ---
+        async function mostrarMisCitas() {
+            document.getElementById('wrapper-cats').style.display = 'none';
+            document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('lista-negocios').style.display = 'none';
+            document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'block';
+            document.getElementById('back-container').style.display = 'block';
+            document.getElementById('section-title').innerText = "Mi Historial de Citas";
+            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
 
-        function scrollCat(val) {
-            const container = document.getElementById('categorias');
-            container.scrollLeft += val;
-            setTimeout(() => {
-                document.getElementById('arrow-l').style.display = container.scrollLeft > 20 ? 'flex' : 'none';
-            }, 300);
+            const contenedor = document.getElementById('contenedor-citas');
+            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
+
+            try {
+                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
+                const citas = await res.json();
+                if(citas.length === 0) {
+                    contenedor.innerHTML = "<p>Aún no tienes citas registradas.</p>";
+                    return;
+                }
+                contenedor.innerHTML = "";
+                citas.forEach(cita => {
+                    const statusClass = `status-${cita.status.toLowerCase()}`;
+                    contenedor.innerHTML += `
+                        <div class="cita-card">
+                            <div>
+                                <h4 style="margin:0">${cita.negocioNombre}</h4>
+                                <small style="color:#666">${cita.fecha} - ${cita.hora}</small><br>
+                                <small><b>Servicio:</b> ${cita.servicio}</small>
+                            </div>
+                            <span class="status-pill ${statusClass}">${cita.status}</span>
+                        </div>`;
+                });
+            } catch (e) { contenedor.innerHTML = "<p>No se pudo cargar el historial.</p>"; }
         }
 
+        // --- NAVEGACIÓN Y CARGA ---
         function volverInicio(pushState = false) {
             document.getElementById('wrapper-cats').style.display = 'block';
             document.getElementById('hero-area').style.display = 'block';
             document.getElementById('lista-negocios').style.display = 'none';
             document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'none';
             document.getElementById('back-container').style.display = 'none';
             document.getElementById('section-title').innerText = "Explora Categorías";
             if(pushState) window.history.pushState(null, "", window.location.pathname);
@@ -394,13 +408,12 @@
 
         async function cargarNegocios(tipo, query = "", pushState = true) {
             if(pushState) window.history.pushState({view: 'lista', tipo, query}, "", tipo ? `?tipo=${tipo}` : `?q=${encodeURIComponent(query)}`);
-            
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'none';
             document.getElementById('perfil-detalle').style.display = 'none';
             document.getElementById('back-container').style.display = 'block';
             document.getElementById('btn-atras-dinamico').onclick = () => window.history.back();
-            document.getElementById('section-title').innerText = query ? `Resultados: "${query}"` : `Establecimientos`;
             
             const listado = document.getElementById('lista-negocios');
             listado.style.display = 'grid';
@@ -411,8 +424,7 @@
                 const res = await fetch(url);
                 const negocios = await res.json();
                 cacheNegocios = negocios;
-                listado.innerHTML = negocios.length ? "" : "<p>No hay resultados todavía.</p>";
-
+                listado.innerHTML = negocios.length ? "" : "<p>No hay resultados.</p>";
                 negocios.forEach(n => {
                     listado.innerHTML += `
                         <div class="biz-card">
@@ -430,50 +442,28 @@
         function verPerfil(id) {
             const n = cacheNegocios.find(item => item._id === id);
             if(!n) return;
-
             window.history.pushState({view: 'perfil', id}, "", `?negocio=${n.nombre.replace(/\s+/g, '-').toLowerCase()}`);
             document.getElementById('lista-negocios').style.display = 'none';
             document.getElementById('perfil-detalle').style.display = 'block';
-            document.getElementById('section-title').innerText = "Detalles del Establecimiento";
-
             document.getElementById('p-nombre').innerText = n.nombre;
             document.getElementById('p-ubicacion').innerText = "📍 " + n.ubicacion;
             document.getElementById('p-imagen').src = n.imagen;
-
             const divServicios = document.getElementById('p-servicios');
             divServicios.innerHTML = ""; 
-
-            if(n.servicios && n.servicios.length > 0) {
+            if(n.servicios) {
                 n.servicios.forEach(s => {
-                    divServicios.innerHTML += `
-                        <div class="servicio-item">
-                            <span>${s.nombre}</span> 
-                            <b>${s.precio}</b>
-                        </div>`;
+                    divServicios.innerHTML += `<div class="servicio-item"><span>${s.nombre}</span> <b>${s.precio}</b></div>`;
                 });
-            } else {
-                divServicios.innerHTML = "<p style='color:#777;'>Sin servicios registrados.</p>";
             }
-
-            document.getElementById('p-resenas').innerHTML = `
-                <div class="resena-card">
-                    <span class="rating-stars">⭐⭐⭐⭐⭐</span>
-                    "Excelente lugar, la atención es increíble."<br>
-                    <small>— <b>Carlos Mendoza</b></small>
-                </div>
-            `;
             window.scrollTo(0,0);
         }
 
         function buscarAhora() {
             const q = document.getElementById('query').value.trim();
-            const l = document.getElementById('loc').value.trim();
-            let t = q && l ? `${q} ${l}` : q || l;
-            if(t) cargarNegocios(null, t);
+            if(q) cargarNegocios(null, q);
         }
 
-        document.getElementById('query').addEventListener('keypress', e => { if (e.key === 'Enter') buscarAhora(); });
-        document.getElementById('loc').addEventListener('keypress', e => { if (e.key === 'Enter') buscarAhora(); });
+        function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
 
         window.onpopstate = e => {
             if (e.state) {

@@ -7,17 +7,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #1a1a1a; 
-            --accent: #d4af37; 
+            --primary: #0a1626; /* Azul profundo de tu imagen */
+            --accent: #c09931;  /* Dorado exacto de tu imagen */
             --bg: #ffffff;
             --pastel-green: #e8f5e9; 
             --pastel-purple: #f3e5f5;
             --pastel-blue: #e3f2fd; 
             --pastel-orange: #fff3e0;
             
-            /* COLORES EXACTOS DE TU IMAGEN */
-            --logo-blue: #0a1a2f; /* Azul oscuro profundo */
-            --logo-gold: #c5a040; /* Dorado de la imagen */
+            /* Variables específicas para el logo */
+            --logo-dark: #0a1626;
+            --logo-gold: #c09931;
         }
         
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; }
@@ -30,8 +30,16 @@
         }
         .nav-top-row { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         
-        /* LOGO CON COLORES DE IMAGEN */
-        .logo { font-weight: 800; font-size: 20px; cursor: pointer; color: var(--logo-blue); text-decoration: none; }
+        /* Ajuste de colores del Logo según imagen */
+        .logo { 
+            font-weight: 800; 
+            font-size: 22px; 
+            cursor: pointer; 
+            color: var(--logo-dark); 
+            text-decoration: none; 
+            letter-spacing: -0.5px; 
+            text-transform: uppercase;
+        }
         .logo span { color: var(--logo-gold); }
 
         .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
@@ -46,7 +54,7 @@
         }
         .user-menu.active { display: flex; animation: slideDown 0.3s ease; }
         .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f5f5f5; }
-        .user-menu-item:hover { background: #f9f9f9; color: var(--logo-gold); }
+        .user-menu-item:hover { background: #f9f9f9; color: var(--accent); }
         .user-menu-item:last-child { border-bottom: none; color: #ff4444; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -90,7 +98,7 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eee;
             cursor: pointer; z-index: 10; transition: 0.3s; font-weight: bold;
         }
-        .nav-arrow:hover { background: var(--logo-gold); color: white; }
+        .nav-arrow:hover { background: var(--accent); color: white; }
         .arrow-left { left: 2%; display: none; }
         .arrow-right { right: 2%; }
 
@@ -114,14 +122,15 @@
         .biz-card { background: white; border-radius: 25px; overflow: hidden; border: 1px solid #eee; transition: 0.3s; }
         .biz-card img { width: 100%; height: 170px; object-fit: cover; }
         .biz-info { padding: 20px; }
-        .btn-book { width: 100%; background: var(--logo-blue); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn-book:hover { background: var(--accent); }
 
         #perfil-detalle, #seccion-mis-citas { display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
-        .servicio-item:hover { border-color: var(--logo-gold); background: white; }
+        .servicio-item:hover { border-color: var(--accent); background: white; }
         
         /* Historial */
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
@@ -132,15 +141,15 @@
 
         .resenas-container { margin-top: 50px; padding-top: 30px; border-top: 1px solid #eee; }
         .resena-card { background: var(--pastel-blue); padding: 20px; border-radius: 25px; margin-bottom: 15px; font-size: 14px; border: 1px solid rgba(0,0,0,0.02); }
-        .rating-stars { color: var(--logo-gold); font-size: 14px; margin-bottom: 8px; display: block; }
+        .rating-stars { color: var(--accent); font-size: 14px; margin-bottom: 8px; display: block; }
 
         footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
         .footer-grid { max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
-        .footer-col h4 { font-weight: 800; font-size: 16px; margin-bottom: 20px; color: var(--logo-blue); }
+        .footer-col h4 { font-weight: 800; font-size: 16px; margin-bottom: 20px; color: var(--primary); }
         .footer-col ul { list-style: none; padding: 0; margin: 0; }
         .footer-col ul li { margin-bottom: 12px; }
         .footer-col ul li a { text-decoration: none; color: #666; font-size: 14px; transition: 0.3s; }
-        .footer-col ul li a:hover { color: var(--logo-gold); padding-left: 5px; }
+        .footer-col ul li a:hover { color: var(--accent); padding-left: 5px; }
         
         .footer-bottom { max-width: 1200px; margin: auto; padding-top: 30px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .footer-bottom p { font-size: 13px; color: #999; }
@@ -157,22 +166,23 @@
         .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; z-index: 10; }
         .auth-container { padding: 40px 30px; text-align: center; }
         
-        /* CABECERA MODAL CON COLORES DE IMAGEN */
-        .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--logo-blue); letter-spacing: -0.5px; }
+        /* Ajuste de Bienvenida con colores de imagen */
+        .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--logo-dark); letter-spacing: -0.5px; }
         .auth-header span { color: var(--logo-gold); }
         .auth-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; font-weight: 600; }
 
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
         
         .btn-main-auth { 
-            width: 100%; background: var(--logo-blue); color: white; border: none; 
+            width: 100%; background: #2c2e35; color: white; border: none; 
             padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;
+            transition: 0.3s;
         }
+        .btn-main-auth:hover { background: var(--primary); }
 
-        /* Estilo Registro */
         .register-box { margin: 20px 0 10px; font-size: 14px; font-weight: 600; color: #444; }
-        .register-link { color: var(--logo-gold); font-weight: 800; text-decoration: none; cursor: pointer; }
+        .register-link { color: var(--accent); font-weight: 800; text-decoration: none; cursor: pointer; }
 
         .auth-divider { margin: 20px 0; position: relative; border-top: 1px solid #eee; display: flex; justify-content: center; }
         .auth-divider span { position: absolute; top: -10px; background: white; padding: 0 15px; color: #999; font-size: 12px; }
@@ -205,7 +215,7 @@
         <div class="search-container">
             <div class="search-box"><input type="text" id="query" placeholder="Código, Negocio o Servicio"></div>
             <div class="search-box" style="flex: 0.6;"><input type="text" id="loc" placeholder="Ubicación"></div>
-            <button style="background:var(--logo-gold); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;" onclick="buscarAhora()">🔍</button>
+            <button style="background:var(--accent); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;" onclick="buscarAhora()">🔍</button>
         </div>
     </nav>
 
@@ -244,7 +254,7 @@
             <p id="p-ubicacion" style="color: #666; font-size: 16px; margin-bottom: 30px;"></p>
             <h3 style="font-weight: 800; margin-bottom: 20px;">Servicios Disponibles</h3>
             <div id="p-servicios" style="margin-bottom: 30px;"></div>
-            <button class="btn-book" style="background: var(--logo-blue); height: 60px; font-size: 18px; margin-bottom: 40px; border-radius: 20px;">AGENDAR UNA CITA</button>
+            <button class="btn-book" style="background: var(--primary); height: 60px; font-size: 18px; margin-bottom: 40px; border-radius: 20px;">AGENDAR UNA CITA</button>
             <div class="resenas-container">
                 <h3 style="font-weight: 800; margin-bottom: 20px;">Opiniones de nuestros clientes</h3>
                 <div id="p-resenas"></div>
@@ -291,7 +301,7 @@
             <div class="auth-container" id="auth-paso-2" style="display:none;">
                 <h2 class="auth-header">Verifica tu correo</h2>
                 <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
-                <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--logo-gold);">Verificar e Ingresar</button>
+                <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
                 <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Volver al login</p>
             </div>
         </div>
@@ -340,7 +350,7 @@
             const nombreMostrar = email.split('@')[0];
             const btnAuth = document.getElementById('btn-auth-main');
             btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
-            btnAuth.style.background = "var(--logo-gold)";
+            btnAuth.style.background = "var(--accent)";
         }
 
         function abrirAuth() { 

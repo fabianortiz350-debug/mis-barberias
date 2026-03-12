@@ -7,17 +7,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #0a1626; /* Azul profundo de tu imagen */
-            --accent: #c09931;  /* Dorado exacto de tu imagen */
+            --primary: #1a1a1a; 
+            --accent: #d4af37; 
             --bg: #ffffff;
             --pastel-green: #e8f5e9; 
             --pastel-purple: #f3e5f5;
             --pastel-blue: #e3f2fd; 
             --pastel-orange: #fff3e0;
-            
-            /* Variables específicas para el logo */
-            --logo-dark: #0a1626;
-            --logo-gold: #c09931;
         }
         
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; }
@@ -29,17 +25,8 @@
             position: sticky; top: 0; z-index: 1000; gap: 12px;
         }
         .nav-top-row { display: flex; width: 100%; justify-content: space-between; align-items: center; }
-        
-        .logo { 
-            font-weight: 800; 
-            font-size: 22px; 
-            cursor: pointer; 
-            color: var(--logo-dark); 
-            text-decoration: none; 
-            letter-spacing: -0.5px; 
-            text-transform: uppercase;
-        }
-        .logo span { color: var(--logo-gold); }
+        .logo { font-weight: 800; font-size: 20px; cursor: pointer; color: var(--primary); text-decoration: none; }
+        .logo span { color: var(--accent); }
 
         .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
         .lang-selector { font-size: 22px; cursor: pointer; }
@@ -121,8 +108,7 @@
         .biz-card { background: white; border-radius: 25px; overflow: hidden; border: 1px solid #eee; transition: 0.3s; }
         .biz-card img { width: 100%; height: 170px; object-fit: cover; }
         .biz-info { padding: 20px; }
-        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .btn-book:hover { background: var(--accent); }
+        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
 
         #perfil-detalle, #seccion-mis-citas { display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -131,7 +117,7 @@
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
         .servicio-item:hover { border-color: var(--accent); background: white; }
         
-        /* Historial */
+        /* Estilos para las tarjetas de cita en el historial */
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .status-asignada { background: var(--pastel-blue); color: #007bff; }
@@ -159,26 +145,11 @@
             background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
         }
         .modal-content {
-            background: white; border-radius: 25px; width: 90%; max-width: 420px; 
-            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
+            background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; 
+            position: relative; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; z-index: 10; }
-        .auth-container { padding: 40px 30px; text-align: center; }
-        
-        .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--logo-dark); letter-spacing: -0.5px; }
-        
-        .auth-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; font-weight: 600; }
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; }
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
-        
-        .btn-main-auth { 
-            width: 100%; background: #2c2e35; color: white; border: none; 
-            padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;
-            transition: 0.3s;
-        }
-        .btn-main-auth:hover { background: var(--primary); }
-
-        .auth-legal { font-size: 11px; color: #888; margin-top: 25px; line-height: 1.4; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -248,33 +219,29 @@
         </div>
 
         <div id="seccion-mis-citas">
-            <div id="contenedor-citas"></div>
+            <div id="contenedor-citas">
+                </div>
         </div>
     </div>
 
-    <div id="modal-auth" onclick="cerrarSiClicFuera(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="modal-auth">
+        <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
+            <h2 id="auth-titulo" style="font-weight: 800;">Acceso Seguro</h2>
+            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Tu historial se guardará con tu correo.</p>
             
-            <div class="auth-container" id="auth-paso-1">
-                <h2 class="auth-header">Bienvenido</h2>
-                <p class="auth-subtitle">Ingresa tu correo para recibir un código de acceso</p>
-                
-                <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
-                
-                <button class="btn-main-auth" id="btn-enviar-codigo" onclick="solicitarCodigo()">
-                    ✉️ ENVIAR CÓDIGO AL CORREO
-                </button>
-                
-                <p class="auth-legal">Al continuar, crearemos una cuenta automáticamente para guardar tu historial de citas. Aceptas nuestros <u>Términos y condiciones</u>.</p>
+            <div id="auth-paso-1">
+                <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
+                <button id="btn-enviar-codigo" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
             </div>
 
-            <div class="auth-container" id="auth-paso-2" style="display:none;">
-                <h2 class="auth-header">Verifica tu correo</h2>
-                <p class="auth-subtitle">Hemos enviado un código de 6 dígitos a tu email</p>
-                <input type="text" id="auth-codigo" class="auth-input" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 24px; font-weight: 800;">
-                <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent); height: 50px;">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer; font-weight: 700;" onclick="regresarPaso1()">← Volver a intentar con otro correo</p>
+            <div id="auth-paso-2" style="display:none;">
+                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
+                <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
+                <p style="font-size: 12px; margin-top: 15px; color: #888;">
+                    ¿No recibiste el código? <span onclick="solicitarCodigo()" style="color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline;">Reenviar ahora</span>
+                </p>
+                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Cambiar correo</p>
             </div>
         </div>
     </div>
@@ -307,25 +274,15 @@
     <script>
         const api = "https://mis-barberias.onrender.com"; 
         let cacheNegocios = [];
-        let usuarioEmail = ""; 
+        let usuarioEmail = ""; // Cambiado de usuarioTemporal para mayor claridad
         let usuarioLogueado = false;
 
-        // --- MANEJO DE SESIÓN Y UI ---
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === "Escape") {
-                cerrarAuth();
-                document.getElementById('user-menu-dropdown').classList.remove('active');
-            }
-        });
-
-        function cerrarSiClicFuera(event) {
-            if (event.target.id === "modal-auth") cerrarAuth();
-        }
-
+        // --- LÓGICA DE PERSISTENCIA ---
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
-            if(emailGuardado) { loguearUsuarioGlobal(emailGuardado); }
+            if(emailGuardado) {
+                loguearUsuarioGlobal(emailGuardado);
+            }
         }
 
         function loguearUsuarioGlobal(email) {
@@ -346,20 +303,14 @@
             }
         }
         
-        function cerrarAuth() { 
-            document.getElementById('modal-auth').style.display = 'none'; 
-            regresarPaso1();
-        }
-
-        // --- FLUJO DE AUTENTICACIÓN ---
-
+        function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
+        
         async function solicitarCodigo() {
             const emailInput = document.getElementById('auth-email');
             const email = emailInput.value.trim();
             const btn = document.getElementById('btn-enviar-codigo');
-            
             if(!email.includes("@")) return alert("Ingresa un correo válido");
-
+            
             usuarioEmail = email;
             btn.innerText = "Enviando..."; btn.disabled = true;
 
@@ -372,18 +323,15 @@
                 if (respuesta.ok) {
                     document.getElementById('auth-paso-1').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
-                } else {
-                    alert("No pudimos enviar el código. Intenta de nuevo.");
+                    document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
                 }
-            } catch (error) { alert("Error de conexión con el servidor"); }
-            finally { btn.innerHTML = "✉️ ENVIAR CÓDIGO AL CORREO"; btn.disabled = false; }
+            } catch (error) { alert("Error de conexión"); }
+            finally { btn.innerText = "Enviar Código"; btn.disabled = false; }
         }
 
         async function confirmarCodigo() {
             const codigoInput = document.getElementById('auth-codigo');
             const codigo = codigoInput.value.trim();
-            if(codigo.length < 6) return alert("Ingresa el código completo");
-
             try {
                 const res = await fetch(`${api}/api/auth/verificar`, {
                     method: 'POST',
@@ -395,13 +343,8 @@
                     loguearUsuarioGlobal(usuarioEmail);
                     codigoInput.value = "";
                     cerrarAuth();
-                } else { alert(data.mensaje || "Código incorrecto o expirado"); }
-            } catch (e) { alert("Error al verificar código"); }
-        }
-
-        function regresarPaso1() {
-            document.getElementById('auth-paso-1').style.display = 'block';
-            document.getElementById('auth-paso-2').style.display = 'none';
+                } else { alert("Código incorrecto"); }
+            } catch (e) { alert("Error al verificar"); }
         }
 
         function cerrarSesion() {
@@ -409,8 +352,49 @@
             location.reload();
         }
 
-        // --- NAVEGACIÓN Y CONTENIDO ---
+        function regresarPaso1() {
+            document.getElementById('auth-paso-1').style.display = 'block';
+            document.getElementById('auth-paso-2').style.display = 'none';
+        }
 
+        // --- LÓGICA DE HISTORIAL ---
+        async function mostrarMisCitas() {
+            document.getElementById('wrapper-cats').style.display = 'none';
+            document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('lista-negocios').style.display = 'none';
+            document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'block';
+            document.getElementById('back-container').style.display = 'block';
+            document.getElementById('section-title').innerText = "Mi Historial de Citas";
+            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
+
+            const contenedor = document.getElementById('contenedor-citas');
+            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
+
+            try {
+                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
+                const citas = await res.json();
+                if(citas.length === 0) {
+                    contenedor.innerHTML = "<p>Aún no tienes citas registradas.</p>";
+                    return;
+                }
+                contenedor.innerHTML = "";
+                citas.forEach(cita => {
+                    const statusClass = `status-${cita.status.toLowerCase()}`;
+                    contenedor.innerHTML += `
+                        <div class="cita-card">
+                            <div>
+                                <h4 style="margin:0">${cita.negocioNombre}</h4>
+                                <small style="color:#666">${cita.fecha} - ${cita.hora}</small><br>
+                                <small><b>Servicio:</b> ${cita.servicio}</small>
+                            </div>
+                            <span class="status-pill ${statusClass}">${cita.status}</span>
+                        </div>`;
+                });
+            } catch (e) { contenedor.innerHTML = "<p>No se pudo cargar el historial.</p>"; }
+        }
+
+        // --- NAVEGACIÓN Y CARGA ---
         function volverInicio(pushState = false) {
             document.getElementById('wrapper-cats').style.display = 'block';
             document.getElementById('hero-area').style.display = 'block';
@@ -442,7 +426,15 @@
                 cacheNegocios = negocios;
                 listado.innerHTML = negocios.length ? "" : "<p>No hay resultados.</p>";
                 negocios.forEach(n => {
-                    listado.innerHTML += `<div class="biz-card"><img src="${n.imagen}"><div class="biz-info"><h3 style="margin:0; font-size:18px;">${n.nombre}</h3><p style="color:#777; font-size:13px; margin:5px 0 15px;">📍 ${n.ubicacion}</p><button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil y Citas</button></div></div>`;
+                    listado.innerHTML += `
+                        <div class="biz-card">
+                            <img src="${n.imagen}">
+                            <div class="biz-info">
+                                <h3 style="margin:0; font-size:18px;">${n.nombre}</h3>
+                                <p style="color:#777; font-size:13px; margin:5px 0 15px;">📍 ${n.ubicacion}</p>
+                                <button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil y Citas</button>
+                            </div>
+                        </div>`;
                 });
             } catch (e) { listado.innerHTML = "<p>Error de conexión.</p>"; }
         }
@@ -466,32 +458,6 @@
             window.scrollTo(0,0);
         }
 
-        async function mostrarMisCitas() {
-            if(!usuarioLogueado) { abrirAuth(); return; }
-            
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'block';
-            document.getElementById('back-container').style.display = 'block';
-            document.getElementById('section-title').innerText = "Mi Historial de Citas";
-            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
-            
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
-            try {
-                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
-                const citas = await res.json();
-                if(citas.length === 0) { contenedor.innerHTML = "<p>Aún no tienes citas registradas.</p>"; return; }
-                contenedor.innerHTML = "";
-                citas.forEach(cita => {
-                    const statusClass = `status-${cita.status.toLowerCase()}`;
-                    contenedor.innerHTML += `<div class="cita-card"><div><h4 style="margin:0">${cita.negocioNombre}</h4><small style="color:#666">${cita.fecha} - ${cita.hora}</small></div><span class="status-pill ${statusClass}">${cita.status}</span></div>`;
-                });
-            } catch (e) { contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>"; }
-        }
-
         function buscarAhora() {
             const q = document.getElementById('query').value.trim();
             if(q) cargarNegocios(null, q);
@@ -508,3 +474,4 @@
     </script>
 </body>
 </html>
+

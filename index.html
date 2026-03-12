@@ -117,6 +117,7 @@
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
         .servicio-item:hover { border-color: var(--accent); background: white; }
         
+        /* Historial */
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .status-asignada { background: var(--pastel-blue); color: #007bff; }
@@ -149,7 +150,12 @@
         }
         .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; z-index: 10; }
         .auth-container { padding: 40px 30px; text-align: center; }
-        .auth-header { font-size: 22px; font-weight: 800; margin-bottom: 25px; color: #1a1a1a; }
+        
+        /* Ajuste de Bienvenida */
+        .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: #1a1a1a; letter-spacing: -0.5px; }
+        .auth-header span { color: var(--accent); }
+        .auth-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; font-weight: 600; }
+
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
         
         .btn-main-auth { 
@@ -157,7 +163,12 @@
             padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;
         }
-        .auth-divider { margin: 25px 0; position: relative; border-top: 1px solid #eee; display: flex; justify-content: center; }
+
+        /* Estilo Registro */
+        .register-box { margin: 20px 0 10px; font-size: 14px; font-weight: 600; color: #444; }
+        .register-link { color: var(--accent); font-weight: 800; text-decoration: none; cursor: pointer; }
+
+        .auth-divider { margin: 20px 0; position: relative; border-top: 1px solid #eee; display: flex; justify-content: center; }
         .auth-divider span { position: absolute; top: -10px; background: white; padding: 0 15px; color: #999; font-size: 12px; }
         
         .btn-social {
@@ -186,8 +197,8 @@
         </div>
         
         <div class="search-container">
-            <div class="search-box"><input type="text" id="query" placeholder="Código, Negocio o Servicio" onkeypress="if(event.key === 'Enter') buscarAhora()"></div>
-            <div class="search-box" style="flex: 0.6;"><input type="text" id="loc" placeholder="Ubicación" onkeypress="if(event.key === 'Enter') buscarAhora()"></div>
+            <div class="search-box"><input type="text" id="query" placeholder="Código, Negocio o Servicio"></div>
+            <div class="search-box" style="flex: 0.6;"><input type="text" id="loc" placeholder="Ubicación"></div>
             <button style="background:var(--accent); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;" onclick="buscarAhora()">🔍</button>
         </div>
     </nav>
@@ -243,16 +254,32 @@
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
             <div class="auth-container" id="auth-paso-1">
-                <h2 class="auth-header">Hola de nuevo</h2>
+                <h2 class="auth-header">Bienvenido <span>AGENDATE</span>LIVE</h2>
+                <p class="auth-subtitle">Ingresa tus datos para continuar</p>
+                
                 <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
                 <div style="position: relative;">
                     <input type="password" id="auth-pass" class="auth-input" placeholder="Contraseña">
+                    <span style="position: absolute; right: 15px; top: 15px; font-size: 10px; font-weight: 800; cursor: pointer; color: #999;">MOSTRAR</span>
                 </div>
+                
                 <button class="btn-main-auth" id="btn-enviar-codigo" onclick="solicitarCodigo()">
                     ✉️ INICIA SESIÓN CON TU EMAIL
                 </button>
+                
+                <p style="margin-top:15px; font-size:13px; font-weight:700; text-decoration:underline; cursor:pointer;">¿Olvidaste la contraseña?</p>
+                
+                <div class="register-box">
+                    ¿Eres nuevo aquí? <span class="register-link" onclick="alert('Funcionalidad de registro próximamente')">Regístrate ahora</span>
+                </div>
+
                 <div class="auth-divider"><span>O</span></div>
+                
+                <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"> Continuar con Apple</button>
+                <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"> Continuar con Facebook</button>
                 <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Continuar con Google</button>
+                
+                <p class="auth-legal">Al registrarme, acepto las <u>Términos y condiciones</u> y <u>Política de protección de datos</u></p>
             </div>
 
             <div class="auth-container" id="auth-paso-2" style="display:none;">
@@ -274,6 +301,13 @@
                 <h4>Explorar</h4>
                 <ul>
                     <li><a href="#" onclick="volverInicio(true)">Inicio</a></li>
+                    <li><a href="#">Negocios Destacados</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Contacto</h4>
+                <ul>
+                    <li style="font-size: 14px; color: #666;">📍 Bogotá, Colombia</li>
                 </ul>
             </div>
         </div>
@@ -314,8 +348,10 @@
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
         
         async function solicitarCodigo() {
-            const email = document.getElementById('auth-email').value.trim();
-            const pass = document.getElementById('auth-pass').value.trim();
+            const emailInput = document.getElementById('auth-email');
+            const passInput = document.getElementById('auth-pass');
+            const email = emailInput.value.trim();
+            const pass = passInput.value.trim();
             const btn = document.getElementById('btn-enviar-codigo');
             
             if(!email.includes("@")) return alert("Ingresa un correo válido");
@@ -333,13 +369,16 @@
                 if (respuesta.ok) {
                     document.getElementById('auth-paso-1').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
-                } else { alert("Error en las credenciales."); }
+                } else {
+                    alert("Error en las credenciales.");
+                }
             } catch (error) { alert("Error de conexión"); }
             finally { btn.innerHTML = "✉️ INICIA SESIÓN CON TU EMAIL"; btn.disabled = false; }
         }
 
         async function confirmarCodigo() {
-            const codigo = document.getElementById('auth-codigo').value.trim();
+            const codigoInput = document.getElementById('auth-codigo');
+            const codigo = codigoInput.value.trim();
             try {
                 const res = await fetch(`${api}/api/auth/verificar`, {
                     method: 'POST',
@@ -349,6 +388,7 @@
                 const data = await res.json();
                 if (data.success) {
                     loguearUsuarioGlobal(usuarioEmail);
+                    codigoInput.value = "";
                     cerrarAuth();
                 } else { alert("Código incorrecto"); }
             } catch (e) { alert("Error al verificar"); }
@@ -377,7 +417,6 @@
 
         async function cargarNegocios(tipo, query = "", pushState = true) {
             if(pushState) window.history.pushState({view: 'lista', tipo, query}, "", tipo ? `?tipo=${tipo}` : `?q=${encodeURIComponent(query)}`);
-            
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
             document.getElementById('seccion-mis-citas').style.display = 'none';
@@ -388,7 +427,6 @@
             const listado = document.getElementById('lista-negocios');
             listado.style.display = 'grid';
             listado.innerHTML = "<p>Buscando...</p>";
-            document.getElementById('section-title').innerText = tipo ? `Resultados: ${tipo}` : "Resultados de búsqueda";
 
             try {
                 let url = tipo ? `${api}/api/negocios/${tipo.toLowerCase()}` : `${api}/api/buscar?q=${encodeURIComponent(query)}`;
@@ -422,9 +460,10 @@
         }
 
         async function mostrarMisCitas() {
-            volverInicio(false);
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('lista-negocios').style.display = 'none';
+            document.getElementById('perfil-detalle').style.display = 'none';
             document.getElementById('seccion-mis-citas').style.display = 'block';
             document.getElementById('back-container').style.display = 'block';
             document.getElementById('section-title').innerText = "Mi Historial de Citas";

@@ -7,15 +7,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --primary: #0a1626; /* Azul profundo de tu imagen */
-            --accent: #c09931;  /* Dorado exacto de tu imagen */
+            --primary: #0a1626; 
+            --accent: #c09931;  
             --bg: #ffffff;
             --pastel-green: #e8f5e9; 
             --pastel-purple: #f3e5f5;
             --pastel-blue: #e3f2fd; 
             --pastel-orange: #fff3e0;
-            
-            /* Variables específicas para el logo */
             --logo-dark: #0a1626;
             --logo-gold: #c09931;
         }
@@ -30,22 +28,13 @@
         }
         .nav-top-row { display: flex; width: 100%; justify-content: space-between; align-items: center; }
         
-        .logo { 
-            font-weight: 800; 
-            font-size: 22px; 
-            cursor: pointer; 
-            color: var(--logo-dark); 
-            text-decoration: none; 
-            letter-spacing: -0.5px; 
-            text-transform: uppercase;
-        }
+        .logo { font-weight: 800; font-size: 22px; cursor: pointer; color: var(--logo-dark); text-decoration: none; letter-spacing: -0.5px; text-transform: uppercase; }
         .logo span { color: var(--logo-gold); }
 
         .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
         .lang-selector { font-size: 22px; cursor: pointer; }
         .btn-auth { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 11px; cursor: pointer; white-space: nowrap; }
 
-        /* --- MENU DESPLEGABLE --- */
         .user-menu {
             position: absolute; top: 110%; right: 0; background: white; 
             min-width: 180px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -57,13 +46,11 @@
         .user-menu-item:last-child { border-bottom: none; color: #ff4444; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- BUSCADOR --- */
         .search-container {
             display: flex; width: 100%; max-width: 650px; background: #f4f4f4; 
             border-radius: 30px; padding: 4px; border: 1px solid #ddd;
         }
         .search-box { display: flex; flex: 1; align-items: center; padding: 0 10px; border-right: 1px solid #ddd; }
-        .search-box:last-child { border-right: none; }
         .search-box input { border: none; background: transparent; padding: 8px; width: 100%; font-size: 12px; outline: none; font-family: inherit; }
 
         @media (min-width: 992px) {
@@ -72,7 +59,6 @@
             .search-container { flex: 1; margin: 0 40px; }
         }
 
-        /* --- HERO --- */
         .hero {
             padding: 50px 5%; text-align: center;
             background: linear-gradient(-45deg, #ffffff, #f3e5f5, #e3f2fd, #fff3e0);
@@ -82,12 +68,8 @@
         .hero h1 { font-size: 36px; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -1px; }
         .hero p { font-size: 16px; color: #444; margin-top: 10px; font-weight: 600; }
 
-        /* --- CARRUSEL --- */
         .category-wrapper-pro { position: relative; max-width: 1200px; margin: auto; padding: 0 5%; }
-        .category-container { 
-            display: flex; gap: 15px; overflow-x: auto; padding: 25px 0;
-            scrollbar-width: none; scroll-behavior: smooth;
-        }
+        .category-container { display: flex; gap: 15px; overflow-x: auto; padding: 25px 0; scrollbar-width: none; scroll-behavior: smooth; }
         .category-container::-webkit-scrollbar { display: none; }
 
         .nav-arrow {
@@ -101,19 +83,12 @@
         .arrow-left { left: 2%; display: none; }
         .arrow-right { right: 2%; }
 
-        .cat-card { 
-            min-width: 140px; padding: 30px 15px; border-radius: 28px; 
-            text-align: center; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: white; border: 1px solid rgba(0,0,0,0.03);
-        }
-        .cat-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.05); }
+        .cat-card { min-width: 140px; padding: 30px 15px; border-radius: 28px; text-align: center; cursor: pointer; transition: 0.4s; background: white; border: 1px solid rgba(0,0,0,0.03); }
         .cat-card i { font-size: 32px; display: block; margin-bottom: 10px; }
         .cat-card span { font-weight: 700; font-size: 13px; }
 
-        /* --- SECCIONES --- */
         .btn-back-container { display: none; padding: 20px 5% 0; max-width: 1200px; margin: auto; }
         .btn-back { background: #f0f0f0; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; transition: 0.3s; }
-        .btn-back:hover { background: #e2e2e2; }
 
         .section-content { max-width: 1200px; margin: auto; padding: 20px 5%; min-height: 400px; }
         #lista-negocios { display: none; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
@@ -122,37 +97,13 @@
         .biz-card img { width: 100%; height: 170px; object-fit: cover; }
         .biz-info { padding: 20px; }
         .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
-        .btn-book:hover { background: var(--accent); }
 
         #perfil-detalle, #seccion-mis-citas { display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
-        .servicio-item:hover { border-color: var(--accent); background: white; }
         
-        /* Historial */
-        .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-        .status-asignada { background: var(--pastel-blue); color: #007bff; }
-        .status-asistida { background: var(--pastel-green); color: #28a745; }
-        .status-cancelada { background: #ffebee; color: #dc3545; }
-
-        .resenas-container { margin-top: 50px; padding-top: 30px; border-top: 1px solid #eee; }
-        .resena-card { background: var(--pastel-blue); padding: 20px; border-radius: 25px; margin-bottom: 15px; font-size: 14px; border: 1px solid rgba(0,0,0,0.02); }
-        .rating-stars { color: var(--accent); font-size: 14px; margin-bottom: 8px; display: block; }
-
-        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
-        .footer-grid { max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
-        .footer-col h4 { font-weight: 800; font-size: 16px; margin-bottom: 20px; color: var(--primary); }
-        .footer-col ul { list-style: none; padding: 0; margin: 0; }
-        .footer-col ul li { margin-bottom: 12px; }
-        .footer-col ul li a { text-decoration: none; color: #666; font-size: 14px; transition: 0.3s; }
-        .footer-col ul li a:hover { color: var(--accent); padding-left: 5px; }
-        
-        .footer-bottom { max-width: 1200px; margin: auto; padding-top: 30px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .footer-bottom p { font-size: 13px; color: #999; }
-
         /* --- MODAL AUTH --- */
         #modal-auth {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -164,9 +115,7 @@
         }
         .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; z-index: 10; }
         .auth-container { padding: 40px 30px; text-align: center; }
-        
         .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--logo-dark); letter-spacing: -0.5px; }
-        
         .auth-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; font-weight: 600; }
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
         
@@ -174,22 +123,17 @@
             width: 100%; background: #2c2e35; color: white; border: none; 
             padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;
-            transition: 0.3s;
         }
-        .btn-main-auth:hover { background: var(--primary); }
 
-        .register-box { margin: 20px 0 10px; font-size: 14px; font-weight: 600; color: #444; }
-        .register-link { color: var(--accent); font-weight: 800; text-decoration: none; cursor: pointer; }
-
-        .auth-divider { margin: 20px 0; position: relative; border-top: 1px solid #eee; display: flex; justify-content: center; }
-        .auth-divider span { position: absolute; top: -10px; background: white; padding: 0 15px; color: #999; font-size: 12px; }
-        
         .btn-social {
             width: 100%; background: white; border: 1px solid #ddd; padding: 12px; border-radius: 10px; 
             font-weight: 600; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px;
         }
         .btn-social img { width: 18px; }
-        .auth-legal { font-size: 11px; color: #888; margin-top: 25px; line-height: 1.4; }
+
+        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
+        .footer-grid { max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; }
+        .footer-bottom { max-width: 1200px; margin: auto; padding-top: 30px; border-top: 1px solid #eee; margin-top: 40px; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -252,10 +196,6 @@
             <h3 style="font-weight: 800; margin-bottom: 20px;">Servicios Disponibles</h3>
             <div id="p-servicios" style="margin-bottom: 30px;"></div>
             <button class="btn-book" style="background: var(--primary); height: 60px; font-size: 18px; margin-bottom: 40px; border-radius: 20px;">AGENDAR UNA CITA</button>
-            <div class="resenas-container">
-                <h3 style="font-weight: 800; margin-bottom: 20px;">Opiniones de nuestros clientes</h3>
-                <div id="p-resenas"></div>
-            </div>
         </div>
 
         <div id="seccion-mis-citas">
@@ -263,43 +203,25 @@
         </div>
     </div>
 
-    <div id="modal-auth">
-        <div class="modal-content">
+    <div id="modal-auth" onclick="cerrarSiClicFuera(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
             <div class="auth-container" id="auth-paso-1">
                 <h2 class="auth-header">Bienvenido</h2>
                 <p class="auth-subtitle">Ingresa tus datos para continuar</p>
-                
                 <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
-                <div style="position: relative;">
-                    <input type="password" id="auth-pass" class="auth-input" placeholder="Contraseña">
-                    <span style="position: absolute; right: 15px; top: 15px; font-size: 10px; font-weight: 800; cursor: pointer; color: #999;">MOSTRAR</span>
-                </div>
-                
-                <button class="btn-main-auth" id="btn-enviar-codigo" onclick="solicitarCodigo()">
+                <input type="password" id="auth-pass" class="auth-input" placeholder="Contraseña">
+                <button class="btn-main-auth" id="btn-enviar-codigo" onclick="solicitarCodigo()" style="color:white; padding:15px; border-radius:10px; width:100%; border:none; cursor:pointer; font-weight:700;">
                     ✉️ INICIA SESIÓN CON TU EMAIL
                 </button>
-                
-                <p style="margin-top:15px; font-size:13px; font-weight:700; text-decoration:underline; cursor:pointer;">¿Olvidaste la contraseña?</p>
-                
-                <div class="register-box">
-                    ¿Eres nuevo aquí? <span class="register-link" onclick="alert('Funcionalidad de registro próximamente')">Regístrate ahora</span>
-                </div>
-
-                <div class="auth-divider"><span>O</span></div>
-                
-                <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"> Continuar con Apple</button>
-                <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"> Continuar con Facebook</button>
+                <div class="auth-divider" style="margin:20px 0; border-top:1px solid #eee; position:relative; display:flex; justify-content:center;"><span style="position:absolute; top:-10px; background:white; padding:0 10px; color:#999; font-size:12px;">O</span></div>
                 <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg"> Continuar con Google</button>
-                
-                <p class="auth-legal">Al registrarme, acepto las <u>Términos y condiciones</u> y <u>Política de protección de datos</u></p>
             </div>
 
             <div class="auth-container" id="auth-paso-2" style="display:none;">
                 <h2 class="auth-header">Verifica tu correo</h2>
-                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
+                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6">
                 <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Volver al login</p>
             </div>
         </div>
     </div>
@@ -307,25 +229,9 @@
     <footer>
         <div class="footer-grid">
             <div class="footer-col">
-                <div class="logo" style="margin-bottom: 15px; cursor:default;">AGENDATE<span>LIVE</span></div>
-                <p style="font-size: 14px; color: #666; line-height: 1.6;">La plataforma líder para gestionar tus citas de forma rápida, segura y profesional.</p>
+                <div class="logo">AGENDATE<span>LIVE</span></div>
+                <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
             </div>
-            <div class="footer-col">
-                <h4>Explorar</h4>
-                <ul>
-                    <li><a href="#" onclick="volverInicio(true)">Inicio</a></li>
-                    <li><a href="#">Negocios Destacados</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Contacto</h4>
-                <ul>
-                    <li style="font-size: 14px; color: #666;">📍 Bogotá, Colombia</li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
         </div>
     </footer>
 
@@ -334,6 +240,21 @@
         let cacheNegocios = [];
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
+
+        // --- SOLUCIÓN TECLA ESC Y CIERRE EXTERNO ---
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                cerrarAuth();
+                document.getElementById('user-menu-dropdown').classList.remove('active');
+            }
+        });
+
+        function cerrarSiClicFuera(event) {
+            if (event.target.id === "modal-auth") {
+                cerrarAuth();
+            }
+        }
+        // ------------------------------------------
 
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
@@ -358,40 +279,30 @@
             }
         }
         
-        function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
+        function cerrarAuth() { 
+            document.getElementById('modal-auth').style.display = 'none'; 
+        }
         
         async function solicitarCodigo() {
-            const emailInput = document.getElementById('auth-email');
-            const passInput = document.getElementById('auth-pass');
-            const email = emailInput.value.trim();
-            const pass = passInput.value.trim();
-            const btn = document.getElementById('btn-enviar-codigo');
-            
-            if(!email.includes("@")) return alert("Ingresa un correo válido");
-            if(pass.length < 4) return alert("Ingresa tu contraseña");
-
+            const email = document.getElementById('auth-email').value.trim();
+            const pass = document.getElementById('auth-pass').value.trim();
+            if(!email.includes("@") || pass.length < 4) return alert("Datos incompletos");
             usuarioEmail = email;
-            btn.innerText = "Verificando..."; btn.disabled = true;
-
             try {
-                const respuesta = await fetch(`${api}/api/auth/enviar-codigo`, {
+                const res = await fetch(`${api}/api/auth/enviar-codigo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ correo: email, password: pass })
                 });
-                if (respuesta.ok) {
+                if (res.ok) {
                     document.getElementById('auth-paso-1').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
-                } else {
-                    alert("Error en las credenciales.");
-                }
-            } catch (error) { alert("Error de conexión"); }
-            finally { btn.innerHTML = "✉️ INICIA SESIÓN CON TU EMAIL"; btn.disabled = false; }
+                } else { alert("Error en credenciales"); }
+            } catch (e) { alert("Error de conexión"); }
         }
 
         async function confirmarCodigo() {
-            const codigoInput = document.getElementById('auth-codigo');
-            const codigo = codigoInput.value.trim();
+            const codigo = document.getElementById('auth-codigo').value.trim();
             try {
                 const res = await fetch(`${api}/api/auth/verificar`, {
                     method: 'POST',
@@ -401,20 +312,14 @@
                 const data = await res.json();
                 if (data.success) {
                     loguearUsuarioGlobal(usuarioEmail);
-                    codigoInput.value = "";
                     cerrarAuth();
                 } else { alert("Código incorrecto"); }
-            } catch (e) { alert("Error al verificar"); }
+            } catch (e) { alert("Error"); }
         }
 
         function cerrarSesion() {
             localStorage.removeItem('agendate_user_email');
             location.reload();
-        }
-
-        function regresarPaso1() {
-            document.getElementById('auth-paso-1').style.display = 'block';
-            document.getElementById('auth-paso-2').style.display = 'none';
         }
 
         function volverInicio(pushState = false) {
@@ -432,15 +337,11 @@
             if(pushState) window.history.pushState({view: 'lista', tipo, query}, "", tipo ? `?tipo=${tipo}` : `?q=${encodeURIComponent(query)}`);
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('lista-negocios').style.display = 'grid';
             document.getElementById('back-container').style.display = 'block';
             document.getElementById('btn-atras-dinamico').onclick = () => window.history.back();
-            
             const listado = document.getElementById('lista-negocios');
-            listado.style.display = 'grid';
-            listado.innerHTML = "<p>Buscando...</p>";
-
+            listado.innerHTML = "<p>Cargando...</p>";
             try {
                 let url = tipo ? `${api}/api/negocios/${tipo.toLowerCase()}` : `${api}/api/buscar?q=${encodeURIComponent(query)}`;
                 const res = await fetch(url);
@@ -448,51 +349,20 @@
                 cacheNegocios = negocios;
                 listado.innerHTML = negocios.length ? "" : "<p>No hay resultados.</p>";
                 negocios.forEach(n => {
-                    listado.innerHTML += `<div class="biz-card"><img src="${n.imagen}"><div class="biz-info"><h3 style="margin:0; font-size:18px;">${n.nombre}</h3><p style="color:#777; font-size:13px; margin:5px 0 15px;">📍 ${n.ubicacion}</p><button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil y Citas</button></div></div>`;
+                    listado.innerHTML += `<div class="biz-card"><img src="${n.imagen}"><div class="biz-info"><h3>${n.nombre}</h3><p>📍 ${n.ubicacion}</p><button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil</button></div></div>`;
                 });
-            } catch (e) { listado.innerHTML = "<p>Error de conexión.</p>"; }
+            } catch (e) { listado.innerHTML = "<p>Error.</p>"; }
         }
 
         function verPerfil(id) {
             const n = cacheNegocios.find(item => item._id === id);
             if(!n) return;
-            window.history.pushState({view: 'perfil', id}, "", `?negocio=${n.nombre.replace(/\s+/g, '-').toLowerCase()}`);
             document.getElementById('lista-negocios').style.display = 'none';
             document.getElementById('perfil-detalle').style.display = 'block';
             document.getElementById('p-nombre').innerText = n.nombre;
             document.getElementById('p-ubicacion').innerText = "📍 " + n.ubicacion;
             document.getElementById('p-imagen').src = n.imagen;
-            const divServicios = document.getElementById('p-servicios');
-            divServicios.innerHTML = ""; 
-            if(n.servicios) {
-                n.servicios.forEach(s => {
-                    divServicios.innerHTML += `<div class="servicio-item"><span>${s.nombre}</span> <b>${s.precio}</b></div>`;
-                });
-            }
             window.scrollTo(0,0);
-        }
-
-        async function mostrarMisCitas() {
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'block';
-            document.getElementById('back-container').style.display = 'block';
-            document.getElementById('section-title').innerText = "Mi Historial de Citas";
-            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
-            try {
-                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
-                const citas = await res.json();
-                if(citas.length === 0) { contenedor.innerHTML = "<p>Aún no tienes citas.</p>"; return; }
-                contenedor.innerHTML = "";
-                citas.forEach(cita => {
-                    const statusClass = `status-${cita.status.toLowerCase()}`;
-                    contenedor.innerHTML += `<div class="cita-card"><div><h4 style="margin:0">${cita.negocioNombre}</h4><small style="color:#666">${cita.fecha} - ${cita.hora}</small></div><span class="status-pill ${statusClass}">${cita.status}</span></div>`;
-                });
-            } catch (e) { contenedor.innerHTML = "<p>Error al cargar historial.</p>"; }
         }
 
         function buscarAhora() {
@@ -503,10 +373,8 @@
         function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
 
         window.onpopstate = e => {
-            if (e.state) {
-                if(e.state.view === 'perfil') verPerfil(e.state.id);
-                else cargarNegocios(e.state.tipo, e.state.query, false);
-            } else volverInicio(false);
+            if (e.state) cargarNegocios(e.state.tipo, e.state.query, false);
+            else volverInicio(false);
         };
     </script>
 </body>

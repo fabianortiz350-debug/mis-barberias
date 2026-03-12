@@ -14,6 +14,9 @@
             --pastel-purple: #f3e5f5;
             --pastel-blue: #e3f2fd; 
             --pastel-orange: #fff3e0;
+            /* Nuevos colores específicos para el logo según imagen */
+            --logo-dark: #101c2c;
+            --logo-gold: #c5a040;
         }
         
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; }
@@ -25,8 +28,10 @@
             position: sticky; top: 0; z-index: 1000; gap: 12px;
         }
         .nav-top-row { display: flex; width: 100%; justify-content: space-between; align-items: center; }
-        .logo { font-weight: 800; font-size: 20px; cursor: pointer; color: var(--primary); text-decoration: none; }
-        .logo span { color: var(--accent); }
+        
+        /* Ajuste de colores del Logo */
+        .logo { font-weight: 800; font-size: 20px; cursor: pointer; color: var(--logo-dark); text-decoration: none; letter-spacing: -0.5px; }
+        .logo span { color: var(--logo-gold); }
 
         .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
         .lang-selector { font-size: 22px; cursor: pointer; }
@@ -152,8 +157,8 @@
         .auth-container { padding: 40px 30px; text-align: center; }
         
         /* Ajuste de Bienvenida */
-        .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: #1a1a1a; letter-spacing: -0.5px; }
-        .auth-header span { color: var(--accent); }
+        .auth-header { font-size: 24px; font-weight: 800; margin-bottom: 10px; color: var(--logo-dark); letter-spacing: -0.5px; }
+        .auth-header span { color: var(--logo-gold); }
         .auth-subtitle { font-size: 14px; color: #666; margin-bottom: 25px; font-weight: 600; }
 
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }

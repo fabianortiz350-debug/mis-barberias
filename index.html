@@ -139,17 +139,36 @@
         .footer-bottom { max-width: 1200px; margin: auto; padding-top: 30px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .footer-bottom p { font-size: 13px; color: #999; }
 
-        /* --- MODAL AUTH --- */
+        /* --- MODAL AUTH NUEVO --- */
         #modal-auth {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
         }
         .modal-content {
-            background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; 
-            position: relative; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            background: white; border-radius: 25px; width: 90%; max-width: 420px; 
+            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden;
         }
-        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; }
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; z-index: 10; }
+        .auth-container { padding: 40px 30px; text-align: center; }
+        .auth-header { font-size: 22px; font-weight: 800; margin-bottom: 25px; color: #1a1a1a; }
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
+        
+        .btn-main-auth { 
+            width: 100%; background: #2c2e35; color: white; border: none; 
+            padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;
+        }
+        .auth-divider { margin: 25px 0; position: relative; border-top: 1px solid #eee; display: flex; justify-content: center; }
+        .auth-divider span { position: absolute; top: -10px; background: white; padding: 0 15px; color: #999; font-size: 12px; }
+        
+        .btn-social {
+            width: 100%; background: white; border: 1px solid #ddd; padding: 12px; border-radius: 10px; 
+            font-weight: 600; margin-bottom: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 14px;
+        }
+        .btn-social img { width: 18px; }
+        .auth-selectors { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .selector-pill { border: 1px solid #ddd; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; }
+        .auth-legal { font-size: 11px; color: #888; margin-top: 25px; line-height: 1.4; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -219,29 +238,43 @@
         </div>
 
         <div id="seccion-mis-citas">
-            <div id="contenedor-citas">
-                </div>
+            <div id="contenedor-citas"></div>
         </div>
     </div>
 
     <div id="modal-auth">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
-            <h2 id="auth-titulo" style="font-weight: 800;">Acceso Seguro</h2>
-            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Tu historial se guardará con tu correo.</p>
-            
-            <div id="auth-paso-1">
-                <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
-                <button id="btn-enviar-codigo" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
+            <div class="auth-container" id="auth-paso-1">
+                <h2 class="auth-header">Hola de nuevo</h2>
+                <input type="email" id="auth-email" class="auth-input" placeholder="Correo electrónico">
+                <div style="position: relative;">
+                    <input type="password" id="auth-pass" class="auth-input" placeholder="Contraseña">
+                    <span style="position: absolute; right: 15px; top: 15px; font-size: 10px; font-weight: 800; cursor: pointer; color: #999;">MOSTRAR</span>
+                </div>
+                <button class="btn-main-auth" id="btn-enviar-codigo" onclick="solicitarCodigo()">
+                    ✉️ INICIA SESIÓN CON TU EMAIL
+                </button>
+                <p style="margin-top:20px; font-size:13px; font-weight:700; text-decoration:underline; cursor:pointer;">¿Olvidaste la contraseña?</p>
+                
+                <div class="auth-divider"><span>O</span></div>
+                
+                <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg"> Continuar con Apple</button>
+                <button class="btn-social"><img src="https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png"> Continuar con Facebook</button>
+                <button class="btn-social"><img src="https://www.gstatic.com/images/branding/product/1x/gmail_512dp.png"> Continuar con Google</button>
+                
+                <div class="auth-selectors">
+                    <div class="selector-pill">🇪🇸 IDIOMA</div>
+                    <div class="selector-pill">🇪🇸 PAÍS</div>
+                </div>
+                <p class="auth-legal">Al registrarme, acepto las <u>Términos y condiciones</u> y <u>Política de protección de datos</u></p>
             </div>
 
-            <div id="auth-paso-2" style="display:none;">
+            <div class="auth-container" id="auth-paso-2" style="display:none;">
+                <h2 class="auth-header">Verifica tu correo</h2>
                 <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
                 <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 15px; color: #888;">
-                    ¿No recibiste el código? <span onclick="solicitarCodigo()" style="color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline;">Reenviar ahora</span>
-                </p>
-                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Cambiar correo</p>
+                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Volver al login</p>
             </div>
         </div>
     </div>
@@ -274,15 +307,12 @@
     <script>
         const api = "https://mis-barberias.onrender.com"; 
         let cacheNegocios = [];
-        let usuarioEmail = ""; // Cambiado de usuarioTemporal para mayor claridad
+        let usuarioEmail = ""; 
         let usuarioLogueado = false;
 
-        // --- LÓGICA DE PERSISTENCIA ---
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
-            if(emailGuardado) {
-                loguearUsuarioGlobal(emailGuardado);
-            }
+            if(emailGuardado) { loguearUsuarioGlobal(emailGuardado); }
         }
 
         function loguearUsuarioGlobal(email) {
@@ -307,26 +337,31 @@
         
         async function solicitarCodigo() {
             const emailInput = document.getElementById('auth-email');
+            const passInput = document.getElementById('auth-pass');
             const email = emailInput.value.trim();
+            const pass = passInput.value.trim();
             const btn = document.getElementById('btn-enviar-codigo');
-            if(!email.includes("@")) return alert("Ingresa un correo válido");
             
+            if(!email.includes("@")) return alert("Ingresa un correo válido");
+            if(pass.length < 4) return alert("Ingresa tu contraseña");
+
             usuarioEmail = email;
-            btn.innerText = "Enviando..."; btn.disabled = true;
+            btn.innerText = "Verificando..."; btn.disabled = true;
 
             try {
                 const respuesta = await fetch(`${api}/api/auth/enviar-codigo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: email })
+                    body: JSON.stringify({ correo: email, password: pass })
                 });
                 if (respuesta.ok) {
                     document.getElementById('auth-paso-1').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
-                    document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
+                } else {
+                    alert("Error en las credenciales.");
                 }
             } catch (error) { alert("Error de conexión"); }
-            finally { btn.innerText = "Enviar Código"; btn.disabled = false; }
+            finally { btn.innerHTML = "✉️ INICIA SESIÓN CON TU EMAIL"; btn.disabled = false; }
         }
 
         async function confirmarCodigo() {
@@ -355,43 +390,6 @@
         function regresarPaso1() {
             document.getElementById('auth-paso-1').style.display = 'block';
             document.getElementById('auth-paso-2').style.display = 'none';
-        }
-
-        // --- LÓGICA DE HISTORIAL ---
-        async function mostrarMisCitas() {
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'block';
-            document.getElementById('back-container').style.display = 'block';
-            document.getElementById('section-title').innerText = "Mi Historial de Citas";
-            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
-
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
-
-            try {
-                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
-                const citas = await res.json();
-                if(citas.length === 0) {
-                    contenedor.innerHTML = "<p>Aún no tienes citas registradas.</p>";
-                    return;
-                }
-                contenedor.innerHTML = "";
-                citas.forEach(cita => {
-                    const statusClass = `status-${cita.status.toLowerCase()}`;
-                    contenedor.innerHTML += `
-                        <div class="cita-card">
-                            <div>
-                                <h4 style="margin:0">${cita.negocioNombre}</h4>
-                                <small style="color:#666">${cita.fecha} - ${cita.hora}</small><br>
-                                <small><b>Servicio:</b> ${cita.servicio}</small>
-                            </div>
-                            <span class="status-pill ${statusClass}">${cita.status}</span>
-                        </div>`;
-                });
-            } catch (e) { contenedor.innerHTML = "<p>No se pudo cargar el historial.</p>"; }
         }
 
         // --- NAVEGACIÓN Y CARGA ---
@@ -426,15 +424,7 @@
                 cacheNegocios = negocios;
                 listado.innerHTML = negocios.length ? "" : "<p>No hay resultados.</p>";
                 negocios.forEach(n => {
-                    listado.innerHTML += `
-                        <div class="biz-card">
-                            <img src="${n.imagen}">
-                            <div class="biz-info">
-                                <h3 style="margin:0; font-size:18px;">${n.nombre}</h3>
-                                <p style="color:#777; font-size:13px; margin:5px 0 15px;">📍 ${n.ubicacion}</p>
-                                <button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil y Citas</button>
-                            </div>
-                        </div>`;
+                    listado.innerHTML += `<div class="biz-card"><img src="${n.imagen}"><div class="biz-info"><h3 style="margin:0; font-size:18px;">${n.nombre}</h3><p style="color:#777; font-size:13px; margin:5px 0 15px;">📍 ${n.ubicacion}</p><button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil y Citas</button></div></div>`;
                 });
             } catch (e) { listado.innerHTML = "<p>Error de conexión.</p>"; }
         }
@@ -456,6 +446,29 @@
                 });
             }
             window.scrollTo(0,0);
+        }
+
+        async function mostrarMisCitas() {
+            document.getElementById('wrapper-cats').style.display = 'none';
+            document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('lista-negocios').style.display = 'none';
+            document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'block';
+            document.getElementById('back-container').style.display = 'block';
+            document.getElementById('section-title').innerText = "Mi Historial de Citas";
+            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
+            const contenedor = document.getElementById('contenedor-citas');
+            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
+            try {
+                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
+                const citas = await res.json();
+                if(citas.length === 0) { contenedor.innerHTML = "<p>Aún no tienes citas.</p>"; return; }
+                contenedor.innerHTML = "";
+                citas.forEach(cita => {
+                    const statusClass = `status-${cita.status.toLowerCase()}`;
+                    contenedor.innerHTML += `<div class="cita-card"><div><h4 style="margin:0">${cita.negocioNombre}</h4><small style="color:#666">${cita.fecha} - ${cita.hora}</small></div><span class="status-pill ${statusClass}">${cita.status}</span></div>`;
+                });
+            } catch (e) { contenedor.innerHTML = "<p>Error al cargar historial.</p>"; }
         }
 
         function buscarAhora() {

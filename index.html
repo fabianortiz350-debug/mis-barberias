@@ -117,7 +117,6 @@
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
         .servicio-item:hover { border-color: var(--accent); background: white; }
         
-        /* Estilos para las tarjetas de cita en el historial */
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .status-asignada { background: var(--pastel-blue); color: #007bff; }
@@ -219,29 +218,35 @@
         </div>
 
         <div id="seccion-mis-citas">
-            <div id="contenedor-citas">
-                </div>
+            <div id="contenedor-citas"></div>
         </div>
     </div>
 
     <div id="modal-auth">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
-            <h2 id="auth-titulo" style="font-weight: 800;">Acceso Seguro</h2>
-            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Tu historial se guardará con tu correo.</p>
+            <h2 id="auth-titulo" style="font-weight: 800; margin-bottom: 5px;">Bienvenido</h2>
+            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tus datos para continuar</p>
             
-            <div id="auth-paso-1">
+            <div id="auth-formularios">
+                <input type="text" id="auth-nombre" class="auth-input" placeholder="Nombre completo" style="display:none;">
                 <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
-                <button id="btn-enviar-codigo" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
+                <input type="password" id="auth-password" class="auth-input" placeholder="Contraseña" style="display:none;">
+                
+                <button id="btn-principal-auth" class="btn-book" onclick="manejarAuthPrincipal()">Enviar Código</button>
+                
+                <p id="toggle-text" style="font-size: 13px; margin-top: 15px; color: #666;">
+                    ¿Eres nuevo aquí? <span onclick="mostrarRegistro()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Regístrate ahora</span>
+                </p>
+                <p id="login-alternativo" style="font-size: 12px; margin-top: 10px; color: var(--primary); cursor: pointer; font-weight: 600;" onclick="usarPassword()">
+                    Entrar con contraseña
+                </p>
             </div>
 
             <div id="auth-paso-2" style="display:none;">
                 <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
                 <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 15px; color: #888;">
-                    ¿No recibiste el código? <span onclick="solicitarCodigo()" style="color: var(--primary); font-weight: bold; cursor: pointer; text-decoration: underline;">Reenviar ahora</span>
-                </p>
-                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarPaso1()">← Cambiar correo</p>
+                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarInicioAuth()">← Volver</p>
             </div>
         </div>
     </div>
@@ -274,8 +279,9 @@
     <script>
         const api = "https://mis-barberias.onrender.com"; 
         let cacheNegocios = [];
-        let usuarioEmail = ""; // Cambiado de usuarioTemporal para mayor claridad
+        let usuarioEmail = ""; 
         let usuarioLogueado = false;
+        let modoActual = "codigo"; // codigo, registro, password
 
         // --- LÓGICA DE PERSISTENCIA ---
         function verificarSesionAlCargar() {
@@ -299,39 +305,77 @@
             if(usuarioLogueado) {
                 document.getElementById('user-menu-dropdown').classList.toggle('active');
             } else {
+                regresarInicioAuth();
                 document.getElementById('modal-auth').style.display = 'flex'; 
             }
         }
         
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
-        
+
+        // --- LÓGICA DE INTERFAZ AUTH ---
+        function mostrarRegistro() {
+            modoActual = "registro";
+            document.getElementById('auth-titulo').innerText = "Crea tu cuenta";
+            document.getElementById('auth-nombre').style.display = 'block';
+            document.getElementById('auth-password').style.display = 'block';
+            document.getElementById('btn-principal-auth').innerText = "Registrarse";
+            document.getElementById('toggle-text').innerHTML = '¿Ya tienes cuenta? <span onclick="regresarInicioAuth()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Inicia sesión</span>';
+            document.getElementById('login-alternativo').style.display = 'none';
+        }
+
+        function usarPassword() {
+            modoActual = "password";
+            document.getElementById('auth-titulo').innerText = "Iniciar Sesión";
+            document.getElementById('auth-password').style.display = 'block';
+            document.getElementById('auth-nombre').style.display = 'none';
+            document.getElementById('btn-principal-auth').innerText = "Entrar";
+            document.getElementById('login-alternativo').style.display = 'none';
+            document.getElementById('toggle-text').innerHTML = '¿No tienes cuenta? <span onclick="mostrarRegistro()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Regístrate</span>';
+        }
+
+        function regresarInicioAuth() {
+            modoActual = "codigo";
+            document.getElementById('auth-titulo').innerText = "Bienvenido";
+            document.getElementById('auth-nombre').style.display = 'none';
+            document.getElementById('auth-password').style.display = 'none';
+            document.getElementById('btn-principal-auth').innerText = "Enviar Código";
+            document.getElementById('auth-paso-2').style.display = 'none';
+            document.getElementById('auth-formularios').style.display = 'block';
+            document.getElementById('login-alternativo').style.display = 'block';
+            document.getElementById('toggle-text').innerHTML = '¿Eres nuevo aquí? <span onclick="mostrarRegistro()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Regístrate ahora</span>';
+        }
+
+        function manejarAuthPrincipal() {
+            if(modoActual === "codigo") solicitarCodigo();
+            else if(modoActual === "registro") ejecutarRegistro();
+            else if(modoActual === "password") loginConPassword();
+        }
+
+        // --- ACCIONES DE BACKEND ---
         async function solicitarCodigo() {
-            const emailInput = document.getElementById('auth-email');
-            const email = emailInput.value.trim();
-            const btn = document.getElementById('btn-enviar-codigo');
+            const email = document.getElementById('auth-email').value.trim();
+            const btn = document.getElementById('btn-principal-auth');
             if(!email.includes("@")) return alert("Ingresa un correo válido");
             
             usuarioEmail = email;
             btn.innerText = "Enviando..."; btn.disabled = true;
-
             try {
-                const respuesta = await fetch(`${api}/api/auth/enviar-codigo`, {
+                const res = await fetch(`${api}/api/auth/enviar-codigo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ correo: email })
                 });
-                if (respuesta.ok) {
-                    document.getElementById('auth-paso-1').style.display = 'none';
+                if (res.ok) {
+                    document.getElementById('auth-formularios').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
                     document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
                 }
-            } catch (error) { alert("Error de conexión"); }
+            } catch (e) { alert("Error de conexión"); }
             finally { btn.innerText = "Enviar Código"; btn.disabled = false; }
         }
 
         async function confirmarCodigo() {
-            const codigoInput = document.getElementById('auth-codigo');
-            const codigo = codigoInput.value.trim();
+            const codigo = document.getElementById('auth-codigo').value.trim();
             try {
                 const res = await fetch(`${api}/api/auth/verificar`, {
                     method: 'POST',
@@ -341,20 +385,51 @@
                 const data = await res.json();
                 if (data.success) {
                     loguearUsuarioGlobal(usuarioEmail);
-                    codigoInput.value = "";
                     cerrarAuth();
                 } else { alert("Código incorrecto"); }
             } catch (e) { alert("Error al verificar"); }
         }
 
+        async function ejecutarRegistro() {
+            const nombre = document.getElementById('auth-nombre').value.trim();
+            const email = document.getElementById('auth-email').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
+            if(!nombre || !email || !pass) return alert("Completa todos los campos");
+            
+            try {
+                const res = await fetch(`${api}/api/auth/registrar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, correo: email, password: pass })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert("Registro exitoso. Ahora inicia sesión.");
+                    regresarInicioAuth();
+                } else { alert(data.mensaje || "Error al registrar"); }
+            } catch (e) { alert("Error de conexión"); }
+        }
+
+        async function loginConPassword() {
+            const email = document.getElementById('auth-email').value.trim();
+            const pass = document.getElementById('auth-password').value.trim();
+            try {
+                const res = await fetch(`${api}/api/auth/login-pass`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: email, password: pass })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    loguearUsuarioGlobal(email);
+                    cerrarAuth();
+                } else { alert("Credenciales incorrectas"); }
+            } catch (e) { alert("Error de conexión"); }
+        }
+
         function cerrarSesion() {
             localStorage.removeItem('agendate_user_email');
             location.reload();
-        }
-
-        function regresarPaso1() {
-            document.getElementById('auth-paso-1').style.display = 'block';
-            document.getElementById('auth-paso-2').style.display = 'none';
         }
 
         // --- LÓGICA DE HISTORIAL ---
@@ -474,4 +549,3 @@
     </script>
 </body>
 </html>
-

@@ -23,11 +23,9 @@ const Cita = mongoose.model('Cita', {
     hora: String
 });
 
-// MODELO USUARIO ACTUALIZADO: Añadimos nombre y password
+// Modelo de Usuario simplificado: Solo para gestión de acceso por código
 const Usuario = mongoose.model('Usuario', {
     correo: String,
-    nombre: String,          // NUEVO
-    password: String,        // NUEVO
     codigoVerificacion: String,
     fechaExpiracion: Date, 
     verificado: { type: Boolean, default: false }
@@ -46,42 +44,11 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// --- ✅ RUTA: REGISTRAR NUEVO USUARIO (NUEVA) ---
-app.post('/api/auth/registrar', async (req, res) => {
-    try {
-        const { nombre, correo, password } = req.body;
-        const existe = await Usuario.findOne({ correo });
-        if (existe) {
-            return res.status(400).json({ success: false, mensaje: "El correo ya está registrado" });
-        }
-        const nuevoUsuario = new Usuario({ nombre, correo, password });
-        await nuevoUsuario.save();
-        res.json({ success: true, mensaje: "Usuario creado con éxito" });
-    } catch (error) {
-        res.status(500).json({ success: false, mensaje: "Error al registrar" });
-    }
-});
-
-// --- ✅ RUTA: LOGIN CON CONTRASEÑA (NUEVA) ---
-app.post('/api/auth/login-pass', async (req, res) => {
-    try {
-        const { correo, password } = req.body;
-        const usuario = await Usuario.findOne({ correo, password });
-        if (usuario) {
-            res.json({ success: true, nombre: usuario.nombre });
-        } else {
-            res.status(401).json({ success: false, mensaje: "Correo o contraseña incorrectos" });
-        }
-    } catch (error) {
-        res.status(500).json({ success: false, mensaje: "Error en el servidor" });
-    }
-});
-
 // --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO ---
 app.post('/api/auth/enviar-codigo', async (req, res) => {
     const { correo } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiracion = new Date(Date.now() + 5 * 60 * 1000); 
+    const expiracion = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos de validez
 
     try {
         await Usuario.findOneAndUpdate(
@@ -100,9 +67,11 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
         sendSmtpEmail.to = [{ "email": correo }];
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
+        console.log(`✅ Código enviado con éxito a: ${correo}`);
         res.json({ mensaje: "Código enviado" });
 
     } catch (error) {
+        console.error("❌ Error API Brevo:", error);
         res.status(500).json({ mensaje: "Error al enviar el correo" });
     }
 });
@@ -112,14 +81,19 @@ app.post('/api/auth/verificar', async (req, res) => {
     const { correo, codigo } = req.body;
     try {
         const usuario = await Usuario.findOne({ correo });
+
         if (!usuario || !usuario.codigoVerificacion) {
             return res.status(400).json({ success: false, mensaje: "No hay un código activo." });
         }
+
+        // Verificar expiración
         if (new Date() > usuario.fechaExpiracion) {
             await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null });
             return res.status(400).json({ success: false, mensaje: "El código ha expirado." });
         }
+
         if (usuario.codigoVerificacion === codigo) {
+            // Un solo uso: Limpiamos el código tras validar
             await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null }); 
             res.json({ success: true, mensaje: "Acceso concedido" });
         } else {
@@ -158,6 +132,7 @@ app.post('/reservar', async (req, res) => {
                     end: { dateTime: endDateTime.toISOString(), timeZone: 'America/Bogota' },
                 },
             });
+            console.log("Evento creado en Google Calendar ✅");
         } catch (calError) {
             console.error("❌ ERROR CALENDAR:", calError);
         }

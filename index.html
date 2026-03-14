@@ -30,7 +30,7 @@
 
         .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
         .lang-selector { font-size: 22px; cursor: pointer; }
-        .btn-auth { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 11px; cursor: pointer; white-space: nowrap; }
+        .btn-auth { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 11px; cursor: pointer; white-space: nowrap; transition: 0.3s; }
 
         /* --- MENU DESPLEGABLE --- */
         .user-menu {
@@ -39,7 +39,7 @@
             display: none; flex-direction: column; overflow: hidden; border: 1px solid #eee; z-index: 2001;
         }
         .user-menu.active { display: flex; animation: slideDown 0.3s ease; }
-        .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f5f5f5; }
+        .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f5f5f5; text-align: left; }
         .user-menu-item:hover { background: #f9f9f9; color: var(--accent); }
         .user-menu-item:last-child { border-bottom: none; color: #ff4444; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -73,7 +73,7 @@
         .category-wrapper-pro { position: relative; max-width: 1200px; margin: auto; padding: 0 5%; }
         .category-container { 
             display: flex; gap: 15px; overflow-x: auto; padding: 25px 0;
-            scrollbar-width: none; scroll-behavior: smooth;
+            scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none;
         }
         .category-container::-webkit-scrollbar { display: none; }
 
@@ -100,43 +100,24 @@
         /* --- SECCIONES --- */
         .btn-back-container { display: none; padding: 20px 5% 0; max-width: 1200px; margin: auto; }
         .btn-back { background: #f0f0f0; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; transition: 0.3s; }
-        .btn-back:hover { background: #e2e2e2; }
-
+        
         .section-content { max-width: 1200px; margin: auto; padding: 20px 5%; min-height: 400px; }
         #lista-negocios { display: none; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
 
         .biz-card { background: white; border-radius: 25px; overflow: hidden; border: 1px solid #eee; transition: 0.3s; }
         .biz-card img { width: 100%; height: 170px; object-fit: cover; }
         .biz-info { padding: 20px; }
-        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
 
         #perfil-detalle, #seccion-mis-citas { display: none; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
         .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
-        .servicio-item:hover { border-color: var(--accent); background: white; }
         
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .status-asignada { background: var(--pastel-blue); color: #007bff; }
-        .status-asistida { background: var(--pastel-green); color: #28a745; }
-        .status-cancelada { background: #ffebee; color: #dc3545; }
-
-        .resenas-container { margin-top: 50px; padding-top: 30px; border-top: 1px solid #eee; }
-        .resena-card { background: var(--pastel-blue); padding: 20px; border-radius: 25px; margin-bottom: 15px; font-size: 14px; border: 1px solid rgba(0,0,0,0.02); }
-        .rating-stars { color: var(--accent); font-size: 14px; margin-bottom: 8px; display: block; }
-
-        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
-        .footer-grid { max-width: 1200px; margin: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 40px; margin-bottom: 40px; }
-        .footer-col h4 { font-weight: 800; font-size: 16px; margin-bottom: 20px; color: var(--primary); }
-        .footer-col ul { list-style: none; padding: 0; margin: 0; }
-        .footer-col ul li { margin-bottom: 12px; }
-        .footer-col ul li a { text-decoration: none; color: #666; font-size: 14px; transition: 0.3s; }
-        .footer-col ul li a:hover { color: var(--accent); padding-left: 5px; }
-        
-        .footer-bottom { max-width: 1200px; margin: auto; padding-top: 30px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .footer-bottom p { font-size: 13px; color: #999; }
 
         /* --- MODAL AUTH --- */
         #modal-auth {
@@ -149,6 +130,8 @@
         }
         .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; }
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
+
+        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -158,10 +141,9 @@
             <div class="logo" onclick="volverInicio(true)">AGENDATE<span>LIVE</span></div>
             <div class="nav-actions">
                 <span id="flag-icon" class="lang-selector">🇨🇴</span>
-                <button class="btn-auth" id="btn-auth-main" onclick="abrirAuth()">Iniciar sesión o Regístrate</button>
+                <button class="btn-auth" id="btn-auth-main" onclick="abrirAuth()">Iniciar sesión</button>
                 
                 <div class="user-menu" id="user-menu-dropdown">
-                    <div class="user-menu-item">👤 Mi Perfil</div>
                     <div class="user-menu-item" onclick="mostrarMisCitas()">📅 Mis Citas</div>
                     <div class="user-menu-item" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
                 </div>
@@ -198,7 +180,7 @@
                 <div class="cat-card" style="background:var(--pastel-orange)" onclick="cargarNegocios('barberia')"><i>💈</i><span>Barberías</span></div>
                 <div class="cat-card" style="background:var(--pastel-green)" onclick="cargarNegocios('veterinaria')"><i>🐾</i><span>Veterinarias</span></div>
                 <div class="cat-card" style="background:var(--pastel-purple)" onclick="cargarNegocios('spa')"><i>💅</i><span>Spa</span></div>
-                <div class="cat-card" style="background:var(--pastel-blue)" onclick="cargarNegocios('otros')"><i>✨</i><span>Otros Servicios</span></div>
+                <div class="cat-card" style="background:var(--pastel-blue)" onclick="cargarNegocios('otros')"><i>✨</i><span>Otros</span></div>
             </div>
         </div>
 
@@ -211,10 +193,6 @@
             <h3 style="font-weight: 800; margin-bottom: 20px;">Servicios Disponibles</h3>
             <div id="p-servicios" style="margin-bottom: 30px;"></div>
             <button class="btn-book" style="background: var(--primary); height: 60px; font-size: 18px; margin-bottom: 40px; border-radius: 20px;">AGENDAR UNA CITA</button>
-            <div class="resenas-container">
-                <h3 style="font-weight: 800; margin-bottom: 20px;">Opiniones de nuestros clientes</h3>
-                <div id="p-resenas"></div>
-            </div>
         </div>
 
         <div id="seccion-mis-citas">
@@ -226,52 +204,23 @@
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
             <h2 id="auth-titulo" style="font-weight: 800; margin-bottom: 5px;">Bienvenido</h2>
-            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tus datos para continuar</p>
+            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tu correo para recibir un código de acceso</p>
             
             <div id="auth-formularios">
-                <input type="text" id="auth-nombre" class="auth-input" placeholder="Nombre completo" style="display:none;">
                 <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
-                <input type="password" id="auth-password" class="auth-input" placeholder="Contraseña" style="display:none;">
-                
-                <button id="btn-principal-auth" class="btn-book" onclick="manejarAuthPrincipal()">Enviar Código</button>
-                
-                <p id="toggle-text" style="font-size: 13px; margin-top: 15px; color: #666;">
-                    ¿Eres nuevo aquí? <span onclick="mostrarRegistro()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Regístrate ahora</span>
-                </p>
-                <p id="login-alternativo" style="font-size: 12px; margin-top: 10px; color: var(--primary); cursor: pointer; font-weight: 600;" onclick="usarPassword()">
-                    Entrar con contraseña
-                </p>
+                <button id="btn-principal-auth" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
             </div>
 
             <div id="auth-paso-2" style="display:none;">
                 <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
                 <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 10px; color: #888; cursor: pointer;" onclick="regresarInicioAuth()">← Volver</p>
+                <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer;" onclick="regresarInicioAuth()">← Usar otro correo</p>
             </div>
         </div>
     </div>
 
     <footer>
-        <div class="footer-grid">
-            <div class="footer-col">
-                <div class="logo" style="margin-bottom: 15px; cursor:default;">AGENDATE<span>LIVE</span></div>
-                <p style="font-size: 14px; color: #666; line-height: 1.6;">La plataforma líder para gestionar tus citas de forma rápida, segura y profesional.</p>
-            </div>
-            <div class="footer-col">
-                <h4>Explorar</h4>
-                <ul>
-                    <li><a href="#" onclick="volverInicio(true)">Inicio</a></li>
-                    <li><a href="#">Negocios Destacados</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Contacto</h4>
-                <ul>
-                    <li style="font-size: 14px; color: #666;">📍 Bogotá, Colombia</li>
-                </ul>
-            </div>
-        </div>
-        <div class="footer-bottom">
+        <div class="footer-bottom" style="text-align: center; padding: 20px;">
             <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
         </div>
     </footer>
@@ -281,14 +230,10 @@
         let cacheNegocios = [];
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
-        let modoActual = "codigo"; // codigo, registro, password
 
-        // --- LÓGICA DE PERSISTENCIA ---
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
-            if(emailGuardado) {
-                loguearUsuarioGlobal(emailGuardado);
-            }
+            if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
         }
 
         function loguearUsuarioGlobal(email) {
@@ -312,46 +257,12 @@
         
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
 
-        // --- LÓGICA DE INTERFAZ AUTH ---
-        function mostrarRegistro() {
-            modoActual = "registro";
-            document.getElementById('auth-titulo').innerText = "Crea tu cuenta";
-            document.getElementById('auth-nombre').style.display = 'block';
-            document.getElementById('auth-password').style.display = 'block';
-            document.getElementById('btn-principal-auth').innerText = "Registrarse";
-            document.getElementById('toggle-text').innerHTML = '¿Ya tienes cuenta? <span onclick="regresarInicioAuth()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Inicia sesión</span>';
-            document.getElementById('login-alternativo').style.display = 'none';
-        }
-
-        function usarPassword() {
-            modoActual = "password";
-            document.getElementById('auth-titulo').innerText = "Iniciar Sesión";
-            document.getElementById('auth-password').style.display = 'block';
-            document.getElementById('auth-nombre').style.display = 'none';
-            document.getElementById('btn-principal-auth').innerText = "Entrar";
-            document.getElementById('login-alternativo').style.display = 'none';
-            document.getElementById('toggle-text').innerHTML = '¿No tienes cuenta? <span onclick="mostrarRegistro()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Regístrate</span>';
-        }
-
         function regresarInicioAuth() {
-            modoActual = "codigo";
-            document.getElementById('auth-titulo').innerText = "Bienvenido";
-            document.getElementById('auth-nombre').style.display = 'none';
-            document.getElementById('auth-password').style.display = 'none';
-            document.getElementById('btn-principal-auth').innerText = "Enviar Código";
-            document.getElementById('auth-paso-2').style.display = 'none';
             document.getElementById('auth-formularios').style.display = 'block';
-            document.getElementById('login-alternativo').style.display = 'block';
-            document.getElementById('toggle-text').innerHTML = '¿Eres nuevo aquí? <span onclick="mostrarRegistro()" style="color: var(--accent); font-weight: bold; cursor: pointer;">Regístrate ahora</span>';
+            document.getElementById('auth-paso-2').style.display = 'none';
+            document.getElementById('auth-instruccion').innerText = "Ingresa tu correo para recibir un código de acceso";
         }
 
-        function manejarAuthPrincipal() {
-            if(modoActual === "codigo") solicitarCodigo();
-            else if(modoActual === "registro") ejecutarRegistro();
-            else if(modoActual === "password") loginConPassword();
-        }
-
-        // --- ACCIONES DE BACKEND ---
         async function solicitarCodigo() {
             const email = document.getElementById('auth-email').value.trim();
             const btn = document.getElementById('btn-principal-auth');
@@ -386,45 +297,8 @@
                 if (data.success) {
                     loguearUsuarioGlobal(usuarioEmail);
                     cerrarAuth();
-                } else { alert("Código incorrecto"); }
+                } else { alert("Código incorrecto o vencido"); }
             } catch (e) { alert("Error al verificar"); }
-        }
-
-        async function ejecutarRegistro() {
-            const nombre = document.getElementById('auth-nombre').value.trim();
-            const email = document.getElementById('auth-email').value.trim();
-            const pass = document.getElementById('auth-password').value.trim();
-            if(!nombre || !email || !pass) return alert("Completa todos los campos");
-            
-            try {
-                const res = await fetch(`${api}/api/auth/registrar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nombre, correo: email, password: pass })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    alert("Registro exitoso. Ahora inicia sesión.");
-                    regresarInicioAuth();
-                } else { alert(data.mensaje || "Error al registrar"); }
-            } catch (e) { alert("Error de conexión"); }
-        }
-
-        async function loginConPassword() {
-            const email = document.getElementById('auth-email').value.trim();
-            const pass = document.getElementById('auth-password').value.trim();
-            try {
-                const res = await fetch(`${api}/api/auth/login-pass`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: email, password: pass })
-                });
-                const data = await res.json();
-                if(data.success) {
-                    loguearUsuarioGlobal(email);
-                    cerrarAuth();
-                } else { alert("Credenciales incorrectas"); }
-            } catch (e) { alert("Error de conexión"); }
         }
 
         function cerrarSesion() {
@@ -432,44 +306,21 @@
             location.reload();
         }
 
-        // --- LÓGICA DE HISTORIAL ---
         async function mostrarMisCitas() {
+            volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
             document.getElementById('seccion-mis-citas').style.display = 'block';
             document.getElementById('back-container').style.display = 'block';
             document.getElementById('section-title').innerText = "Mi Historial de Citas";
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
+            document.getElementById('user-menu-dropdown').classList.remove('active');
 
             const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando tu historial...</p>";
-
-            try {
-                const res = await fetch(`${api}/api/citas/historial/${usuarioEmail}`);
-                const citas = await res.json();
-                if(citas.length === 0) {
-                    contenedor.innerHTML = "<p>Aún no tienes citas registradas.</p>";
-                    return;
-                }
-                contenedor.innerHTML = "";
-                citas.forEach(cita => {
-                    const statusClass = `status-${cita.status.toLowerCase()}`;
-                    contenedor.innerHTML += `
-                        <div class="cita-card">
-                            <div>
-                                <h4 style="margin:0">${cita.negocioNombre}</h4>
-                                <small style="color:#666">${cita.fecha} - ${cita.hora}</small><br>
-                                <small><b>Servicio:</b> ${cita.servicio}</small>
-                            </div>
-                            <span class="status-pill ${statusClass}">${cita.status}</span>
-                        </div>`;
-                });
-            } catch (e) { contenedor.innerHTML = "<p>No se pudo cargar el historial.</p>"; }
+            contenedor.innerHTML = "<p>Cargando citas...</p>";
+            // Aquí iría el fetch a tu historial cuando lo tengas listo
         }
 
-        // --- NAVEGACIÓN Y CARGA ---
         function volverInicio(pushState = false) {
             document.getElementById('wrapper-cats').style.display = 'block';
             document.getElementById('hero-area').style.display = 'block';
@@ -478,74 +329,23 @@
             document.getElementById('seccion-mis-citas').style.display = 'none';
             document.getElementById('back-container').style.display = 'none';
             document.getElementById('section-title').innerText = "Explora Categorías";
-            if(pushState) window.history.pushState(null, "", window.location.pathname);
         }
 
-        async function cargarNegocios(tipo, query = "", pushState = true) {
-            if(pushState) window.history.pushState({view: 'lista', tipo, query}, "", tipo ? `?tipo=${tipo}` : `?q=${encodeURIComponent(query)}`);
+        async function cargarNegocios(tipo, query = "") {
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
             document.getElementById('back-container').style.display = 'block';
-            document.getElementById('btn-atras-dinamico').onclick = () => window.history.back();
+            document.getElementById('lista-negocios').style.display = 'grid';
+            document.getElementById('lista-negocios').innerHTML = "<p>Buscando...</p>";
+            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
             
-            const listado = document.getElementById('lista-negocios');
-            listado.style.display = 'grid';
-            listado.innerHTML = "<p>Buscando...</p>";
-
-            try {
-                let url = tipo ? `${api}/api/negocios/${tipo.toLowerCase()}` : `${api}/api/buscar?q=${encodeURIComponent(query)}`;
-                const res = await fetch(url);
-                const negocios = await res.json();
-                cacheNegocios = negocios;
-                listado.innerHTML = negocios.length ? "" : "<p>No hay resultados.</p>";
-                negocios.forEach(n => {
-                    listado.innerHTML += `
-                        <div class="biz-card">
-                            <img src="${n.imagen}">
-                            <div class="biz-info">
-                                <h3 style="margin:0; font-size:18px;">${n.nombre}</h3>
-                                <p style="color:#777; font-size:13px; margin:5px 0 15px;">📍 ${n.ubicacion}</p>
-                                <button class="btn-book" onclick="verPerfil('${n._id}')">Ver Perfil y Citas</button>
-                            </div>
-                        </div>`;
-                });
-            } catch (e) { listado.innerHTML = "<p>Error de conexión.</p>"; }
-        }
-
-        function verPerfil(id) {
-            const n = cacheNegocios.find(item => item._id === id);
-            if(!n) return;
-            window.history.pushState({view: 'perfil', id}, "", `?negocio=${n.nombre.replace(/\s+/g, '-').toLowerCase()}`);
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'block';
-            document.getElementById('p-nombre').innerText = n.nombre;
-            document.getElementById('p-ubicacion').innerText = "📍 " + n.ubicacion;
-            document.getElementById('p-imagen').src = n.imagen;
-            const divServicios = document.getElementById('p-servicios');
-            divServicios.innerHTML = ""; 
-            if(n.servicios) {
-                n.servicios.forEach(s => {
-                    divServicios.innerHTML += `<div class="servicio-item"><span>${s.nombre}</span> <b>${s.precio}</b></div>`;
-                });
-            }
-            window.scrollTo(0,0);
-        }
-
-        function buscarAhora() {
-            const q = document.getElementById('query').value.trim();
-            if(q) cargarNegocios(null, q);
+            // Simulación de carga (sustituir por fetch real)
+            setTimeout(() => {
+                document.getElementById('lista-negocios').innerHTML = "<p>No hay negocios registrados en esta categoría aún.</p>";
+            }, 500);
         }
 
         function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
-
-        window.onpopstate = e => {
-            if (e.state) {
-                if(e.state.view === 'perfil') verPerfil(e.state.id);
-                else cargarNegocios(e.state.tipo, e.state.query, false);
-            } else volverInicio(false);
-        };
     </script>
 </body>
 </html>

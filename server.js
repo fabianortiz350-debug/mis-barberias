@@ -46,7 +46,8 @@ app.get('/', (req, res) => {
 
 // --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO ---
 app.post('/api/auth/enviar-codigo', async (req, res) => {
-    const { correo } = req.body;
+    // MODIFICACIÓN: Ahora recibimos también 'htmlCustom' desde el cliente
+    const { correo, htmlCustom } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
     const expiracion = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos de validez
 
@@ -60,14 +61,20 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
             { upsert: true }
         );
 
+        // LÓGICA DE DISEÑO: Reemplazamos la etiqueta por el código real generado
+        // Si por alguna razón htmlCustom no llega, usamos un diseño básico por defecto
+        const disenioFinal = htmlCustom 
+            ? htmlCustom.replace('{{CODIGO}}', codigo) 
+            : `<h3>Bienvenido</h3><p>Tu código es: <b>${codigo}</b></p>`;
+
         let sendSmtpEmail = new Brevo.SendSmtpEmail();
         sendSmtpEmail.subject = "Tu código de seguridad - Agendate Live";
-        sendSmtpEmail.htmlContent = `<h3>Bienvenido</h3><p>Tu código de verificación es: <b>${codigo}</b></p><p>Este código expirará en 5 minutos.</p>`;
+        sendSmtpEmail.htmlContent = disenioFinal; // Inyectamos el diseño profesional
         sendSmtpEmail.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         sendSmtpEmail.to = [{ "email": correo }];
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`✅ Código enviado con éxito a: ${correo}`);
+        console.log(`✅ Código enviado con diseño profesional a: ${correo}`);
         res.json({ mensaje: "Código enviado" });
 
     } catch (error) {

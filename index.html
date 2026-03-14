@@ -270,11 +270,35 @@
             
             usuarioEmail = email;
             btn.innerText = "Enviando..."; btn.disabled = true;
+
+            // Plantilla de correo profesional integrada
+            const htmlCorreo = `
+                <div style="font-family:'Plus Jakarta Sans',sans-serif;max-width:500px;margin:20px auto;border:1px solid #eee;border-radius:24px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+                    <div style="background:#1a1a1a;padding:30px;text-align:center;">
+                        <span style="color:white;font-weight:800;font-size:22px;">AGENDATE<span style="color:#d4af37;">LIVE</span></span>
+                    </div>
+                    <div style="padding:40px 20px;text-align:center;background:white;">
+                        <h2 style="margin:0;color:#1a1a1a;font-weight:800;">Tu código de acceso</h2>
+                        <p style="color:#666;margin:10px 0 30px;">Cópialo y pégalo para ingresar a tu cuenta.</p>
+                        <div style="background:#fff3e0;border:2px dashed #d4af37;padding:15px;border-radius:12px;display:inline-block;">
+                            <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#1a1a1a;">{{CODIGO}}</span>
+                        </div>
+                        <p style="font-size:12px;color:#ff4444;margin-top:25px;font-weight:600;">Este código vence en 5 minutos.</p>
+                    </div>
+                    <div style="background:#f9f9f9;padding:20px;text-align:center;font-size:11px;color:#999;">
+                        &copy; 2026 Agendate Live. Bogotá, Colombia.
+                    </div>
+                </div>
+            `;
+
             try {
                 const res = await fetch(`${api}/api/auth/enviar-codigo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: email })
+                    body: JSON.stringify({ 
+                        correo: email,
+                        htmlCustom: htmlCorreo // Enviamos el HTML al backend
+                    })
                 });
                 if (res.ok) {
                     document.getElementById('auth-formularios').style.display = 'none';
@@ -318,7 +342,6 @@
 
             const contenedor = document.getElementById('contenedor-citas');
             contenedor.innerHTML = "<p>Cargando citas...</p>";
-            // Aquí iría el fetch a tu historial cuando lo tengas listo
         }
 
         function volverInicio(pushState = false) {
@@ -339,7 +362,6 @@
             document.getElementById('lista-negocios').innerHTML = "<p>Buscando...</p>";
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
             
-            // Simulación de carga (sustituir por fetch real)
             setTimeout(() => {
                 document.getElementById('lista-negocios').innerHTML = "<p>No hay negocios registrados en esta categoría aún.</p>";
             }, 500);

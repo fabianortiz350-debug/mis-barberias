@@ -113,11 +113,15 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
-        .servicio-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: #f8f8f8; border-radius: 15px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
         
-        .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .status-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-        .status-asignada { background: var(--pastel-blue); color: #007bff; }
+        /* --- SELECTOR DE HORAS VIP --- */
+        .reserva-contenedor { background: #f9f9f9; padding: 20px; border-radius: 24px; margin-top: 20px; border: 1px solid #eee; }
+        .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-family: inherit; }
+        .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .hora-btn { background: white; color: var(--primary); border: 1px solid #ddd; padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 600; }
+        .hora-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+        .hora-btn.seleccionada { background: var(--accent); color: white; border-color: var(--accent); }
+        .hora-btn:disabled { background: #eee; color: #bbb; cursor: not-allowed; border: none; }
 
         /* --- MODAL AUTH --- */
         #modal-auth {
@@ -190,9 +194,19 @@
             <img id="p-imagen" class="foto-perfil" src="" alt="Negocio">
             <h1 id="p-nombre" style="font-weight: 800; margin: 0 0 10px 0; font-size: 32px;"></h1>
             <p id="p-ubicacion" style="color: #666; font-size: 16px; margin-bottom: 30px;"></p>
-            <h3 style="font-weight: 800; margin-bottom: 20px;">Servicios Disponibles</h3>
-            <div id="p-servicios" style="margin-bottom: 30px;"></div>
-            <button class="btn-book" style="background: var(--primary); height: 60px; font-size: 18px; margin-bottom: 40px; border-radius: 20px;">AGENDAR UNA CITA</button>
+            
+            <div class="reserva-contenedor">
+                <h3 style="font-weight: 800; margin-top: 0;">Reserva tu espacio</h3>
+                <label style="font-size: 14px; font-weight: 600;">1. Selecciona el día:</label>
+                <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
+                
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Elige la hora:</label>
+                <div id="contenedor-horas" class="grid-horas">
+                    <p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha para ver disponibilidad</p>
+                </div>
+
+                <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="background: var(--primary); height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR UNA CITA</button>
+            </div>
         </div>
 
         <div id="seccion-mis-citas">
@@ -227,9 +241,9 @@
 
     <script>
         const api = "https://mis-barberias.onrender.com"; 
-        let cacheNegocios = [];
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
+        let horaSeleccionada = null;
 
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
@@ -271,34 +285,13 @@
             usuarioEmail = email;
             btn.innerText = "Enviando..."; btn.disabled = true;
 
-            // Plantilla de correo profesional integrada
-            const htmlCorreo = `
-                <div style="font-family:'Plus Jakarta Sans',sans-serif;max-width:500px;margin:20px auto;border:1px solid #eee;border-radius:24px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
-                    <div style="background:#1a1a1a;padding:30px;text-align:center;">
-                        <span style="color:white;font-weight:800;font-size:22px;">AGENDATE<span style="color:#d4af37;">LIVE</span></span>
-                    </div>
-                    <div style="padding:40px 20px;text-align:center;background:white;">
-                        <h2 style="margin:0;color:#1a1a1a;font-weight:800;">Tu código de acceso</h2>
-                        <p style="color:#666;margin:10px 0 30px;">Cópialo y pégalo para ingresar a tu cuenta.</p>
-                        <div style="background:#fff3e0;border:2px dashed #d4af37;padding:15px;border-radius:12px;display:inline-block;">
-                            <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#1a1a1a;">{{CODIGO}}</span>
-                        </div>
-                        <p style="font-size:12px;color:#ff4444;margin-top:25px;font-weight:600;">Este código vence en 5 minutos.</p>
-                    </div>
-                    <div style="background:#f9f9f9;padding:20px;text-align:center;font-size:11px;color:#999;">
-                        &copy; 2026 Agendate Live. Bogotá, Colombia.
-                    </div>
-                </div>
-            `;
+            const htmlCorreo = `<div style="font-family:'Plus Jakarta Sans',sans-serif;max-width:500px;margin:20px auto;border:1px solid #eee;border-radius:24px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);"><div style="background:#1a1a1a;padding:30px;text-align:center;"><span style="color:white;font-weight:800;font-size:22px;">AGENDATE<span style="color:#d4af37;">LIVE</span></span></div><div style="padding:40px 20px;text-align:center;background:white;"><h2 style="margin:0;color:#1a1a1a;font-weight:800;">Tu código de acceso</h2><p style="color:#666;margin:10px 0 30px;">Cópialo y pégalo para ingresar a tu cuenta.</p><div style="background:#fff3e0;border:2px dashed #d4af37;padding:15px;border-radius:12px;display:inline-block;"><span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#1a1a1a;">{{CODIGO}}</span></div><p style="font-size:12px;color:#ff4444;margin-top:25px;font-weight:600;">Este código vence en 5 minutos.</p></div></div>`;
 
             try {
                 const res = await fetch(`${api}/api/auth/enviar-codigo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        correo: email,
-                        htmlCustom: htmlCorreo // Enviamos el HTML al backend
-                    })
+                    body: JSON.stringify({ correo: email, htmlCustom: htmlCorreo })
                 });
                 if (res.ok) {
                     document.getElementById('auth-formularios').style.display = 'none';
@@ -330,18 +323,73 @@
             location.reload();
         }
 
-        async function mostrarMisCitas() {
-            volverInicio();
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'block';
-            document.getElementById('back-container').style.display = 'block';
-            document.getElementById('section-title').innerText = "Mi Historial de Citas";
-            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio(true);
-            document.getElementById('user-menu-dropdown').classList.remove('active');
+        async function cargarHorasDisponibles() {
+            const fecha = document.getElementById('fecha-reserva').value;
+            const barbero = document.getElementById('p-nombre').innerText;
+            const contenedor = document.getElementById('contenedor-horas');
+            
+            if(!fecha) return;
+            contenedor.innerHTML = "<p style='grid-column: span 3; text-align:center;'>Buscando disponibilidad...</p>";
 
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando citas...</p>";
+            try {
+                const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
+                const data = await res.json();
+                
+                const horarioBase = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+                contenedor.innerHTML = "";
+                horaSeleccionada = null;
+
+                horarioBase.forEach(hora => {
+                    const btn = document.createElement('button');
+                    btn.innerText = hora;
+                    btn.className = 'hora-btn';
+                    if(data.ocupadas && data.ocupadas.includes(hora)) {
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = () => {
+                            document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('seleccionada'));
+                            btn.classList.add('seleccionada');
+                            horaSeleccionada = hora;
+                        };
+                    }
+                    contenedor.appendChild(btn);
+                });
+            } catch (e) { contenedor.innerHTML = "Error al cargar disponibilidad"; }
+        }
+
+        async function enviarReserva() {
+            if(!usuarioLogueado) return abrirAuth();
+            const fecha = document.getElementById('fecha-reserva').value;
+            if(!fecha || !horaSeleccionada) return alert("Por favor elige fecha y hora");
+
+            const nombre = prompt("¿A nombre de quién?");
+            const telefono = prompt("Número de contacto:");
+            if(!nombre || !telefono) return;
+
+            const btn = document.getElementById('btn-finalizar-reserva');
+            btn.innerText = "Agendando..."; btn.disabled = true;
+
+            const datos = {
+                clienteNombre: nombre,
+                clienteTelefono: telefono,
+                clienteEmail: usuarioEmail,
+                barbero: document.getElementById('p-nombre').innerText,
+                fecha: fecha,
+                hora: horaSeleccionada
+            };
+
+            try {
+                const res = await fetch(`${api}/reservar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                if(res.ok) {
+                    alert("✨ ¡Cita agendada con éxito! Revisa tu correo electrónico.");
+                    location.reload();
+                } else { alert("No se pudo agendar. Intenta otra hora."); }
+            } catch (e) { alert("Error al conectar con el servidor"); }
+            finally { btn.innerText = "AGENDAR UNA CITA"; btn.disabled = false; }
         }
 
         function volverInicio(pushState = false) {
@@ -354,17 +402,16 @@
             document.getElementById('section-title').innerText = "Explora Categorías";
         }
 
-        async function cargarNegocios(tipo, query = "") {
+        async function cargarNegocios(tipo) {
+            // Ejemplo rápido para visualizar el perfil (puedes adaptarlo a tu lógica de carga real)
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
             document.getElementById('back-container').style.display = 'block';
-            document.getElementById('lista-negocios').style.display = 'grid';
-            document.getElementById('lista-negocios').innerHTML = "<p>Buscando...</p>";
+            document.getElementById('perfil-detalle').style.display = 'block';
+            document.getElementById('p-nombre').innerText = "Master Barber VIP";
+            document.getElementById('p-ubicacion').innerText = "Bogotá, Colombia";
+            document.getElementById('p-imagen').src = "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800";
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
-            
-            setTimeout(() => {
-                document.getElementById('lista-negocios').innerHTML = "<p>No hay negocios registrados en esta categoría aún.</p>";
-            }, 500);
         }
 
         function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }

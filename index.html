@@ -116,7 +116,7 @@
         
         /* --- SELECTOR DE HORAS VIP --- */
         .reserva-contenedor { background: #f9f9f9; padding: 20px; border-radius: 24px; margin-top: 20px; border: 1px solid #eee; }
-        .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-family: inherit; }
+        .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-family: inherit; box-sizing: border-box; }
         .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
         .hora-btn { background: white; color: var(--primary); border: 1px solid #ddd; padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 600; }
         .hora-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
@@ -197,12 +197,17 @@
             
             <div class="reserva-contenedor">
                 <h3 style="font-weight: 800; margin-top: 0;">Reserva tu espacio</h3>
-                <label style="font-size: 14px; font-weight: 600;">1. Selecciona el día:</label>
+                
+                <label style="font-size: 14px; font-weight: 600;">1. Datos de contacto:</label>
+                <input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre completo" required>
+                <input type="tel" id="reserva-telefono" class="input-vip" placeholder="Teléfono" required>
+
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Selecciona el día:</label>
                 <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
                 
-                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Elige la hora:</label>
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Elige la hora:</label>
                 <div id="contenedor-horas" class="grid-horas">
-                    <p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha para ver disponibilidad</p>
+                    <p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p>
                 </div>
 
                 <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="background: var(--primary); height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR UNA CITA</button>
@@ -244,6 +249,7 @@
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
         let horaSeleccionada = null;
+        let categoriaActual = "";
 
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
@@ -324,26 +330,38 @@
         }
 
         async function cargarHorasDisponibles() {
-            const fecha = document.getElementById('fecha-reserva').value;
+            const fechaInput = document.getElementById('fecha-reserva').value;
             const barbero = document.getElementById('p-nombre').innerText;
             const contenedor = document.getElementById('contenedor-horas');
             
-            if(!fecha) return;
+            if(!fechaInput) return;
             contenedor.innerHTML = "<p style='grid-column: span 3; text-align:center;'>Buscando disponibilidad...</p>";
 
             try {
-                const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
+                const res = await fetch(`${api}/disponibilidad?fecha=${fechaInput}&barbero=${barbero}`);
                 const data = await res.json();
                 
                 const horarioBase = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
                 contenedor.innerHTML = "";
                 horaSeleccionada = null;
 
+                const ahora = new Date();
+                const hoyStr = ahora.toISOString().split('T')[0];
+                const horaActual = ahora.getHours();
+
                 horarioBase.forEach(hora => {
+                    const [h, m] = hora.split(':').map(Number);
                     const btn = document.createElement('button');
                     btn.innerText = hora;
                     btn.className = 'hora-btn';
-                    if(data.ocupadas && data.ocupadas.includes(hora)) {
+                    
+                    const estaOcupada = data.ocupadas && data.ocupadas.includes(hora);
+                    let yaPaso = false;
+                    if (fechaInput === hoyStr && h <= horaActual) {
+                        yaPaso = true;
+                    }
+
+                    if(estaOcupada || yaPaso) {
                         btn.disabled = true;
                     } else {
                         btn.onclick = () => {
@@ -359,12 +377,15 @@
 
         async function enviarReserva() {
             if(!usuarioLogueado) return abrirAuth();
+            
+            const nombre = document.getElementById('reserva-nombre').value.trim();
+            const telefono = document.getElementById('reserva-telefono').value.trim();
             const fecha = document.getElementById('fecha-reserva').value;
-            if(!fecha || !horaSeleccionada) return alert("Por favor elige fecha y hora");
 
-            const nombre = prompt("¿A nombre de quién?");
-            const telefono = prompt("Número de contacto:");
-            if(!nombre || !telefono) return;
+            if(!nombre || !telefono || !fecha || !horaSeleccionada) {
+                alert("⚠️ Por favor completa tu nombre, teléfono y elige una hora.");
+                return;
+            }
 
             const btn = document.getElementById('btn-finalizar-reserva');
             btn.innerText = "Agendando..."; btn.disabled = true;
@@ -375,7 +396,8 @@
                 clienteEmail: usuarioEmail,
                 barbero: document.getElementById('p-nombre').innerText,
                 fecha: fecha,
-                hora: horaSeleccionada
+                hora: horaSeleccionada,
+                categoria: categoriaActual
             };
 
             try {
@@ -385,7 +407,7 @@
                     body: JSON.stringify(datos)
                 });
                 if(res.ok) {
-                    alert("✨ ¡Cita agendada con éxito! Revisa tu correo electrónico.");
+                    alert(`✨ ¡Cita agendada con éxito en ${categoriaActual}!`);
                     location.reload();
                 } else { alert("No se pudo agendar. Intenta otra hora."); }
             } catch (e) { alert("Error al conectar con el servidor"); }
@@ -403,12 +425,12 @@
         }
 
         async function cargarNegocios(tipo) {
-            // Ejemplo rápido para visualizar el perfil (puedes adaptarlo a tu lógica de carga real)
+            categoriaActual = tipo.charAt(0).toUpperCase() + tipo.slice(1);
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
             document.getElementById('back-container').style.display = 'block';
             document.getElementById('perfil-detalle').style.display = 'block';
-            document.getElementById('p-nombre').innerText = "Master Barber VIP";
+            document.getElementById('p-nombre').innerText = "Negocio de " + categoriaActual;
             document.getElementById('p-ubicacion').innerText = "Bogotá, Colombia";
             document.getElementById('p-imagen').src = "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800";
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();

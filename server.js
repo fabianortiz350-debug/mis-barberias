@@ -15,15 +15,16 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
     .catch(err => console.error("❌ Error de conexión:", err));
 
+// MODELO ACTUALIZADO: Añadido clienteEmail
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
+    clienteEmail: String, 
     barbero: String,
     fecha: String,
     hora: String
 });
 
-// Modelo de Usuario simplificado: Solo para gestión de acceso por código
 const Usuario = mongoose.model('Usuario', {
     correo: String,
     codigoVerificacion: String,
@@ -46,10 +47,9 @@ app.get('/', (req, res) => {
 
 // --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO ---
 app.post('/api/auth/enviar-codigo', async (req, res) => {
-    // MODIFICACIÓN: Ahora recibimos también 'htmlCustom' desde el cliente
     const { correo, htmlCustom } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiracion = new Date(Date.now() + 5 * 60 * 1000); // 5 minutos de validez
+    const expiracion = new Date(Date.now() + 5 * 60 * 1000); 
 
     try {
         await Usuario.findOneAndUpdate(
@@ -61,20 +61,18 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
             { upsert: true }
         );
 
-        // LÓGICA DE DISEÑO: Reemplazamos la etiqueta por el código real generado
-        // Si por alguna razón htmlCustom no llega, usamos un diseño básico por defecto
         const disenioFinal = htmlCustom 
             ? htmlCustom.replace('{{CODIGO}}', codigo) 
             : `<h3>Bienvenido</h3><p>Tu código es: <b>${codigo}</b></p>`;
 
         let sendSmtpEmail = new Brevo.SendSmtpEmail();
         sendSmtpEmail.subject = "Tu código de seguridad - Agendate Live";
-        sendSmtpEmail.htmlContent = disenioFinal; // Inyectamos el diseño profesional
+        sendSmtpEmail.htmlContent = disenioFinal;
         sendSmtpEmail.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         sendSmtpEmail.to = [{ "email": correo }];
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`✅ Código enviado con diseño profesional a: ${correo}`);
+        console.log(`✅ Código enviado con éxito a: ${correo}`);
         res.json({ mensaje: "Código enviado" });
 
     } catch (error) {
@@ -88,19 +86,14 @@ app.post('/api/auth/verificar', async (req, res) => {
     const { correo, codigo } = req.body;
     try {
         const usuario = await Usuario.findOne({ correo });
-
         if (!usuario || !usuario.codigoVerificacion) {
             return res.status(400).json({ success: false, mensaje: "No hay un código activo." });
         }
-
-        // Verificar expiración
         if (new Date() > usuario.fechaExpiracion) {
             await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null });
             return res.status(400).json({ success: false, mensaje: "El código ha expirado." });
         }
-
         if (usuario.codigoVerificacion === codigo) {
-            // Un solo uso: Limpiamos el código tras validar
             await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null }); 
             res.json({ success: true, mensaje: "Acceso concedido" });
         } else {
@@ -111,41 +104,64 @@ app.post('/api/auth/verificar', async (req, res) => {
     }
 });
 
+// --- ✅ RUTA: DISPONIBILIDAD ---
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
-        res.json({ ocupadas: [], bloqueadas: [] });
+        const citas = await Cita.find({ fecha, barbero });
+        const ocupadas = citas.map(c => c.hora);
+        res.json({ ocupadas, bloqueadas: [] });
     } catch (error) {
         res.status(500).json({ error: "Error cargando horas" });
     }
 });
 
+// --- ✅ RUTA: RESERVAR CITA (Actualizada con Email de Confirmación) ---
 app.post('/reservar', async (req, res) => {
     try {
-        const { clienteNombre, clienteTelefono, barbero, fecha, hora } = req.body;
-        const nuevaCita = new Cita(req.body);
+        const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora } = req.body;
+        
+        // Guardamos en la base de datos
+        const nuevaCita = new Cita({
+            clienteNombre,
+            clienteTelefono,
+            clienteEmail,
+            barbero,
+            fecha,
+            hora
+        });
         await nuevaCita.save();
 
-        try {
-            const startDateTime = new Date(`${fecha}T${hora}:00`);
-            const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
-            await calendar.events.insert({
-                calendarId: 'primary',
-                resource: {
-                    summary: `💈 Cita: ${clienteNombre} - ${barbero}`,
-                    location: 'Master Barber VIP',
-                    description: `Teléfono: ${clienteTelefono}`,
-                    start: { dateTime: startDateTime.toISOString(), timeZone: 'America/Bogota' },
-                    end: { dateTime: endDateTime.toISOString(), timeZone: 'America/Bogota' },
-                },
-            });
-            console.log("Evento creado en Google Calendar ✅");
-        } catch (calError) {
-            console.error("❌ ERROR CALENDAR:", calError);
-        }
-        res.status(200).json({ message: "Cita guardada" });
+        // Enviamos correo de confirmación profesional
+        let emailConfirm = new Brevo.SendSmtpEmail();
+        emailConfirm.subject = "✨ Cita Confirmada - Agendate Live";
+        emailConfirm.htmlContent = `
+            <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #d4af37;border-radius:20px;padding:20px;background:#fff;">
+                <div style="text-align:center;background:#1a1a1a;padding:15px;border-radius:15px 15px 0 0;">
+                    <h2 style="color:#d4af37;margin:0;">Reserva Confirmada</h2>
+                </div>
+                <div style="padding:20px;color:#333;">
+                    <p>Hola <b>${clienteNombre}</b>,</p>
+                    <p>Tu cita se ha agendado correctamente en <b>Agendate Live</b>.</p>
+                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;">
+                        <p style="margin:5px 0;">📅 <b>Fecha:</b> ${fecha}</p>
+                        <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
+                        <p style="margin:5px 0;">💈 <b>Barbero:</b> ${barbero}</p>
+                    </div>
+                    <p style="font-size:12px;color:#777;margin-top:20px;">Si necesitas cancelar, por favor avísanos con tiempo.</p>
+                </div>
+            </div>`;
+        emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
+        emailConfirm.to = [{ "email": clienteEmail }];
+
+        await apiInstance.sendTransacEmail(emailConfirm);
+        
+        console.log(`✅ Cita guardada y confirmada para: ${clienteEmail}`);
+        res.status(200).json({ message: "Cita guardada y confirmada" });
+
     } catch (e) {
-        res.status(500).json({ error: "Error en el servidor" });
+        console.error("❌ Error en reserva:", e);
+        res.status(500).json({ error: "Error en el servidor al reservar" });
     }
 });
 

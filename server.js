@@ -15,14 +15,15 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
     .catch(err => console.error("❌ Error de conexión:", err));
 
-// MODELO ACTUALIZADO: Añadido clienteEmail
+// MODELO ACTUALIZADO: Añadido reservaId para seguimiento
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
     clienteEmail: String, 
     barbero: String,
     fecha: String,
-    hora: String
+    hora: String,
+    reservaId: String // Nuevo campo para el ID de reserva
 });
 
 const Usuario = mongoose.model('Usuario', {
@@ -116,25 +117,47 @@ app.get('/disponibilidad', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: RESERVAR CITA (Actualizada con Email de Confirmación) ---
+// --- ✅ RUTA: MIS CITAS (Nueva) ---
+app.get('/mis-citas', async (req, res) => {
+    try {
+        const { email } = req.query;
+        const citas = await Cita.find({ clienteEmail: email }).sort({ fecha: 1, hora: 1 });
+        res.json(citas);
+    } catch (error) {
+        res.status(500).json({ error: "Error al obtener historial" });
+    }
+});
+
+// --- ✅ RUTA: CANCELAR CITA (Nueva) ---
+app.post('/cancelar-cita', async (req, res) => {
+    try {
+        const { id, email } = req.body;
+        // Solo borra si el email coincide por seguridad
+        await Cita.findOneAndDelete({ _id: id, clienteEmail: email });
+        res.json({ success: true, mensaje: "Cita eliminada" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al cancelar" });
+    }
+});
+
+// --- ✅ RUTA: RESERVAR CITA (Actualizada con ID de reserva) ---
 app.post('/reservar', async (req, res) => {
     try {
-        const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora } = req.body;
+        const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
         
-        // Guardamos en la base de datos
         const nuevaCita = new Cita({
             clienteNombre,
             clienteTelefono,
             clienteEmail,
             barbero,
             fecha,
-            hora
+            hora,
+            reservaId // Guardamos el ID generado en el frontend
         });
         await nuevaCita.save();
 
-        // Enviamos correo de confirmación profesional
         let emailConfirm = new Brevo.SendSmtpEmail();
-        emailConfirm.subject = "✨ Cita Confirmada - Agendate Live";
+        emailConfirm.subject = `✨ Confirmación #${reservaId} - Agendate Live`;
         emailConfirm.htmlContent = `
             <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #d4af37;border-radius:20px;padding:20px;background:#fff;">
                 <div style="text-align:center;background:#1a1a1a;padding:15px;border-radius:15px 15px 0 0;">
@@ -142,13 +165,13 @@ app.post('/reservar', async (req, res) => {
                 </div>
                 <div style="padding:20px;color:#333;">
                     <p>Hola <b>${clienteNombre}</b>,</p>
-                    <p>Tu cita se ha agendado correctamente en <b>Agendate Live</b>.</p>
+                    <p>Tu cita se ha agendado con el código: <b>${reservaId}</b>.</p>
                     <div style="background:#f9f9f9;padding:15px;border-radius:10px;">
                         <p style="margin:5px 0;">📅 <b>Fecha:</b> ${fecha}</p>
                         <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
-                        <p style="margin:5px 0;">💈 <b>Barbero:</b> ${barbero}</p>
+                        <p style="margin:5px 0;">📍 <b>Lugar:</b> ${barbero}</p>
                     </div>
-                    <p style="font-size:12px;color:#777;margin-top:20px;">Si necesitas cancelar, por favor avísanos con tiempo.</p>
+                    <p style="font-size:12px;color:#777;margin-top:20px;">Recuerda que puedes cancelar desde "Mis Citas" hasta 12 horas antes.</p>
                 </div>
             </div>`;
         emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
@@ -156,8 +179,8 @@ app.post('/reservar', async (req, res) => {
 
         await apiInstance.sendTransacEmail(emailConfirm);
         
-        console.log(`✅ Cita guardada y confirmada para: ${clienteEmail}`);
-        res.status(200).json({ message: "Cita guardada y confirmada" });
+        console.log(`✅ Cita #${reservaId} confirmada para: ${clienteEmail}`);
+        res.status(200).json({ message: "Cita guardada", reservaId });
 
     } catch (e) {
         console.error("❌ Error en reserva:", e);

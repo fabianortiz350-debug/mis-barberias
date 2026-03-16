@@ -117,10 +117,11 @@ app.get('/disponibilidad', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: MIS CITAS (Nueva) ---
+// --- ✅ RUTA: MIS CITAS (Actualizada: Ordenado por fecha y hora) ---
 app.get('/mis-citas', async (req, res) => {
     try {
         const { email } = req.query;
+        // Ordenamos por fecha (1) y luego por hora (1) ascendente
         const citas = await Cita.find({ clienteEmail: email }).sort({ fecha: 1, hora: 1 });
         res.json(citas);
     } catch (error) {
@@ -128,14 +129,48 @@ app.get('/mis-citas', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: CANCELAR CITA (Nueva) ---
+// --- ✅ RUTA: CANCELAR CITA (Actualizada: Envía correo de cancelación) ---
 app.post('/cancelar-cita', async (req, res) => {
     try {
         const { id, email } = req.body;
-        // Solo borra si el email coincide por seguridad
-        await Cita.findOneAndDelete({ _id: id, clienteEmail: email });
-        res.json({ success: true, mensaje: "Cita eliminada" });
+        
+        // 1. Buscamos la cita antes de borrarla para tener los datos
+        const citaInfo = await Cita.findOne({ _id: id, clienteEmail: email });
+        
+        if (!citaInfo) {
+            return res.status(404).json({ success: false, mensaje: "Cita no encontrada" });
+        }
+
+        // 2. Borramos la cita
+        await Cita.findByIdAndDelete(id);
+
+        // 3. Enviamos correo de confirmación de cancelación
+        let emailCancel = new Brevo.SendSmtpEmail();
+        emailCancel.subject = `🚫 Cita Cancelada - Agendate Live`;
+        emailCancel.htmlContent = `
+            <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #ff4d4d;border-radius:20px;padding:20px;background:#fff;">
+                <div style="text-align:center;background:#1a1a1a;padding:15px;border-radius:15px 15px 0 0;">
+                    <h2 style="color:#ff4d4d;margin:0;">Cita Cancelada</h2>
+                </div>
+                <div style="padding:20px;color:#333;">
+                    <p>Hola <b>${citaInfo.clienteNombre}</b>,</p>
+                    <p>Te confirmamos que tu cita ha sido <b>cancelada exitosamente</b>.</p>
+                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;border-left:5px solid #ff4d4d;">
+                        <p style="margin:5px 0;">📅 <b>Fecha:</b> ${citaInfo.fecha}</p>
+                        <p style="margin:5px 0;">⏰ <b>Hora:</b> ${citaInfo.hora}</p>
+                        <p style="margin:5px 0;">📍 <b>Barbero:</b> ${citaInfo.barbero}</p>
+                    </div>
+                    <p style="margin-top:20px;">Si deseas agendar una nueva cita, puedes hacerlo desde nuestra aplicación.</p>
+                </div>
+            </div>`;
+        emailCancel.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
+        emailCancel.to = [{ "email": email }];
+
+        await apiInstance.sendTransacEmail(emailCancel);
+
+        res.json({ success: true, mensaje: "Cita eliminada y correo enviado" });
     } catch (error) {
+        console.error("❌ Error al cancelar:", error);
         res.status(500).json({ error: "Error al cancelar" });
     }
 });

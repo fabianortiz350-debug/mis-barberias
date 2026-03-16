@@ -275,7 +275,6 @@
             if(emailGuardado && loginTime) {
                 const ahora = Date.now();
                 const diezMinutos = 10 * 60 * 1000;
-                // Si pasaron más de 10 min, cerrar sesión
                 if(ahora - loginTime > diezMinutos) {
                     cerrarSesion();
                 } else {
@@ -358,7 +357,7 @@
             location.reload();
         }
 
-        // --- MIS CITAS CON CANCELACIÓN DE 12 HORAS ---
+        // --- MIS CITAS ACTUALIZADO ---
         async function mostrarMisCitas() {
             volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
@@ -370,6 +369,7 @@
             contenedor.innerHTML = "<p>Cargando tus citas...</p>";
 
             try {
+                // El servidor ya nos devuelve las citas ordenadas por fecha reciente
                 const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
                 const citas = await res.json();
                 contenedor.innerHTML = "";
@@ -380,6 +380,7 @@
                 }
 
                 citas.forEach(cita => {
+                    // Validar tiempo de cancelación (12 horas antes)
                     const fechaCita = new Date(`${cita.fecha}T${cita.hora}`);
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
@@ -399,16 +400,17 @@
             } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
         }
 
+        // --- CANCELAR CITA ACTUALIZADO ---
         async function cancelarCita(id) {
-            if(!confirm("¿Estás seguro de cancelar esta reserva?")) return;
+            if(!confirm("¿Estás seguro de cancelar esta reserva? Te enviaremos un correo de confirmación.")) return;
             try {
                 const res = await fetch(`${api}/cancelar-cita`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id, email: usuarioEmail })
+                    body: JSON.stringify({ id: id, email: usuarioEmail })
                 });
                 if(res.ok) {
-                    alert("Cita cancelada con éxito.");
+                    alert("Cita cancelada. Revisa tu correo para la confirmación.");
                     mostrarMisCitas();
                 }
             } catch (e) { alert("Error al cancelar."); }
@@ -461,9 +463,7 @@
                 return;
             }
 
-            // Generación de número de reserva
             const resId = "AG-" + Math.floor(1000 + Math.random() * 9000);
-
             const btn = document.getElementById('btn-finalizar-reserva');
             btn.innerText = "Agendando..."; btn.disabled = true;
 
@@ -484,14 +484,14 @@
                     body: JSON.stringify(datos)
                 });
                 if(res.ok) {
-                    alert(`✨ ¡Cita agendada! Tu número de reserva es: ${resId}`);
+                    alert(`✨ ¡Cita agendada! Tu número de reserva es: ${resId}. Revisa tu correo.`);
                     location.reload();
                 } else { alert("No se pudo agendar. Intenta otra hora."); }
             } catch (e) { alert("Error al conectar con el servidor"); }
             finally { btn.innerText = "AGENDAR UNA CITA"; btn.disabled = false; }
         }
 
-        function volverInicio(pushState = false) {
+        function volverInicio() {
             document.getElementById('wrapper-cats').style.display = 'block';
             document.getElementById('hero-area').style.display = 'block';
             document.getElementById('lista-negocios').style.display = 'none';

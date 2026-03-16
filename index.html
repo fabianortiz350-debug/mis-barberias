@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agendate Live | Tu tiempo, nuestra prioridad</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -29,16 +29,20 @@
         .logo span { color: var(--accent); }
 
         .nav-actions { display: flex; align-items: center; gap: 12px; position: relative; }
+        .lang-selector { font-size: 22px; cursor: pointer; }
         .btn-auth { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 11px; cursor: pointer; white-space: nowrap; transition: 0.3s; }
 
+        /* --- MENU DESPLEGABLE --- */
         .user-menu {
             position: absolute; top: 110%; right: 0; background: white; 
             min-width: 180px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             display: none; flex-direction: column; overflow: hidden; border: 1px solid #eee; z-index: 2001;
         }
         .user-menu.active { display: flex; animation: slideDown 0.3s ease; }
-        .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; border-bottom: 1px solid #f5f5f5; text-align: left; }
+        .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f5f5f5; text-align: left; }
         .user-menu-item:hover { background: #f9f9f9; color: var(--accent); }
+        .user-menu-item:last-child { border-bottom: none; color: #ff4444; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- BUSCADOR --- */
         .search-container {
@@ -46,8 +50,8 @@
             border-radius: 30px; padding: 4px; border: 1px solid #ddd;
         }
         .search-box { display: flex; flex: 1; align-items: center; padding: 0 10px; border-right: 1px solid #ddd; }
-        /* Cambio 3: Font-size 16px para que los navegadores móviles no hagan zoom al enfocar */
-        .search-box input { border: none; background: transparent; padding: 8px; width: 100%; font-size: 16px; outline: none; }
+        .search-box:last-child { border-right: none; }
+        .search-box input { border: none; background: transparent; padding: 8px; width: 100%; font-size: 12px; outline: none; font-family: inherit; }
 
         @media (min-width: 992px) {
             nav { flex-direction: row; justify-content: space-between; padding: 15px 5%; }
@@ -56,15 +60,20 @@
         }
 
         /* --- HERO --- */
-        .hero { padding: 50px 5%; text-align: center; background: linear-gradient(-45deg, #ffffff, #f3e5f5, #e3f2fd, #fff3e0); background-size: 400% 400%; animation: gradientMove 12s ease infinite; }
+        .hero {
+            padding: 50px 5%; text-align: center;
+            background: linear-gradient(-45deg, #ffffff, #f3e5f5, #e3f2fd, #fff3e0);
+            background-size: 400% 400%; animation: gradientMove 12s ease infinite;
+        }
         @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        .hero h1 { font-size: 36px; font-weight: 800; margin: 0; }
+        .hero h1 { font-size: 36px; font-weight: 800; margin: 0; line-height: 1.1; letter-spacing: -1px; }
+        .hero p { font-size: 16px; color: #444; margin-top: 10px; font-weight: 600; }
 
         /* --- CARRUSEL --- */
         .category-wrapper-pro { position: relative; max-width: 1200px; margin: auto; padding: 0 5%; }
         .category-container { 
             display: flex; gap: 15px; overflow-x: auto; padding: 25px 0;
-            scroll-behavior: smooth; scrollbar-width: none;
+            scroll-behavior: smooth; -ms-overflow-style: none; scrollbar-width: none;
         }
         .category-container::-webkit-scrollbar { display: none; }
 
@@ -73,55 +82,85 @@
             width: 40px; height: 40px; background: white; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid #eee;
-            cursor: pointer; z-index: 10;
+            cursor: pointer; z-index: 10; transition: 0.3s; font-weight: bold;
         }
-        .arrow-left { left: 2%; } /* Cambio 2: Siempre visible para permitir scroll a la izquierda */
+        .nav-arrow:hover { background: var(--accent); color: white; }
+        .arrow-left { left: 2%; display: none; }
         .arrow-right { right: 2%; }
 
-        .cat-card { min-width: 140px; padding: 30px 15px; border-radius: 28px; text-align: center; cursor: pointer; background: white; border: 1px solid rgba(0,0,0,0.03); transition: 0.3s; }
-        .cat-card:hover { transform: translateY(-8px); }
+        .cat-card { 
+            min-width: 140px; padding: 30px 15px; border-radius: 28px; 
+            text-align: center; cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: white; border: 1px solid rgba(0,0,0,0.03);
+        }
+        .cat-card:hover { transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.05); }
+        .cat-card i { font-size: 32px; display: block; margin-bottom: 10px; }
+        .cat-card span { font-weight: 700; font-size: 13px; }
 
         /* --- SECCIONES --- */
         .btn-back-container { display: none; padding: 20px 5% 0; max-width: 1200px; margin: auto; }
-        .btn-back { background: #f0f0f0; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; cursor: pointer; }
+        .btn-back { background: #f0f0f0; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 14px; color: #333; transition: 0.3s; }
         
-        .section-content { max-width: 1200px; margin: auto; padding: 20px 5%; }
-        #perfil-detalle, #seccion-mis-citas { display: none; }
+        .section-content { max-width: 1200px; margin: auto; padding: 20px 5%; min-height: 400px; }
+        #lista-negocios { display: none; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px; }
+
+        .biz-card { background: white; border-radius: 25px; overflow: hidden; border: 1px solid #eee; transition: 0.3s; }
+        .biz-card img { width: 100%; height: 170px; object-fit: cover; }
+        .biz-info { padding: 20px; }
+        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+
+        #perfil-detalle, #seccion-mis-citas { display: none; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
+        
+        /* --- ESTILOS MIS CITAS --- */
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-cancelar { background: #fee2e2; color: #ef4444; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12px; }
 
-        /* --- RESERVA --- */
-        .reserva-contenedor { background: #f9f9f9; padding: 20px; border-radius: 24px; border: 1px solid #eee; }
-        /* Cambio 3: Font-size 16px evita el zoom en móviles */
-        .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-size: 16px; box-sizing: border-box; }
-        .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .hora-btn { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 600; }
+        /* --- SELECTOR DE HORAS VIP --- */
+        .reserva-contenedor { background: #f9f9f9; padding: 20px; border-radius: 24px; margin-top: 20px; border: 1px solid #eee; }
+        .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-family: inherit; box-sizing: border-box; }
+        .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .hora-btn { background: white; color: var(--primary); border: 1px solid #ddd; padding: 10px; border-radius: 12px; cursor: pointer; transition: 0.3s; font-weight: 600; }
+        .hora-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
         .hora-btn.seleccionada { background: var(--accent); color: white; border-color: var(--accent); }
-        .hora-btn:disabled { background: #eee; color: #bbb; cursor: not-allowed; }
+        .hora-btn:disabled { background: #eee; color: #bbb; cursor: not-allowed; border: none; }
 
-        #modal-auth { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; position: relative; text-align: center; }
-        .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; font-size: 16px; box-sizing: border-box; }
-        
-        .btn-book { width: 100%; background: var(--primary); color: white; padding: 12px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        /* --- MODAL AUTH --- */
+        #modal-auth {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; 
+            position: relative; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; }
+        .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
+
+        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
 
     <nav>
         <div class="nav-top-row">
-            <div class="logo" onclick="volverInicio()">AGENDATE<span>LIVE</span></div>
+            <div class="logo" onclick="volverInicio(true)">AGENDATE<span>LIVE</span></div>
             <div class="nav-actions">
-                <span class="lang-selector">🇨🇴</span>
+                <span id="flag-icon" class="lang-selector">🇨🇴</span>
                 <button class="btn-auth" id="btn-auth-main" onclick="abrirAuth()">Iniciar sesión</button>
+                
                 <div class="user-menu" id="user-menu-dropdown">
                     <div class="user-menu-item" onclick="mostrarMisCitas()">📅 Mis Citas</div>
                     <div class="user-menu-item" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
                 </div>
             </div>
         </div>
+        
         <div class="search-container">
-            <div class="search-box"><input type="text" placeholder="Código, Negocio o Servicio"></div>
+            <div class="search-box"><input type="text" id="query" placeholder="Código, Negocio o Servicio"></div>
+            <div class="search-box" style="flex: 0.6;"><input type="text" id="loc" placeholder="Ubicación"></div>
             <button style="background:var(--accent); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;">🔍</button>
         </div>
     </nav>
@@ -132,36 +171,50 @@
     </div>
 
     <div class="btn-back-container" id="back-container">
-        <button class="btn-back" onclick="volverInicio()">← Regresar</button>
+        <button class="btn-back" id="btn-atras-dinamico">← Regresar</button>
     </div>
 
     <div class="section-content">
-        <h2 id="section-title" style="font-weight: 800; font-size: 24px;">Explora Categorías</h2>
+        <h2 id="section-title" style="font-weight: 800; font-size: 24px; margin-bottom: 5px;">Explora Categorías</h2>
         
         <div class="category-wrapper-pro" id="wrapper-cats">
-            <div class="nav-arrow arrow-left" onclick="scrollCat(-220)">❮</div>
-            <div class="nav-arrow arrow-right" onclick="scrollCat(220)">❯</div>
+            <div class="nav-arrow arrow-left" id="arrow-l" onclick="scrollCat(-220)">❮</div>
+            <div class="nav-arrow arrow-right" id="arrow-r" onclick="scrollCat(220)">❯</div>
             <div class="category-container" id="categorias">
                 <div class="cat-card" style="background:var(--pastel-orange)" onclick="cargarNegocios('barberia')"><i>💈</i><span>Barberías</span></div>
                 <div class="cat-card" style="background:var(--pastel-purple)" onclick="cargarNegocios('spa')"><i>💅</i><span>Spa</span></div>
                 <div class="cat-card" style="background:var(--pastel-blue)" onclick="cargarNegocios('odontologia')"><i>🦷</i><span>Odontología</span></div>
                 <div class="cat-card" style="background:var(--pastel-green)" onclick="cargarNegocios('veterinaria')"><i>🐾</i><span>Veterinarias</span></div>
-                <div class="cat-card" style="background:var(--pastel-orange)" onclick="cargarNegocios('automotriz')"><i>🔧</i><span>Automotriz</span></div>
+                <div class="cat-card" style="background:var(--pastel-orange)" onclick="cargarNegocios('gastronomia')"><i>🍽️</i><span>Gastronomía</span></div>
+                <div class="cat-card" style="background:var(--pastel-purple)" onclick="cargarNegocios('turismo')"><i>✈️</i><span>Turismo</span></div>
+                <div class="cat-card" style="background:var(--pastel-green)" onclick="cargarNegocios('automotriz')"><i>🔧</i><span>Automotriz</span></div>
+                <div class="cat-card" style="background:var(--pastel-blue)" onclick="cargarNegocios('otros')"><i>✨</i><span>Otros</span></div>
             </div>
         </div>
 
+        <div id="lista-negocios"></div>
+
         <div id="perfil-detalle">
-            <img id="p-imagen" style="width:100%; border-radius:30px; height:350px; object-fit:cover; margin-bottom:25px;" src="">
-            <h1 id="p-nombre" style="font-weight: 800; font-size: 32px; margin:0;"></h1>
-            <p id="p-ubicacion" style="color: #666; margin-bottom: 30px;"></p>
+            <img id="p-imagen" class="foto-perfil" src="" alt="Negocio">
+            <h1 id="p-nombre" style="font-weight: 800; margin: 0 0 10px 0; font-size: 32px;"></h1>
+            <p id="p-ubicacion" style="color: #666; font-size: 16px; margin-bottom: 30px;"></p>
             
             <div class="reserva-contenedor">
                 <h3 style="font-weight: 800; margin-top: 0;">Reserva tu espacio</h3>
-                <div id="campos-dinamicos">
-                    </div>
+                
+                <label style="font-size: 14px; font-weight: 600;">1. Datos de contacto:</label>
+                <input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre completo" required>
+                <input type="tel" id="reserva-telefono" class="input-vip" placeholder="Teléfono" required>
+
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Selecciona el día:</label>
                 <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
-                <div id="contenedor-horas" class="grid-horas"></div>
-                <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR CITA</button>
+                
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Elige la hora:</label>
+                <div id="contenedor-horas" class="grid-horas">
+                    <p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p>
+                </div>
+
+                <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="background: var(--primary); height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR UNA CITA</button>
             </div>
         </div>
 
@@ -174,157 +227,297 @@
     <div id="modal-auth">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
-            <h2 style="font-weight: 800;">Acceso</h2>
+            <h2 id="auth-titulo" style="font-weight: 800; margin-bottom: 5px;">Bienvenido</h2>
+            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tu correo para recibir un código de acceso</p>
+            
             <div id="auth-formularios">
                 <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
-                <button class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
+                <button id="btn-principal-auth" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
             </div>
+
             <div id="auth-paso-2" style="display:none;">
-                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos">
-                <button class="btn-book" onclick="confirmarCodigo()">Verificar e Ingresar</button>
+                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
+                <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
+                <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer;" onclick="regresarInicioAuth()">← Usar otro correo</p>
             </div>
         </div>
     </div>
 
+    <footer>
+        <div class="footer-bottom" style="text-align: center; padding: 20px;">
+            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
     <script>
         const api = "https://mis-barberias.onrender.com"; 
-        let usuarioEmail = localStorage.getItem('agendate_user_email') || "";
-        let usuarioLogueado = !!usuarioEmail;
+        let usuarioEmail = ""; 
+        let usuarioLogueado = false;
         let horaSeleccionada = null;
+        let categoriaActual = "";
 
-        // Cambio 6: Estructuras de datos para formularios por categoría
-        const configCategorias = {
-            barberia: {
-                nombre: "The King's Cut",
-                img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800",
-                campos: '<input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre completo"><input type="tel" id="reserva-telefono" class="input-vip" placeholder="Teléfono"><input type="text" id="extra-1" class="input-vip" placeholder="Servicio (Corte, Barba)">'
-            },
-            automotriz: {
-                nombre: "Premium Car Service",
-                img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800",
-                campos: '<input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre del propietario"><input type="text" id="extra-1" class="input-vip" placeholder="Placa del Vehículo"><input type="text" id="extra-2" class="input-vip" placeholder="Marca y Modelo">'
-            },
-            odontologia: {
-                nombre: "Dental Advanced",
-                img: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800",
-                campos: '<input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre del paciente"><input type="text" id="extra-1" class="input-vip" placeholder="Motivo de consulta">'
-            }
+        // --- DATA DE NEGOCIOS REALES POR CATEGORÍA ---
+        const negociosData = {
+            barberia: { nombre: "The King's Cut", img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800", loc: "Chapinero, Bogotá" },
+            spa: { nombre: "Zen Aura Spa", img: "https://images.unsplash.com/photo-1544161515-4ae6ce6ca8b8?w=800", loc: "Usaquén, Bogotá" },
+            odontologia: { nombre: "Dental Advanced", img: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800", loc: "Colina Campestre, Bogotá" },
+            veterinaria: { nombre: "Happy Paws Vet", img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800", loc: "Cedritos, Bogotá" },
+            gastronomia: { nombre: "La Trattoria Real", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800", loc: "Zona G, Bogotá" },
+            turismo: { nombre: "Global Travel Agency", img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800", loc: "El Retiro, Bogotá" },
+            automotriz: { nombre: "Premium Car Service", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800", loc: "Siete de Agosto, Bogotá" },
+            otros: { nombre: "Servicios Varios Express", img: "https://images.unsplash.com/photo-1454165833767-02a6ed8a499a?w=800", loc: "Bogotá, Colombia" }
         };
 
-        function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
-
-        function volverInicio() {
-            // Cambio 5: Asegura que todo se limpie al regresar
-            document.getElementById('wrapper-cats').style.display = 'block';
-            document.getElementById('hero-area').style.display = 'block';
-            document.getElementById('section-title').style.display = 'block';
-            document.getElementById('perfil-detalle').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'none';
-            document.getElementById('back-container').style.display = 'none';
+        function verificarSesionAlCargar() {
+            const emailGuardado = localStorage.getItem('agendate_user_email');
+            const loginTime = localStorage.getItem('agendate_login_time');
+            
+            if(emailGuardado && loginTime) {
+                const ahora = Date.now();
+                const diezMinutos = 10 * 60 * 1000;
+                // Si pasaron más de 10 min, cerrar sesión
+                if(ahora - loginTime > diezMinutos) {
+                    cerrarSesion();
+                } else {
+                    loguearUsuarioGlobal(emailGuardado);
+                }
+            }
         }
 
+        function loguearUsuarioGlobal(email) {
+            usuarioEmail = email;
+            usuarioLogueado = true;
+            localStorage.setItem('agendate_user_email', email);
+            localStorage.setItem('agendate_login_time', Date.now());
+            const nombreMostrar = email.split('@')[0];
+            const btnAuth = document.getElementById('btn-auth-main');
+            btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
+            btnAuth.style.background = "var(--accent)";
+        }
+
+        function abrirAuth() { 
+            if(usuarioLogueado) {
+                document.getElementById('user-menu-dropdown').classList.toggle('active');
+            } else {
+                regresarInicioAuth();
+                document.getElementById('modal-auth').style.display = 'flex'; 
+            }
+        }
+        
+        function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
+
+        function regresarInicioAuth() {
+            document.getElementById('auth-formularios').style.display = 'block';
+            document.getElementById('auth-paso-2').style.display = 'none';
+            document.getElementById('auth-instruccion').innerText = "Ingresa tu correo para recibir un código de acceso";
+        }
+
+        async function solicitarCodigo() {
+            const email = document.getElementById('auth-email').value.trim();
+            const btn = document.getElementById('btn-principal-auth');
+            if(!email.includes("@")) return alert("Ingresa un correo válido");
+            
+            usuarioEmail = email;
+            btn.innerText = "Enviando..."; btn.disabled = true;
+
+            const htmlCorreo = `<div style="font-family:'Plus Jakarta Sans',sans-serif;max-width:500px;margin:20px auto;border:1px solid #eee;border-radius:24px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);"><div style="background:#1a1a1a;padding:30px;text-align:center;"><span style="color:white;font-weight:800;font-size:22px;">AGENDATE<span style="color:#d4af37;">LIVE</span></span></div><div style="padding:40px 20px;text-align:center;background:white;"><h2 style="margin:0;color:#1a1a1a;font-weight:800;">Tu código de acceso</h2><p style="color:#666;margin:10px 0 30px;">Cópialo y pégalo para ingresar a tu cuenta.</p><div style="background:#fff3e0;border:2px dashed #d4af37;padding:15px;border-radius:12px;display:inline-block;"><span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#1a1a1a;">{{CODIGO}}</span></div><p style="font-size:12px;color:#ff4444;margin-top:25px;font-weight:600;">Este código vence en 5 minutos.</p></div></div>`;
+
+            try {
+                const res = await fetch(`${api}/api/auth/enviar-codigo`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: email, htmlCustom: htmlCorreo })
+                });
+                if (res.ok) {
+                    document.getElementById('auth-formularios').style.display = 'none';
+                    document.getElementById('auth-paso-2').style.display = 'block';
+                    document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
+                }
+            } catch (e) { alert("Error de conexión"); }
+            finally { btn.innerText = "Enviar Código"; btn.disabled = false; }
+        }
+
+        async function confirmarCodigo() {
+            const codigo = document.getElementById('auth-codigo').value.trim();
+            try {
+                const res = await fetch(`${api}/api/auth/verificar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ correo: usuarioEmail, codigo: codigo })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    loguearUsuarioGlobal(usuarioEmail);
+                    cerrarAuth();
+                } else { alert("Código incorrecto o vencido"); }
+            } catch (e) { alert("Error al verificar"); }
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        // --- MIS CITAS CON CANCELACIÓN DE 12 HORAS ---
         async function mostrarMisCitas() {
-            if(!usuarioLogueado) return abrirAuth();
-            // Cambio 5: Ocultar el resto al entrar a mis citas
+            volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('section-title').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
             document.getElementById('seccion-mis-citas').style.display = 'block';
             document.getElementById('back-container').style.display = 'block';
-            document.getElementById('user-menu-dropdown').classList.remove('active');
-
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando historial...</p>";
             
+            const contenedor = document.getElementById('contenedor-citas');
+            contenedor.innerHTML = "<p>Cargando tus citas...</p>";
+
             try {
                 const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
                 const citas = await res.json();
                 contenedor.innerHTML = "";
-                // El backend ya las trae ordenadas (Cambio 4)
+
+                if(citas.length === 0) {
+                    contenedor.innerHTML = "<p>No tienes citas agendadas.</p>";
+                    return;
+                }
+
                 citas.forEach(cita => {
+                    const fechaCita = new Date(`${cita.fecha}T${cita.hora}`);
+                    const ahora = new Date();
+                    const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
+
                     const card = document.createElement('div');
                     card.className = 'cita-card';
-                    card.innerHTML = `<div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.fecha} - ${cita.hora}</small></div>
-                                      <button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>`;
+                    card.innerHTML = `
+                        <div>
+                            <strong style="color:var(--accent)">#${cita.reservaId || 'SIN-ID'}</strong><br>
+                            <span style="font-size:18px; font-weight:800;">${cita.barbero}</span><br>
+                            <small>${cita.fecha} | ${cita.hora}</small>
+                        </div>
+                        ${diffHoras > 12 ? `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>` : '<small style="color:#999">No cancelable (menos de 12h)</small>'}
+                    `;
                     contenedor.appendChild(card);
                 });
-            } catch (e) { contenedor.innerHTML = "Error al cargar historial."; }
+            } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
         }
 
         async function cancelarCita(id) {
-            if(!confirm("¿Deseas cancelar?")) return;
-            const res = await fetch(`${api}/cancelar-cita`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ id, email: usuarioEmail })
-            });
-            if(res.ok) { alert("Cita cancelada. Se liberó el horario."); mostrarMisCitas(); }
+            if(!confirm("¿Estás seguro de cancelar esta reserva?")) return;
+            try {
+                const res = await fetch(`${api}/cancelar-cita`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id, email: usuarioEmail })
+                });
+                if(res.ok) {
+                    alert("Cita cancelada con éxito.");
+                    mostrarMisCitas();
+                }
+            } catch (e) { alert("Error al cancelar."); }
         }
 
-        function cargarNegocios(tipo) {
-            const conf = configCategorias[tipo] || configCategorias['barberia'];
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('section-title').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'block';
-            document.getElementById('back-container').style.display = 'block';
-            
-            document.getElementById('p-nombre').innerText = conf.nombre;
-            document.getElementById('p-imagen').src = conf.img;
-            document.getElementById('campos-dinamicos').innerHTML = conf.campos;
-        }
-
-        // --- AUTH Y CARGA DE HORAS (Similares a tu código anterior) ---
-        function abrirAuth() { document.getElementById('modal-auth').style.display = 'flex'; }
-        function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
-        
         async function cargarHorasDisponibles() {
-            const fecha = document.getElementById('fecha-reserva').value;
+            const fechaInput = document.getElementById('fecha-reserva').value;
             const barbero = document.getElementById('p-nombre').innerText;
-            const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
-            const data = await res.json();
-            const horas = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
-            const cont = document.getElementById('contenedor-horas');
-            cont.innerHTML = "";
-            horas.forEach(h => {
-                const b = document.createElement('button');
-                b.innerText = h; b.className = 'hora-btn';
-                if(data.ocupadas.includes(h)) b.disabled = true;
-                b.onclick = () => {
-                    document.querySelectorAll('.hora-btn').forEach(x => x.classList.remove('seleccionada'));
-                    b.classList.add('seleccionada'); horaSeleccionada = h;
-                };
-                cont.appendChild(b);
-            });
+            const contenedor = document.getElementById('contenedor-horas');
+            
+            if(!fechaInput) return;
+            contenedor.innerHTML = "<p style='grid-column: span 3; text-align:center;'>Buscando disponibilidad...</p>";
+
+            try {
+                const res = await fetch(`${api}/disponibilidad?fecha=${fechaInput}&barbero=${barbero}`);
+                const data = await res.json();
+                
+                const horarioBase = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+                contenedor.innerHTML = "";
+                horaSeleccionada = null;
+
+                horarioBase.forEach(hora => {
+                    const btn = document.createElement('button');
+                    btn.innerText = hora;
+                    btn.className = 'hora-btn';
+                    
+                    if(data.ocupadas && data.ocupadas.includes(hora)) {
+                        btn.disabled = true;
+                    } else {
+                        btn.onclick = () => {
+                            document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('seleccionada'));
+                            btn.classList.add('seleccionada');
+                            horaSeleccionada = hora;
+                        };
+                    }
+                    contenedor.appendChild(btn);
+                });
+            } catch (e) { contenedor.innerHTML = "Error al cargar disponibilidad"; }
         }
 
         async function enviarReserva() {
             if(!usuarioLogueado) return abrirAuth();
-            const resId = "AG-" + Math.floor(Math.random()*9000);
+            
+            const nombre = document.getElementById('reserva-nombre').value.trim();
+            const telefono = document.getElementById('reserva-telefono').value.trim();
+            const fecha = document.getElementById('fecha-reserva').value;
+
+            if(!nombre || !telefono || !fecha || !horaSeleccionada) {
+                alert("⚠️ Por favor completa todos los datos.");
+                return;
+            }
+
+            // Generación de número de reserva
+            const resId = "AG-" + Math.floor(1000 + Math.random() * 9000);
+
+            const btn = document.getElementById('btn-finalizar-reserva');
+            btn.innerText = "Agendando..."; btn.disabled = true;
+
             const datos = {
-                clienteNombre: document.getElementById('reserva-nombre').value,
+                clienteNombre: nombre,
+                clienteTelefono: telefono,
                 clienteEmail: usuarioEmail,
                 barbero: document.getElementById('p-nombre').innerText,
-                fecha: document.getElementById('fecha-reserva').value,
+                fecha: fecha,
                 hora: horaSeleccionada,
                 reservaId: resId
             };
-            const res = await fetch(`${api}/reservar`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(datos)
-            });
-            if(res.ok) { alert("¡Reserva exitosa!"); location.reload(); }
+
+            try {
+                const res = await fetch(`${api}/reservar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                if(res.ok) {
+                    alert(`✨ ¡Cita agendada! Tu número de reserva es: ${resId}`);
+                    location.reload();
+                } else { alert("No se pudo agendar. Intenta otra hora."); }
+            } catch (e) { alert("Error al conectar con el servidor"); }
+            finally { btn.innerText = "AGENDAR UNA CITA"; btn.disabled = false; }
         }
 
-        function verificarSesionAlCargar() {
-            if(usuarioEmail) {
-                document.getElementById('btn-auth-main').innerText = usuarioEmail.split('@')[0];
-            }
+        function volverInicio(pushState = false) {
+            document.getElementById('wrapper-cats').style.display = 'block';
+            document.getElementById('hero-area').style.display = 'block';
+            document.getElementById('lista-negocios').style.display = 'none';
+            document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'none';
+            document.getElementById('back-container').style.display = 'none';
+            document.getElementById('section-title').innerText = "Explora Categorías";
         }
-        
-        function cerrarSesion() { localStorage.clear(); location.reload(); }
+
+        async function cargarNegocios(tipo) {
+            categoriaActual = tipo;
+            const data = negociosData[tipo] || negociosData['otros'];
+            
+            document.getElementById('wrapper-cats').style.display = 'none';
+            document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('back-container').style.display = 'block';
+            document.getElementById('perfil-detalle').style.display = 'block';
+            
+            document.getElementById('p-nombre').innerText = data.nombre;
+            document.getElementById('p-ubicacion').innerText = data.loc;
+            document.getElementById('p-imagen').src = data.img;
+            
+            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
+        }
+
+        function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
     </script>
 </body>
 </html>

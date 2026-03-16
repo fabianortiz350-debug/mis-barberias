@@ -114,6 +114,10 @@
         
         .foto-perfil { width: 100%; border-radius: 30px; height: 350px; object-fit: cover; margin-bottom: 25px; }
         
+        /* --- ESTILOS MIS CITAS --- */
+        .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-cancelar { background: #fee2e2; color: #ef4444; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12px; }
+
         /* --- SELECTOR DE HORAS VIP --- */
         .reserva-contenedor { background: #f9f9f9; padding: 20px; border-radius: 24px; margin-top: 20px; border: 1px solid #eee; }
         .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-family: inherit; box-sizing: border-box; }
@@ -157,7 +161,7 @@
         <div class="search-container">
             <div class="search-box"><input type="text" id="query" placeholder="Código, Negocio o Servicio"></div>
             <div class="search-box" style="flex: 0.6;"><input type="text" id="loc" placeholder="Ubicación"></div>
-            <button style="background:var(--accent); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;" onclick="buscarAhora()">🔍</button>
+            <button style="background:var(--accent); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;">🔍</button>
         </div>
     </nav>
 
@@ -215,6 +219,7 @@
         </div>
 
         <div id="seccion-mis-citas">
+            <h2 style="font-weight: 800;">Tus Citas Reservadas</h2>
             <div id="contenedor-citas"></div>
         </div>
     </div>
@@ -251,15 +256,39 @@
         let horaSeleccionada = null;
         let categoriaActual = "";
 
+        // --- DATA DE NEGOCIOS REALES POR CATEGORÍA ---
+        const negociosData = {
+            barberia: { nombre: "The King's Cut", img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800", loc: "Chapinero, Bogotá" },
+            spa: { nombre: "Zen Aura Spa", img: "https://images.unsplash.com/photo-1544161515-4ae6ce6ca8b8?w=800", loc: "Usaquén, Bogotá" },
+            odontologia: { nombre: "Dental Advanced", img: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800", loc: "Colina Campestre, Bogotá" },
+            veterinaria: { nombre: "Happy Paws Vet", img: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?w=800", loc: "Cedritos, Bogotá" },
+            gastronomia: { nombre: "La Trattoria Real", img: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800", loc: "Zona G, Bogotá" },
+            turismo: { nombre: "Global Travel Agency", img: "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800", loc: "El Retiro, Bogotá" },
+            automotriz: { nombre: "Premium Car Service", img: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=800", loc: "Siete de Agosto, Bogotá" },
+            otros: { nombre: "Servicios Varios Express", img: "https://images.unsplash.com/photo-1454165833767-02a6ed8a499a?w=800", loc: "Bogotá, Colombia" }
+        };
+
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
-            if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
+            const loginTime = localStorage.getItem('agendate_login_time');
+            
+            if(emailGuardado && loginTime) {
+                const ahora = Date.now();
+                const diezMinutos = 10 * 60 * 1000;
+                // Si pasaron más de 10 min, cerrar sesión
+                if(ahora - loginTime > diezMinutos) {
+                    cerrarSesion();
+                } else {
+                    loguearUsuarioGlobal(emailGuardado);
+                }
+            }
         }
 
         function loguearUsuarioGlobal(email) {
             usuarioEmail = email;
             usuarioLogueado = true;
             localStorage.setItem('agendate_user_email', email);
+            localStorage.setItem('agendate_login_time', Date.now());
             const nombreMostrar = email.split('@')[0];
             const btnAuth = document.getElementById('btn-auth-main');
             btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
@@ -325,8 +354,64 @@
         }
 
         function cerrarSesion() {
-            localStorage.removeItem('agendate_user_email');
+            localStorage.clear();
             location.reload();
+        }
+
+        // --- MIS CITAS CON CANCELACIÓN DE 12 HORAS ---
+        async function mostrarMisCitas() {
+            volverInicio();
+            document.getElementById('wrapper-cats').style.display = 'none';
+            document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'block';
+            document.getElementById('back-container').style.display = 'block';
+            
+            const contenedor = document.getElementById('contenedor-citas');
+            contenedor.innerHTML = "<p>Cargando tus citas...</p>";
+
+            try {
+                const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
+                const citas = await res.json();
+                contenedor.innerHTML = "";
+
+                if(citas.length === 0) {
+                    contenedor.innerHTML = "<p>No tienes citas agendadas.</p>";
+                    return;
+                }
+
+                citas.forEach(cita => {
+                    const fechaCita = new Date(`${cita.fecha}T${cita.hora}`);
+                    const ahora = new Date();
+                    const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
+
+                    const card = document.createElement('div');
+                    card.className = 'cita-card';
+                    card.innerHTML = `
+                        <div>
+                            <strong style="color:var(--accent)">#${cita.reservaId || 'SIN-ID'}</strong><br>
+                            <span style="font-size:18px; font-weight:800;">${cita.barbero}</span><br>
+                            <small>${cita.fecha} | ${cita.hora}</small>
+                        </div>
+                        ${diffHoras > 12 ? `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>` : '<small style="color:#999">No cancelable (menos de 12h)</small>'}
+                    `;
+                    contenedor.appendChild(card);
+                });
+            } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
+        }
+
+        async function cancelarCita(id) {
+            if(!confirm("¿Estás seguro de cancelar esta reserva?")) return;
+            try {
+                const res = await fetch(`${api}/cancelar-cita`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ id, email: usuarioEmail })
+                });
+                if(res.ok) {
+                    alert("Cita cancelada con éxito.");
+                    mostrarMisCitas();
+                }
+            } catch (e) { alert("Error al cancelar."); }
         }
 
         async function cargarHorasDisponibles() {
@@ -345,23 +430,12 @@
                 contenedor.innerHTML = "";
                 horaSeleccionada = null;
 
-                const ahora = new Date();
-                const hoyStr = ahora.toISOString().split('T')[0];
-                const horaActual = ahora.getHours();
-
                 horarioBase.forEach(hora => {
-                    const [h, m] = hora.split(':').map(Number);
                     const btn = document.createElement('button');
                     btn.innerText = hora;
                     btn.className = 'hora-btn';
                     
-                    const estaOcupada = data.ocupadas && data.ocupadas.includes(hora);
-                    let yaPaso = false;
-                    if (fechaInput === hoyStr && h <= horaActual) {
-                        yaPaso = true;
-                    }
-
-                    if(estaOcupada || yaPaso) {
+                    if(data.ocupadas && data.ocupadas.includes(hora)) {
                         btn.disabled = true;
                     } else {
                         btn.onclick = () => {
@@ -383,9 +457,12 @@
             const fecha = document.getElementById('fecha-reserva').value;
 
             if(!nombre || !telefono || !fecha || !horaSeleccionada) {
-                alert("⚠️ Por favor completa tu nombre, teléfono y elige una hora.");
+                alert("⚠️ Por favor completa todos los datos.");
                 return;
             }
+
+            // Generación de número de reserva
+            const resId = "AG-" + Math.floor(1000 + Math.random() * 9000);
 
             const btn = document.getElementById('btn-finalizar-reserva');
             btn.innerText = "Agendando..."; btn.disabled = true;
@@ -397,7 +474,7 @@
                 barbero: document.getElementById('p-nombre').innerText,
                 fecha: fecha,
                 hora: horaSeleccionada,
-                categoria: categoriaActual
+                reservaId: resId
             };
 
             try {
@@ -407,7 +484,7 @@
                     body: JSON.stringify(datos)
                 });
                 if(res.ok) {
-                    alert(`✨ ¡Cita agendada con éxito en ${categoriaActual}!`);
+                    alert(`✨ ¡Cita agendada! Tu número de reserva es: ${resId}`);
                     location.reload();
                 } else { alert("No se pudo agendar. Intenta otra hora."); }
             } catch (e) { alert("Error al conectar con el servidor"); }
@@ -425,14 +502,18 @@
         }
 
         async function cargarNegocios(tipo) {
-            categoriaActual = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+            categoriaActual = tipo;
+            const data = negociosData[tipo] || negociosData['otros'];
+            
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
             document.getElementById('back-container').style.display = 'block';
             document.getElementById('perfil-detalle').style.display = 'block';
-            document.getElementById('p-nombre').innerText = "Negocio de " + categoriaActual;
-            document.getElementById('p-ubicacion').innerText = "Bogotá, Colombia";
-            document.getElementById('p-imagen').src = "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800";
+            
+            document.getElementById('p-nombre').innerText = data.nombre;
+            document.getElementById('p-ubicacion').innerText = data.loc;
+            document.getElementById('p-imagen').src = data.img;
+            
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
         }
 

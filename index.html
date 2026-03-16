@@ -85,7 +85,7 @@
             cursor: pointer; z-index: 10; transition: 0.3s; font-weight: bold;
         }
         .nav-arrow:hover { background: var(--accent); color: white; }
-        .arrow-left { left: 2%; display: none; }
+        .arrow-left { left: 2%; display: none; } /* Se mostrará vía JS */
         .arrow-right { right: 2%; }
 
         .cat-card { 
@@ -369,7 +369,6 @@
             contenedor.innerHTML = "<p>Cargando tus citas...</p>";
 
             try {
-                // El servidor ya nos devuelve las citas ordenadas por fecha reciente
                 const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
                 const citas = await res.json();
                 contenedor.innerHTML = "";
@@ -380,7 +379,6 @@
                 }
 
                 citas.forEach(cita => {
-                    // Validar tiempo de cancelación (12 horas antes)
                     const fechaCita = new Date(`${cita.fecha}T${cita.hora}`);
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
@@ -517,7 +515,22 @@
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
         }
 
-        function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
+        // --- LÓGICA DE CARRUSEL CORREGIDA ---
+        const containerCats = document.getElementById('categorias');
+        const arrowL = document.getElementById('arrow-l');
+
+        function scrollCat(val) { 
+            containerCats.scrollLeft += val; 
+        }
+
+        // Escuchar el scroll para mostrar/ocultar la flecha izquierda
+        containerCats.addEventListener('scroll', () => {
+            if (containerCats.scrollLeft > 10) {
+                arrowL.style.display = 'flex';
+            } else {
+                arrowL.style.display = 'none';
+            }
+        });
     </script>
 </body>
 </html>

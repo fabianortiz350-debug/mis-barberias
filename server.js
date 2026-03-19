@@ -117,11 +117,10 @@ app.get('/disponibilidad', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: MIS CITAS (Actualizada: Ordenado por fecha y hora) ---
+// --- ✅ RUTA: MIS CITAS ---
 app.get('/mis-citas', async (req, res) => {
     try {
         const { email } = req.query;
-        // Ordenamos por fecha (1) y luego por hora (1) ascendente
         const citas = await Cita.find({ clienteEmail: email }).sort({ fecha: 1, hora: 1 });
         res.json(citas);
     } catch (error) {
@@ -129,22 +128,18 @@ app.get('/mis-citas', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: CANCELAR CITA (Actualizada: Envía correo de cancelación) ---
+// --- ✅ RUTA: CANCELAR CITA ---
 app.post('/cancelar-cita', async (req, res) => {
     try {
         const { id, email } = req.body;
-        
-        // 1. Buscamos la cita antes de borrarla para tener los datos
         const citaInfo = await Cita.findOne({ _id: id, clienteEmail: email });
         
         if (!citaInfo) {
             return res.status(404).json({ success: false, mensaje: "Cita no encontrada" });
         }
 
-        // 2. Borramos la cita
         await Cita.findByIdAndDelete(id);
 
-        // 3. Enviamos correo de confirmación de cancelación
         let emailCancel = new Brevo.SendSmtpEmail();
         emailCancel.subject = `🚫 Cita Cancelada - Agendate Live`;
         emailCancel.htmlContent = `
@@ -175,7 +170,7 @@ app.post('/cancelar-cita', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: RESERVAR CITA (Actualizada con ID de reserva) ---
+// --- ✅ RUTA: RESERVAR CITA (Actualizada con botón de gestión/cancelación) ---
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
@@ -187,7 +182,7 @@ app.post('/reservar', async (req, res) => {
             barbero,
             fecha,
             hora,
-            reservaId // Guardamos el ID generado en el frontend
+            reservaId 
         });
         await nuevaCita.save();
 
@@ -201,12 +196,19 @@ app.post('/reservar', async (req, res) => {
                 <div style="padding:20px;color:#333;">
                     <p>Hola <b>${clienteNombre}</b>,</p>
                     <p>Tu cita se ha agendado con el código: <b>${reservaId}</b>.</p>
-                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;">
+                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;margin-bottom:20px;">
                         <p style="margin:5px 0;">📅 <b>Fecha:</b> ${fecha}</p>
                         <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
                         <p style="margin:5px 0;">📍 <b>Lugar:</b> ${barbero}</p>
                     </div>
-                    <p style="font-size:12px;color:#777;margin-top:20px;">Recuerda que puedes cancelar desde "Mis Citas" hasta 12 horas antes.</p>
+                    
+                    <p style="font-size:14px;color:#444;margin-bottom:25px;">Si necesitas gestionar tus reservas o <b>cancelar tu cita</b>, puedes hacerlo ingresando a nuestra plataforma aquí:</p>
+                    
+                    <div style="text-align:center;">
+                        <a href="https://tu-dominio.com" style="background-color:#1a1a1a;color:#d4af37;padding:12px 25px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;border:1px solid #d4af37;">Gestionar o Cancelar Cita</a>
+                    </div>
+
+                    <p style="font-size:12px;color:#777;margin-top:25px;text-align:center;border-top:1px solid #eee;padding-top:15px;">Recuerda que las cancelaciones deben ser con al menos 12 horas de antelación.</p>
                 </div>
             </div>`;
         emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };

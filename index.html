@@ -356,6 +356,7 @@
             location.reload();
         }
 
+        // --- MIS CITAS ACTUALIZADO: Maneja estado y orden ---
         async function mostrarMisCitas() {
             volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
@@ -381,18 +382,19 @@
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
 
+                    // Lógica para el botón o etiqueta de estado
                     let accionHtml = "";
                     if (cita.estado === 'cancelada') {
                         accionHtml = '<small style="color:#ef4444; font-weight:800;">CANCELADA</small>';
                     } else if (diffHoras > 12) {
-                        // Se agrega cita.reservaId como argumento
-                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}', '${cita.reservaId}')">Cancelar</button>`;
+                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>`;
                     } else {
                         accionHtml = '<small style="color:#999">No cancelable (menos de 12h)</small>';
                     }
 
                     const card = document.createElement('div');
                     card.className = 'cita-card';
+                    // Aplicar opacidad si está cancelada
                     if(cita.estado === 'cancelada') card.style.opacity = "0.7";
 
                     card.innerHTML = `
@@ -408,21 +410,18 @@
             } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
         }
 
-        async function cancelarCita(id, resId) {
+        // --- CANCELAR CITA ACTUALIZADO ---
+        async function cancelarCita(id) {
             if(!confirm("¿Estás seguro de cancelar esta reserva? Te enviaremos un correo de confirmación.")) return;
             try {
                 const res = await fetch(`${api}/cancelar-cita`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        id: id, 
-                        email: usuarioEmail,
-                        reservaId: resId // Enviamos el numero de reserva al servidor
-                    })
+                    body: JSON.stringify({ id: id, email: usuarioEmail })
                 });
                 if(res.ok) {
                     alert("Cita cancelada exitosamente.");
-                    mostrarMisCitas();
+                    mostrarMisCitas(); // Refrescar historial
                 }
             } catch (e) { alert("Error al cancelar."); }
         }

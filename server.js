@@ -15,7 +15,7 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
     .catch(err => console.error("❌ Error de conexión:", err));
 
-// MODELO ACTUALIZADO: Añadido reservaId para seguimiento
+// MODELO
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
@@ -23,7 +23,7 @@ const Cita = mongoose.model('Cita', {
     barbero: String,
     fecha: String,
     hora: String,
-    reservaId: String // Nuevo campo para el ID de reserva
+    reservaId: String 
 });
 
 const Usuario = mongoose.model('Usuario', {
@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO ---
+// --- ✅ RUTA: ENVIAR CÓDIGO ---
 app.post('/api/auth/enviar-codigo', async (req, res) => {
     const { correo, htmlCustom } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
@@ -55,10 +55,7 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
     try {
         await Usuario.findOneAndUpdate(
             { correo }, 
-            { 
-                codigoVerificacion: codigo,
-                fechaExpiracion: expiracion 
-            }, 
+            { codigoVerificacion: codigo, fechaExpiracion: expiracion }, 
             { upsert: true }
         );
 
@@ -73,11 +70,8 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
         sendSmtpEmail.to = [{ "email": correo }];
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`✅ Código enviado con éxito a: ${correo}`);
         res.json({ mensaje: "Código enviado" });
-
     } catch (error) {
-        console.error("❌ Error API Brevo:", error);
         res.status(500).json({ mensaje: "Error al enviar el correo" });
     }
 });
@@ -87,21 +81,17 @@ app.post('/api/auth/verificar', async (req, res) => {
     const { correo, codigo } = req.body;
     try {
         const usuario = await Usuario.findOne({ correo });
-        if (!usuario || !usuario.codigoVerificacion) {
-            return res.status(400).json({ success: false, mensaje: "No hay un código activo." });
-        }
-        if (new Date() > usuario.fechaExpiracion) {
-            await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null });
-            return res.status(400).json({ success: false, mensaje: "El código ha expirado." });
-        }
+        if (!usuario || !usuario.codigoVerificacion) return res.status(400).json({ success: false, mensaje: "No hay código activo" });
+        if (new Date() > usuario.fechaExpiracion) return res.status(400).json({ success: false, mensaje: "Código expirado" });
+        
         if (usuario.codigoVerificacion === codigo) {
             await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null }); 
             res.json({ success: true, mensaje: "Acceso concedido" });
         } else {
-            res.status(400).json({ success: false, mensaje: "Código incorrecto." });
+            res.status(400).json({ success: false, mensaje: "Código incorrecto" });
         }
     } catch (error) {
-        res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+        res.status(500).json({ success: false, mensaje: "Error servidor" });
     }
 });
 
@@ -110,8 +100,7 @@ app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
         const citas = await Cita.find({ fecha, barbero });
-        const ocupadas = citas.map(c => c.hora);
-        res.json({ ocupadas, bloqueadas: [] });
+        res.json({ ocupadas: citas.map(c => c.hora), bloqueadas: [] });
     } catch (error) {
         res.status(500).json({ error: "Error cargando horas" });
     }
@@ -124,7 +113,7 @@ app.get('/mis-citas', async (req, res) => {
         const citas = await Cita.find({ clienteEmail: email }).sort({ fecha: 1, hora: 1 });
         res.json(citas);
     } catch (error) {
-        res.status(500).json({ error: "Error al obtener historial" });
+        res.status(500).json({ error: "Error historial" });
     }
 });
 
@@ -133,10 +122,7 @@ app.post('/cancelar-cita', async (req, res) => {
     try {
         const { id, email } = req.body;
         const citaInfo = await Cita.findOne({ _id: id, clienteEmail: email });
-        
-        if (!citaInfo) {
-            return res.status(404).json({ success: false, mensaje: "Cita no encontrada" });
-        }
+        if (!citaInfo) return res.status(404).json({ success: false, mensaje: "Cita no encontrada" });
 
         await Cita.findByIdAndDelete(id);
 
@@ -149,41 +135,25 @@ app.post('/cancelar-cita', async (req, res) => {
                 </div>
                 <div style="padding:20px;color:#333;">
                     <p>Hola <b>${citaInfo.clienteNombre}</b>,</p>
-                    <p>Te confirmamos que tu cita ha sido <b>cancelada exitosamente</b>.</p>
-                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;border-left:5px solid #ff4d4d;">
-                        <p style="margin:5px 0;">📅 <b>Fecha:</b> ${citaInfo.fecha}</p>
-                        <p style="margin:5px 0;">⏰ <b>Hora:</b> ${citaInfo.hora}</p>
-                        <p style="margin:5px 0;">📍 <b>Barbero:</b> ${citaInfo.barbero}</p>
-                    </div>
-                    <p style="margin-top:20px;">Si deseas agendar una nueva cita, puedes hacerlo desde nuestra aplicación.</p>
+                    <p>Confirmamos que tu cita ha sido <b>cancelada exitosamente</b>.</p>
                 </div>
             </div>`;
         emailCancel.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailCancel.to = [{ "email": email }];
-
         await apiInstance.sendTransacEmail(emailCancel);
 
-        res.json({ success: true, mensaje: "Cita eliminada y correo enviado" });
+        res.json({ success: true, mensaje: "Cita eliminada" });
     } catch (error) {
-        console.error("❌ Error al cancelar:", error);
         res.status(500).json({ error: "Error al cancelar" });
     }
 });
 
-// --- ✅ RUTA: RESERVAR CITA (Actualizada con tu URL de Render) ---
+// --- ✅ RUTA: RESERVAR CITA (Mensaje de 12 horas actualizado) ---
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
         
-        const nuevaCita = new Cita({
-            clienteNombre,
-            clienteTelefono,
-            clienteEmail,
-            barbero,
-            fecha,
-            hora,
-            reservaId 
-        });
+        const nuevaCita = new Cita({ clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId });
         await nuevaCita.save();
 
         let emailConfirm = new Brevo.SendSmtpEmail();
@@ -196,32 +166,30 @@ app.post('/reservar', async (req, res) => {
                 <div style="padding:20px;color:#333;">
                     <p>Hola <b>${clienteNombre}</b>,</p>
                     <p>Tu cita se ha agendado con el código: <b>${reservaId}</b>.</p>
-                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;margin-bottom:20px;">
+                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;margin-bottom:20px;border-left:4px solid #d4af37;">
                         <p style="margin:5px 0;">📅 <b>Fecha:</b> ${fecha}</p>
                         <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
                         <p style="margin:5px 0;">📍 <b>Lugar:</b> ${barbero}</p>
                     </div>
                     
-                    <p style="font-size:14px;color:#444;margin-bottom:25px;">Si necesitas gestionar tus reservas o <b>cancelar tu cita</b>, puedes hacerlo ingresando a nuestra plataforma aquí:</p>
-                    
-                    <div style="text-align:center;">
-                        <a href="https://mis-barberias.onrender.com/" style="background-color:#1a1a1a;color:#d4af37;padding:12px 25px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;border:1px solid #d4af37;">Gestionar o Cancelar Cita</a>
+                    <div style="background:#fff5f5; padding:15px; border-radius:10px; border:1px solid #feb2b2; text-align:center;">
+                        <p style="margin:0; color:#c53030; font-size:14px; font-weight:bold;">⚠️ INFORMACIÓN IMPORTANTE</p>
+                        <p style="margin:8px 0 0; color:#4a5568; font-size:13px; line-height:1.4;">
+                            Para cancelar o reprogramar, debes hacerlo desde la sección <b>"Mis Citas"</b> en nuestra aplicación con un mínimo de <b>12 horas de antelación</b>.
+                        </p>
                     </div>
 
-                    <p style="font-size:12px;color:#777;margin-top:25px;text-align:center;border-top:1px solid #eee;padding-top:15px;">Recuerda que las cancelaciones deben ser con al menos 12 horas de antelación.</p>
+                    <p style="font-size:12px; color:#999; margin-top:25px; text-align:center;">Gracias por confiar en Agendate Live.</p>
                 </div>
             </div>`;
         emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailConfirm.to = [{ "email": clienteEmail }];
 
         await apiInstance.sendTransacEmail(emailConfirm);
-        
-        console.log(`✅ Cita #${reservaId} confirmada para: ${clienteEmail}`);
         res.status(200).json({ message: "Cita guardada", reservaId });
 
     } catch (e) {
-        console.error("❌ Error en reserva:", e);
-        res.status(500).json({ error: "Error en el servidor al reservar" });
+        res.status(500).json({ error: "Error en el servidor" });
     }
 });
 

@@ -15,7 +15,7 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
     .catch(err => console.error("❌ Error de conexión:", err));
 
-// MODELO ACTUALIZADO: Añadido reservaId y estado
+// MODELO - Se añade el campo 'estado' para que la cita no se borre físicamente
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
@@ -24,7 +24,7 @@ const Cita = mongoose.model('Cita', {
     fecha: String,
     hora: String,
     reservaId: String,
-    estado: { type: String, default: 'confirmada' } // Nuevo campo: 'confirmada' o 'cancelada'
+    estado: { type: String, default: 'confirmada' } // 'confirmada' o 'cancelada'
 });
 
 const Usuario = mongoose.model('Usuario', {
@@ -47,7 +47,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// --- ✅ RUTA: ENVIAR CÓDIGO POR CORREO ---
+// --- ✅ RUTA: ENVIAR CÓDIGO ---
 app.post('/api/auth/enviar-codigo', async (req, res) => {
     const { correo, htmlCustom } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
@@ -56,10 +56,7 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
     try {
         await Usuario.findOneAndUpdate(
             { correo }, 
-            { 
-                codigoVerificacion: codigo,
-                fechaExpiracion: expiracion 
-            }, 
+            { codigoVerificacion: codigo, fechaExpiracion: expiracion }, 
             { upsert: true }
         );
 
@@ -74,11 +71,8 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
         sendSmtpEmail.to = [{ "email": correo }];
 
         await apiInstance.sendTransacEmail(sendSmtpEmail);
-        console.log(`✅ Código enviado con éxito a: ${correo}`);
         res.json({ mensaje: "Código enviado" });
-
     } catch (error) {
-        console.error("❌ Error API Brevo:", error);
         res.status(500).json({ mensaje: "Error al enviar el correo" });
     }
 });
@@ -88,66 +82,59 @@ app.post('/api/auth/verificar', async (req, res) => {
     const { correo, codigo } = req.body;
     try {
         const usuario = await Usuario.findOne({ correo });
-        if (!usuario || !usuario.codigoVerificacion) {
-            return res.status(400).json({ success: false, mensaje: "No hay un código activo." });
-        }
-        if (new Date() > usuario.fechaExpiracion) {
-            await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null });
-            return res.status(400).json({ success: false, mensaje: "El código ha expirado." });
-        }
+        if (!usuario || !usuario.codigoVerificacion) return res.status(400).json({ success: false, mensaje: "No hay código activo" });
+        if (new Date() > usuario.fechaExpiracion) return res.status(400).json({ success: false, mensaje: "Código expirado" });
+        
         if (usuario.codigoVerificacion === codigo) {
             await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: null }); 
             res.json({ success: true, mensaje: "Acceso concedido" });
         } else {
-            res.status(400).json({ success: false, mensaje: "Código incorrecto." });
+            res.status(400).json({ success: false, mensaje: "Código incorrecto" });
         }
     } catch (error) {
-        res.status(500).json({ success: false, mensaje: "Error en el servidor" });
+        res.status(500).json({ success: false, mensaje: "Error servidor" });
     }
 });
 
-// --- ✅ RUTA: DISPONIBILIDAD (Solo cuenta las confirmadas) ---
+// --- ✅ RUTA: DISPONIBILIDAD (Libera el espacio si está cancelada) ---
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
-        // Solo buscamos citas que estén en estado 'confirmada'
+        // Solo bloqueamos las horas de las citas que siguen 'confirmadas'
         const citas = await Cita.find({ fecha, barbero, estado: 'confirmada' });
-        const ocupadas = citas.map(c => c.hora);
-        res.json({ ocupadas, bloqueadas: [] });
+        res.json({ ocupadas: citas.map(c => c.hora), bloqueadas: [] });
     } catch (error) {
         res.status(500).json({ error: "Error cargando horas" });
     }
 });
 
-// --- ✅ RUTA: MIS CITAS ---
+// --- ✅ RUTA: MIS CITAS (De más reciente a antigua, limitado a 10) ---
 app.get('/mis-citas', async (req, res) => {
     try {
         const { email } = req.query;
-        // Trae todas las citas (confirmadas y canceladas) ordenadas
-        const citas = await Cita.find({ clienteEmail: email }).sort({ fecha: 1, hora: 1 });
+        // Orden descendente por fecha (-1) y límite de 10 resultados
+        const citas = await Cita.find({ clienteEmail: email })
+                               .sort({ fecha: -1, hora: -1 })
+                               .limit(10);
         res.json(citas);
     } catch (error) {
-        res.status(500).json({ error: "Error al obtener historial" });
+        res.status(500).json({ error: "Error historial" });
     }
 });
 
-// --- ✅ RUTA: CANCELAR CITA (Actualizada: No borra, cambia estado) ---
+// --- ✅ RUTA: CANCELAR CITA (No borra, marca como cancelada) ---
 app.post('/cancelar-cita', async (req, res) => {
     try {
         const { id, email } = req.body;
-        
-        // 1. Buscamos y actualizamos el estado en lugar de eliminar
+        // Buscamos y actualizamos el estado
         const citaInfo = await Cita.findOneAndUpdate(
             { _id: id, clienteEmail: email },
             { estado: 'cancelada' },
             { new: true }
         );
-        
-        if (!citaInfo) {
-            return res.status(404).json({ success: false, mensaje: "Cita no encontrada" });
-        }
 
-        // 2. Enviamos correo de confirmación de cancelación
+        if (!citaInfo) return res.status(404).json({ success: false, mensaje: "Cita no encontrada" });
+
         let emailCancel = new Brevo.SendSmtpEmail();
         emailCancel.subject = `🚫 Cita Cancelada - Agendate Live`;
         emailCancel.htmlContent = `
@@ -157,23 +144,15 @@ app.post('/cancelar-cita', async (req, res) => {
                 </div>
                 <div style="padding:20px;color:#333;">
                     <p>Hola <b>${citaInfo.clienteNombre}</b>,</p>
-                    <p>Te confirmamos que tu cita ha sido <b>cancelada exitosamente</b>.</p>
-                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;border-left:5px solid #ff4d4d;">
-                        <p style="margin:5px 0;">📅 <b>Fecha:</b> ${citaInfo.fecha}</p>
-                        <p style="margin:5px 0;">⏰ <b>Hora:</b> ${citaInfo.hora}</p>
-                        <p style="margin:5px 0;">📍 <b>Barbero:</b> ${citaInfo.barbero}</p>
-                    </div>
-                    <p style="margin-top:20px;">Si deseas agendar una nueva cita, puedes hacerlo desde nuestra aplicación.</p>
+                    <p>Confirmamos que tu cita ha sido <b>cancelada exitosamente</b>.</p>
                 </div>
             </div>`;
         emailCancel.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailCancel.to = [{ "email": email }];
-
         await apiInstance.sendTransacEmail(emailCancel);
 
-        res.json({ success: true, mensaje: "Cita cancelada y guardada en historial" });
+        res.json({ success: true, mensaje: "Cita marcada como cancelada" });
     } catch (error) {
-        console.error("❌ Error al cancelar:", error);
         res.status(500).json({ error: "Error al cancelar" });
     }
 });
@@ -183,15 +162,15 @@ app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
         
-        const nuevaCita = new Cita({
-            clienteNombre,
-            clienteTelefono,
-            clienteEmail,
-            barbero,
-            fecha,
-            hora,
+        const nuevaCita = new Cita({ 
+            clienteNombre, 
+            clienteTelefono, 
+            clienteEmail, 
+            barbero, 
+            fecha, 
+            hora, 
             reservaId,
-            estado: 'confirmada' // Estado por defecto al crear
+            estado: 'confirmada' // Estado inicial al crear
         });
         await nuevaCita.save();
 
@@ -205,25 +184,29 @@ app.post('/reservar', async (req, res) => {
                 <div style="padding:20px;color:#333;">
                     <p>Hola <b>${clienteNombre}</b>,</p>
                     <p>Tu cita se ha agendado con el código: <b>${reservaId}</b>.</p>
-                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;">
+                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;margin-bottom:20px;border-left:4px solid #d4af37;">
                         <p style="margin:5px 0;">📅 <b>Fecha:</b> ${fecha}</p>
                         <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
                         <p style="margin:5px 0;">📍 <b>Lugar:</b> ${barbero}</p>
                     </div>
-                    <p style="font-size:12px;color:#777;margin-top:20px;">Recuerda que puedes cancelar desde "Mis Citas" hasta 12 horas antes.</p>
+                    
+                    <div style="background:#fff5f5; padding:15px; border-radius:10px; border:1px solid #feb2b2; text-align:center;">
+                        <p style="margin:0; color:#c53030; font-size:14px; font-weight:bold;">⚠️ INFORMACIÓN IMPORTANTE</p>
+                        <p style="margin:8px 0 0; color:#4a5568; font-size:13px; line-height:1.4;">
+                            Para cancelar o reprogramar, debes hacerlo desde la sección <b>"Mis Citas"</b> en nuestra aplicación con un mínimo de <b>12 horas de antelación</b>.
+                        </p>
+                    </div>
+                    <p style="font-size:12px; color:#999; margin-top:25px; text-align:center;">Gracias por confiar en Agendate Live.</p>
                 </div>
             </div>`;
         emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailConfirm.to = [{ "email": clienteEmail }];
 
         await apiInstance.sendTransacEmail(emailConfirm);
-        
-        console.log(`✅ Cita #${reservaId} confirmada para: ${clienteEmail}`);
         res.status(200).json({ message: "Cita guardada", reservaId });
 
     } catch (e) {
-        console.error("❌ Error en reserva:", e);
-        res.status(500).json({ error: "Error en el servidor al reservar" });
+        res.status(500).json({ error: "Error en el servidor" });
     }
 });
 

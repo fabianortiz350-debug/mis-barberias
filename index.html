@@ -385,7 +385,7 @@
                     if (cita.estado === 'cancelada') {
                         accionHtml = '<small style="color:#ef4444; font-weight:800;">CANCELADA</small>';
                     } else if (diffHoras > 12) {
-                        // Pasamos el reservaId como segundo argumento
+                        // Se agrega cita.reservaId como argumento
                         accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}', '${cita.reservaId}')">Cancelar</button>`;
                     } else {
                         accionHtml = '<small style="color:#999">No cancelable (menos de 12h)</small>';
@@ -408,8 +408,8 @@
             } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
         }
 
-        async function cancelarCita(id, reservaId) {
-            if(!confirm(`¿Estás seguro de cancelar la reserva #${reservaId}? Te enviaremos un correo de confirmación.`)) return;
+        async function cancelarCita(id, resId) {
+            if(!confirm("¿Estás seguro de cancelar esta reserva? Te enviaremos un correo de confirmación.")) return;
             try {
                 const res = await fetch(`${api}/cancelar-cita`, {
                     method: 'POST',
@@ -417,7 +417,7 @@
                     body: JSON.stringify({ 
                         id: id, 
                         email: usuarioEmail,
-                        reservaId: reservaId // Se incluye el ID de reserva en la petición
+                        reservaId: resId // Enviamos el numero de reserva al servidor
                     })
                 });
                 if(res.ok) {

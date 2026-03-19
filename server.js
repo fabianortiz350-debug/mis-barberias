@@ -170,7 +170,7 @@ app.post('/cancelar-cita', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: RESERVAR CITA (Actualizada con botón de gestión/cancelación) ---
+// --- ✅ RUTA: RESERVAR CITA (Actualizada con tu URL de Render) ---
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
@@ -205,7 +205,7 @@ app.post('/reservar', async (req, res) => {
                     <p style="font-size:14px;color:#444;margin-bottom:25px;">Si necesitas gestionar tus reservas o <b>cancelar tu cita</b>, puedes hacerlo ingresando a nuestra plataforma aquí:</p>
                     
                     <div style="text-align:center;">
-                        <a href="https://tu-dominio.com" style="background-color:#1a1a1a;color:#d4af37;padding:12px 25px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;border:1px solid #d4af37;">Gestionar o Cancelar Cita</a>
+                        <a href="https://mis-barberias.onrender.com/" style="background-color:#1a1a1a;color:#d4af37;padding:12px 25px;text-decoration:none;border-radius:10px;font-weight:bold;display:inline-block;border:1px solid #d4af37;">Gestionar o Cancelar Cita</a>
                     </div>
 
                     <p style="font-size:12px;color:#777;margin-top:25px;text-align:center;border-top:1px solid #eee;padding-top:15px;">Recuerda que las cancelaciones deben ser con al menos 12 horas de antelación.</p>

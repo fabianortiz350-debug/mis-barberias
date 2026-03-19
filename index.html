@@ -356,7 +356,6 @@
             location.reload();
         }
 
-        // --- MIS CITAS ACTUALIZADO: Maneja estado y orden ---
         async function mostrarMisCitas() {
             volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
@@ -382,25 +381,26 @@
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
 
-                    // Lógica para el botón o etiqueta de estado
+                    // AJUSTE: Obtener nombre sin importar la categoría de la DB
+                    const nombreNegocio = cita.barbero || cita.negocio || "Servicio Agendate";
+
                     let accionHtml = "";
                     if (cita.estado === 'cancelada') {
                         accionHtml = '<small style="color:#ef4444; font-weight:800;">CANCELADA</small>';
                     } else if (diffHoras > 12) {
-                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>`;
+                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}', '${cita.reservaId}')">Cancelar</button>`;
                     } else {
                         accionHtml = '<small style="color:#999">No cancelable (menos de 12h)</small>';
                     }
 
                     const card = document.createElement('div');
                     card.className = 'cita-card';
-                    // Aplicar opacidad si está cancelada
                     if(cita.estado === 'cancelada') card.style.opacity = "0.7";
 
                     card.innerHTML = `
                         <div>
                             <strong style="color:var(--accent)">#${cita.reservaId || 'SIN-ID'}</strong><br>
-                            <span style="font-size:18px; font-weight:800;">${cita.barbero}</span><br>
+                            <span style="font-size:18px; font-weight:800;">${nombreNegocio}</span><br>
                             <small>${cita.fecha} | ${cita.hora}</small>
                         </div>
                         ${accionHtml}
@@ -410,18 +410,21 @@
             } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
         }
 
-        // --- CANCELAR CITA ACTUALIZADO ---
-        async function cancelarCita(id) {
+        async function cancelarCita(id, resId) {
             if(!confirm("¿Estás seguro de cancelar esta reserva? Te enviaremos un correo de confirmación.")) return;
             try {
                 const res = await fetch(`${api}/cancelar-cita`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: id, email: usuarioEmail })
+                    body: JSON.stringify({ 
+                        id: id, 
+                        email: usuarioEmail,
+                        reservaId: resId 
+                    })
                 });
                 if(res.ok) {
                     alert("Cita cancelada exitosamente.");
-                    mostrarMisCitas(); // Refrescar historial
+                    mostrarMisCitas();
                 }
             } catch (e) { alert("Error al cancelar."); }
         }

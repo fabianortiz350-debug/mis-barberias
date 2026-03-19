@@ -85,7 +85,7 @@
             cursor: pointer; z-index: 10; transition: 0.3s; font-weight: bold;
         }
         .nav-arrow:hover { background: var(--accent); color: white; }
-        .arrow-left { left: 2%; display: none; } /* Se mostrará vía JS */
+        .arrow-left { left: 2%; display: none; } 
         .arrow-right { right: 2%; }
 
         .cat-card { 
@@ -256,7 +256,6 @@
         let horaSeleccionada = null;
         let categoriaActual = "";
 
-        // --- DATA DE NEGOCIOS REALES POR CATEGORÍA ---
         const negociosData = {
             barberia: { nombre: "The King's Cut", img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800", loc: "Chapinero, Bogotá" },
             spa: { nombre: "Zen Aura Spa", img: "https://images.unsplash.com/photo-1544161515-4ae6ce6ca8b8?w=800", loc: "Usaquén, Bogotá" },
@@ -357,7 +356,7 @@
             location.reload();
         }
 
-        // --- MIS CITAS ACTUALIZADO ---
+        // --- MIS CITAS ACTUALIZADO: Maneja estado y orden ---
         async function mostrarMisCitas() {
             volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
@@ -383,15 +382,28 @@
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
 
+                    // Lógica para el botón o etiqueta de estado
+                    let accionHtml = "";
+                    if (cita.estado === 'cancelada') {
+                        accionHtml = '<small style="color:#ef4444; font-weight:800;">CANCELADA</small>';
+                    } else if (diffHoras > 12) {
+                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>`;
+                    } else {
+                        accionHtml = '<small style="color:#999">No cancelable (menos de 12h)</small>';
+                    }
+
                     const card = document.createElement('div');
                     card.className = 'cita-card';
+                    // Aplicar opacidad si está cancelada
+                    if(cita.estado === 'cancelada') card.style.opacity = "0.7";
+
                     card.innerHTML = `
                         <div>
                             <strong style="color:var(--accent)">#${cita.reservaId || 'SIN-ID'}</strong><br>
                             <span style="font-size:18px; font-weight:800;">${cita.barbero}</span><br>
                             <small>${cita.fecha} | ${cita.hora}</small>
                         </div>
-                        ${diffHoras > 12 ? `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>` : '<small style="color:#999">No cancelable (menos de 12h)</small>'}
+                        ${accionHtml}
                     `;
                     contenedor.appendChild(card);
                 });
@@ -408,8 +420,8 @@
                     body: JSON.stringify({ id: id, email: usuarioEmail })
                 });
                 if(res.ok) {
-                    alert("Cita cancelada. Revisa tu correo para la confirmación.");
-                    mostrarMisCitas();
+                    alert("Cita cancelada exitosamente.");
+                    mostrarMisCitas(); // Refrescar historial
                 }
             } catch (e) { alert("Error al cancelar."); }
         }
@@ -515,7 +527,6 @@
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
         }
 
-        // --- LÓGICA DE CARRUSEL CORREGIDA ---
         const containerCats = document.getElementById('categorias');
         const arrowL = document.getElementById('arrow-l');
 
@@ -523,7 +534,6 @@
             containerCats.scrollLeft += val; 
         }
 
-        // Escuchar el scroll para mostrar/ocultar la flecha izquierda
         containerCats.addEventListener('scroll', () => {
             if (containerCats.scrollLeft > 10) {
                 arrowL.style.display = 'flex';

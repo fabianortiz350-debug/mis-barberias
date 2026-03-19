@@ -356,7 +356,6 @@
             location.reload();
         }
 
-        // --- MIS CITAS ACTUALIZADO: Maneja estado y orden ---
         async function mostrarMisCitas() {
             volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
@@ -382,19 +381,18 @@
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
 
-                    // Lógica para el botón o etiqueta de estado
                     let accionHtml = "";
                     if (cita.estado === 'cancelada') {
                         accionHtml = '<small style="color:#ef4444; font-weight:800;">CANCELADA</small>';
                     } else if (diffHoras > 12) {
-                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}')">Cancelar</button>`;
+                        // Pasamos el reservaId como segundo argumento
+                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}', '${cita.reservaId}')">Cancelar</button>`;
                     } else {
                         accionHtml = '<small style="color:#999">No cancelable (menos de 12h)</small>';
                     }
 
                     const card = document.createElement('div');
                     card.className = 'cita-card';
-                    // Aplicar opacidad si está cancelada
                     if(cita.estado === 'cancelada') card.style.opacity = "0.7";
 
                     card.innerHTML = `
@@ -410,18 +408,21 @@
             } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
         }
 
-        // --- CANCELAR CITA ACTUALIZADO ---
-        async function cancelarCita(id) {
-            if(!confirm("¿Estás seguro de cancelar esta reserva? Te enviaremos un correo de confirmación.")) return;
+        async function cancelarCita(id, reservaId) {
+            if(!confirm(`¿Estás seguro de cancelar la reserva #${reservaId}? Te enviaremos un correo de confirmación.`)) return;
             try {
                 const res = await fetch(`${api}/cancelar-cita`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ id: id, email: usuarioEmail })
+                    body: JSON.stringify({ 
+                        id: id, 
+                        email: usuarioEmail,
+                        reservaId: reservaId // Se incluye el ID de reserva en la petición
+                    })
                 });
                 if(res.ok) {
                     alert("Cita cancelada exitosamente.");
-                    mostrarMisCitas(); // Refrescar historial
+                    mostrarMisCitas();
                 }
             } catch (e) { alert("Error al cancelar."); }
         }

@@ -381,7 +381,6 @@
                     const ahora = new Date();
                     const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
 
-                    // AJUSTE: Obtener nombre sin importar la categoría de la DB
                     const nombreNegocio = cita.barbero || cita.negocio || "Servicio Agendate";
 
                     let accionHtml = "";
@@ -445,12 +444,28 @@
                 contenedor.innerHTML = "";
                 horaSeleccionada = null;
 
+                // --- LÓGICA DE TIEMPO REAL ---
+                const ahora = new Date();
+                const fechaHoy = ahora.toISOString().split('T')[0];
+                const horaActual = ahora.getHours();
+                const minutosActuales = ahora.getMinutes();
+
                 horarioBase.forEach(hora => {
+                    const [hStr, mStr] = hora.split(':');
+                    const hNum = parseInt(hStr);
+                    const mNum = parseInt(mStr);
+                    
                     const btn = document.createElement('button');
                     btn.innerText = hora;
                     btn.className = 'hora-btn';
                     
-                    if(data.ocupadas && data.ocupadas.includes(hora)) {
+                    // Condición 1: Ya está ocupada en la DB
+                    const estaOcupada = data.ocupadas && data.ocupadas.includes(hora);
+                    
+                    // Condición 2: Es hoy y la hora ya pasó
+                    const esPasada = (fechaInput === fechaHoy) && (hNum < horaActual || (hNum === horaActual && mNum <= minutosActuales));
+
+                    if(estaOcupada || esPasada) {
                         btn.disabled = true;
                     } else {
                         btn.onclick = () => {
@@ -526,6 +541,11 @@
             document.getElementById('p-nombre').innerText = data.nombre;
             document.getElementById('p-ubicacion').innerText = data.loc;
             document.getElementById('p-imagen').src = data.img;
+
+            // --- BLOQUEAR DÍAS PASADOS EN EL CALENDARIO ---
+            const inputFecha = document.getElementById('fecha-reserva');
+            const hoy = new Date().toISOString().split('T')[0];
+            inputFecha.setAttribute('min', hoy);
             
             document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
         }

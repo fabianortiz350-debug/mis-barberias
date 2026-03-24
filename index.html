@@ -145,6 +145,9 @@
         #seccion-admin { display: none; padding: 40px 5%; max-width: 600px; margin: auto; animation: fadeIn 0.4s ease; }
         .admin-card { background: white; padding: 30px; border-radius: 30px; border: 2px solid var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         .btn-secreto { width: 10px; height: 10px; background: transparent; display: inline-block; cursor: pointer; margin-left: 5px; }
+        
+        /* NUEVO: Botón Copiar QR */
+        .btn-qr-copy { background: #25d366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -220,7 +223,11 @@
                 <input type="text" id="adm-img" class="input-vip" placeholder="URL de la foto">
 
                 <button class="btn-book" onclick="guardarNuevoNegocio()" style="background:var(--accent); height:50px">PUBLICAR AHORA</button>
-                <button class="btn-back" onclick="irA('inicio')" style="width:100%; margin-top:10px; justify-content:center">Cancelar</button>
+                <div id="success-url-panel" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
+                    <p style="font-size:12px; color:green; font-weight:bold;">¡Negocio creado con éxito!</p>
+                    <button class="btn-qr-copy" id="btn-copy-new-url">Copiar Enlace para QR</button>
+                </div>
+                <button class="btn-back" onclick="irA('inicio')" style="width:100%; margin-top:10px; justify-content:center">Cerrar</button>
             </div>
         </div>
 
@@ -267,7 +274,7 @@
 
     <footer>
         <div class="footer-bottom" style="text-align: center; padding: 20px;">
-            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.<span class="btn-secreto" onclick="irA('admin')">.</span></p>
+            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
         </div>
     </footer>
 
@@ -291,14 +298,20 @@
                 document.getElementById('wrapper-cats').style.display = 'block';
                 document.getElementById('hero-area').style.display = 'block';
                 document.getElementById('section-title').innerText = "Explora Categorías";
+                window.location.hash = ''; // Limpiar hash al ir a inicio
             } else if(ruta === 'categoria') {
                 document.getElementById('lista-negocios').style.display = 'grid';
                 document.getElementById('back-container').style.display = 'block';
                 document.getElementById('section-title').innerText = "Negocios Disponibles";
                 cargarNegociosPorCategoria(param);
             } else if(ruta === 'admin') {
-                document.getElementById('seccion-admin').style.display = 'block';
-                document.getElementById('section-title').innerText = "Panel de Control";
+                // SEGURIDAD: Solo permite entrar si la URL es la secreta
+                if(window.location.pathname === '/admin-control-777') {
+                    document.getElementById('seccion-admin').style.display = 'block';
+                    document.getElementById('section-title').innerText = "Panel de Control";
+                } else {
+                    irA('inicio');
+                }
             } else if(ruta === 'citas') {
                 document.getElementById('seccion-mis-citas').style.display = 'block';
                 document.getElementById('back-container').style.display = 'block';
@@ -307,6 +320,7 @@
             } else if(ruta === 'negocio') {
                 document.getElementById('perfil-detalle').style.display = 'block';
                 document.getElementById('back-container').style.display = 'block';
+                window.location.hash = 'negocio/' + param;
                 cargarPerfilNegocio(param);
             }
             window.scrollTo(0,0);
@@ -321,7 +335,7 @@
                 const negocios = await res.json();
                 contenedor.innerHTML = "";
                 if(!negocios || negocios.length === 0) {
-                    contenedor.innerHTML = "<p>No hay negocios aquí. ¡Crea el primero desde el Panel!</p>";
+                    contenedor.innerHTML = "<p>No hay negocios aquí.</p>";
                     return;
                 }
                 negocios.forEach(n => {
@@ -336,10 +350,10 @@
                         </div>
                     `;
                 });
-            } catch (e) { contenedor.innerHTML = "Error al conectar con Render."; }
+            } catch (e) { contenedor.innerHTML = "Error al conectar."; }
         }
 
-        // --- NUEVA FUNCIÓN: GUARDAR NEGOCIO ---
+        // --- GUARDAR NEGOCIO (URL DINÁMICA) ---
         async function guardarNuevoNegocio() {
             const nombre = document.getElementById('adm-nombre').value;
             const cat = document.getElementById('adm-cat').value;
@@ -348,13 +362,7 @@
 
             if(!nombre || !loc) return alert("Completa al menos nombre y ubicación");
 
-            const datos = {
-                idSlug: nombre.toLowerCase().replace(/ /g, "-").normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
-                nombre: nombre,
-                categoria: cat,
-                ubicacion: loc,
-                imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400"
-            };
+            const datos = { nombre, categoria: cat, ubicacion: loc, imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400" };
 
             try {
                 const res = await fetch(`${api}/api/negocios`, {
@@ -362,13 +370,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
+                const resData = await res.json();
                 if(res.ok) {
-                    alert("¡Negocio publicado con éxito!");
-                    irA('inicio');
+                    document.getElementById('success-url-panel').style.display = 'block';
+                    const fullUrl = `${window.location.origin}/#negocio/${resData.slug}`;
+                    document.getElementById('btn-copy-new-url').onclick = () => {
+                        navigator.clipboard.writeText(fullUrl);
+                        alert("¡Enlace copiado para tu QR!: " + fullUrl);
+                    };
                 } else {
-                    alert("Error del servidor al guardar.");
+                    alert("Error al guardar.");
                 }
-            } catch (e) { alert("No se pudo conectar con el servidor."); }
+            } catch (e) { alert("Error de conexión."); }
         }
 
         async function cargarPerfilNegocio(idSlug) {
@@ -386,7 +399,17 @@
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
             if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
-            irA('inicio');
+            
+            // LÓGICA DE URL/QR: Si la URL tiene un #negocio/nombre, ábrelo directamente
+            const hash = window.location.hash;
+            if(hash.startsWith('#negocio/')) {
+                const slug = hash.split('/')[1];
+                irA('negocio', slug);
+            } else if(window.location.pathname === '/admin-control-777') {
+                irA('admin');
+            } else {
+                irA('inicio');
+            }
         }
 
         function loguearUsuarioGlobal(email) {

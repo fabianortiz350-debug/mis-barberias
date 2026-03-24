@@ -146,13 +146,13 @@
 
     <nav>
         <div class="nav-top-row">
-            <div class="logo" onclick="volverInicio(true)">AGENDATE<span>LIVE</span></div>
+            <div class="logo" onclick="irA('inicio')">AGENDATE<span>LIVE</span></div>
             <div class="nav-actions">
                 <span id="flag-icon" class="lang-selector">🇨🇴</span>
                 <button class="btn-auth" id="btn-auth-main" onclick="abrirAuth()">Iniciar sesión</button>
                 
                 <div class="user-menu" id="user-menu-dropdown">
-                    <div class="user-menu-item" onclick="mostrarMisCitas()">📅 Mis Citas</div>
+                    <div class="user-menu-item" onclick="irA('citas')">📅 Mis Citas</div>
                     <div class="user-menu-item" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
                 </div>
             </div>
@@ -171,7 +171,7 @@
     </div>
 
     <div class="btn-back-container" id="back-container">
-        <button class="btn-back" id="btn-atras-dinamico">← Regresar</button>
+        <button class="btn-back" onclick="window.history.back()">← Regresar</button>
     </div>
 
     <div class="section-content">
@@ -181,14 +181,14 @@
             <div class="nav-arrow arrow-left" id="arrow-l" onclick="scrollCat(-220)">❮</div>
             <div class="nav-arrow arrow-right" id="arrow-r" onclick="scrollCat(220)">❯</div>
             <div class="category-container" id="categorias">
-                <div class="cat-card" style="background:var(--pastel-orange)" onclick="cargarNegocios('barberia')"><i>💈</i><span>Barberías</span></div>
-                <div class="cat-card" style="background:var(--pastel-purple)" onclick="cargarNegocios('spa')"><i>💅</i><span>Spa</span></div>
-                <div class="cat-card" style="background:var(--pastel-blue)" onclick="cargarNegocios('odontologia')"><i>🦷</i><span>Odontología</span></div>
-                <div class="cat-card" style="background:var(--pastel-green)" onclick="cargarNegocios('veterinaria')"><i>🐾</i><span>Veterinarias</span></div>
-                <div class="cat-card" style="background:var(--pastel-orange)" onclick="cargarNegocios('gastronomia')"><i>🍽️</i><span>Gastronomía</span></div>
-                <div class="cat-card" style="background:var(--pastel-purple)" onclick="cargarNegocios('turismo')"><i>✈️</i><span>Turismo</span></div>
-                <div class="cat-card" style="background:var(--pastel-green)" onclick="cargarNegocios('automotriz')"><i>🔧</i><span>Automotriz</span></div>
-                <div class="cat-card" style="background:var(--pastel-blue)" onclick="cargarNegocios('otros')"><i>✨</i><span>Otros</span></div>
+                <div class="cat-card" style="background:var(--pastel-orange)" onclick="irA('negocio', 'barberia')"><i>💈</i><span>Barberías</span></div>
+                <div class="cat-card" style="background:var(--pastel-purple)" onclick="irA('negocio', 'spa')"><i>💅</i><span>Spa</span></div>
+                <div class="cat-card" style="background:var(--pastel-blue)" onclick="irA('negocio', 'odontologia')"><i>🦷</i><span>Odontología</span></div>
+                <div class="cat-card" style="background:var(--pastel-green)" onclick="irA('negocio', 'veterinaria')"><i>🐾</i><span>Veterinarias</span></div>
+                <div class="cat-card" style="background:var(--pastel-orange)" onclick="irA('negocio', 'gastronomia')"><i>🍽️</i><span>Gastronomía</span></div>
+                <div class="cat-card" style="background:var(--pastel-purple)" onclick="irA('negocio', 'turismo')"><i>✈️</i><span>Turismo</span></div>
+                <div class="cat-card" style="background:var(--pastel-green)" onclick="irA('negocio', 'automotriz')"><i>🔧</i><span>Automotriz</span></div>
+                <div class="cat-card" style="background:var(--pastel-blue)" onclick="irA('negocio', 'otros')"><i>✨</i><span>Otros</span></div>
             </div>
         </div>
 
@@ -254,7 +254,6 @@
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
         let horaSeleccionada = null;
-        let categoriaActual = "";
 
         const negociosData = {
             barberia: { nombre: "The King's Cut", img: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800", loc: "Chapinero, Bogotá" },
@@ -267,72 +266,93 @@
             otros: { nombre: "Servicios Varios Express", img: "https://images.unsplash.com/photo-1454165833767-02a6ed8a499a?w=800", loc: "Bogotá, Colombia" }
         };
 
+        // --- SISTEMA DE NAVEGACIÓN PASO 1 ---
+        function irA(ruta, param = null) {
+            const path = param ? `/${ruta}/${param}` : `/${ruta}`;
+            window.history.pushState({ruta, param}, '', path);
+            renderizarVista(ruta, param);
+        }
+
+        window.onpopstate = function(e) {
+            if(e.state) renderizarVista(e.state.ruta, e.state.param);
+            else renderizarVista('inicio');
+        };
+
+        function renderizarVista(ruta, param) {
+            // Reset de visibilidad
+            document.getElementById('user-menu-dropdown').classList.remove('active');
+            document.getElementById('wrapper-cats').style.display = 'none';
+            document.getElementById('hero-area').style.display = 'none';
+            document.getElementById('perfil-detalle').style.display = 'none';
+            document.getElementById('seccion-mis-citas').style.display = 'none';
+            document.getElementById('back-container').style.display = 'none';
+
+            if(ruta === 'inicio') {
+                document.getElementById('wrapper-cats').style.display = 'block';
+                document.getElementById('hero-area').style.display = 'block';
+                document.getElementById('section-title').innerText = "Explora Categorías";
+            } else if(ruta === 'citas') {
+                document.getElementById('seccion-mis-citas').style.display = 'block';
+                document.getElementById('back-container').style.display = 'block';
+                document.getElementById('section-title').innerText = "Tus Citas";
+                mostrarMisCitas();
+            } else if(ruta === 'negocio') {
+                document.getElementById('perfil-detalle').style.display = 'block';
+                document.getElementById('back-container').style.display = 'block';
+                const data = negociosData[param] || negociosData['otros'];
+                document.getElementById('p-nombre').innerText = data.nombre;
+                document.getElementById('p-ubicacion').innerText = data.loc;
+                document.getElementById('p-imagen').src = data.img;
+                document.getElementById('section-title').innerText = "Detalle del Negocio";
+            }
+            window.scrollTo(0,0);
+        }
+
+        // --- FUNCIONES EXISTENTES ---
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
-            const loginTime = localStorage.getItem('agendate_login_time');
+            if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
             
-            if(emailGuardado && loginTime) {
-                const ahora = Date.now();
-                const diezMinutos = 10 * 60 * 1000;
-                if(ahora - loginTime > diezMinutos) {
-                    cerrarSesion();
-                } else {
-                    loguearUsuarioGlobal(emailGuardado);
-                }
-            }
+            // Detectar ruta inicial según URL
+            const path = window.location.pathname;
+            if(path.includes('/citas')) renderizarVista('citas');
+            else if(path.includes('/negocio/')) renderizarVista('negocio', path.split('/').pop());
+            else renderizarVista('inicio');
         }
 
         function loguearUsuarioGlobal(email) {
-            usuarioEmail = email;
-            usuarioLogueado = true;
+            usuarioEmail = email; usuarioLogueado = true;
             localStorage.setItem('agendate_user_email', email);
-            localStorage.setItem('agendate_login_time', Date.now());
-            const nombreMostrar = email.split('@')[0];
             const btnAuth = document.getElementById('btn-auth-main');
-            btnAuth.innerHTML = `Hola, ${nombreMostrar} ▾`;
+            btnAuth.innerHTML = `Hola, ${email.split('@')[0]} ▾`;
             btnAuth.style.background = "var(--accent)";
         }
 
         function abrirAuth() { 
-            if(usuarioLogueado) {
-                document.getElementById('user-menu-dropdown').classList.toggle('active');
-            } else {
-                regresarInicioAuth();
-                document.getElementById('modal-auth').style.display = 'flex'; 
-            }
+            if(usuarioLogueado) document.getElementById('user-menu-dropdown').classList.toggle('active');
+            else { regresarInicioAuth(); document.getElementById('modal-auth').style.display = 'flex'; }
         }
-        
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
-
         function regresarInicioAuth() {
             document.getElementById('auth-formularios').style.display = 'block';
             document.getElementById('auth-paso-2').style.display = 'none';
-            document.getElementById('auth-instruccion').innerText = "Ingresa tu correo para recibir un código de acceso";
         }
 
         async function solicitarCodigo() {
             const email = document.getElementById('auth-email').value.trim();
-            const btn = document.getElementById('btn-principal-auth');
             if(!email.includes("@")) return alert("Ingresa un correo válido");
-            
             usuarioEmail = email;
-            btn.innerText = "Enviando..."; btn.disabled = true;
-
-            const htmlCorreo = `<div style="font-family:'Plus Jakarta Sans',sans-serif;max-width:500px;margin:20px auto;border:1px solid #eee;border-radius:24px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);"><div style="background:#1a1a1a;padding:30px;text-align:center;"><span style="color:white;font-weight:800;font-size:22px;">AGENDATE<span style="color:#d4af37;">LIVE</span></span></div><div style="padding:40px 20px;text-align:center;background:white;"><h2 style="margin:0;color:#1a1a1a;font-weight:800;">Tu código de acceso</h2><p style="color:#666;margin:10px 0 30px;">Cópialo y pégalo para ingresar a tu cuenta.</p><div style="background:#fff3e0;border:2px dashed #d4af37;padding:15px;border-radius:12px;display:inline-block;"><span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#1a1a1a;">{{CODIGO}}</span></div><p style="font-size:12px;color:#ff4444;margin-top:25px;font-weight:600;">Este código vence en 5 minutos.</p></div></div>`;
-
             try {
                 const res = await fetch(`${api}/api/auth/enviar-codigo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: email, htmlCustom: htmlCorreo })
+                    body: JSON.stringify({ correo: email })
                 });
                 if (res.ok) {
                     document.getElementById('auth-formularios').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
-                    document.getElementById('auth-instruccion').innerText = "Código enviado a: " + email;
                 }
-            } catch (e) { alert("Error de conexión"); }
-            finally { btn.innerText = "Enviar Código"; btn.disabled = false; }
+            } catch (e) { alert("Error"); }
         }
 
         async function confirmarCodigo() {
@@ -344,226 +364,70 @@
                     body: JSON.stringify({ correo: usuarioEmail, codigo: codigo })
                 });
                 const data = await res.json();
-                if (data.success) {
-                    loguearUsuarioGlobal(usuarioEmail);
-                    cerrarAuth();
-                } else { alert("Código incorrecto o vencido"); }
-            } catch (e) { alert("Error al verificar"); }
+                if (data.success) { loguearUsuarioGlobal(usuarioEmail); cerrarAuth(); }
+            } catch (e) { alert("Error"); }
         }
 
-        function cerrarSesion() {
-            localStorage.clear();
-            // Cerramos el menú antes de recargar
-            document.getElementById('user-menu-dropdown').classList.remove('active');
-            location.reload();
-        }
+        function cerrarSesion() { localStorage.clear(); location.href = "/"; }
 
         async function mostrarMisCitas() {
-            // Cerramos el menú desplegable para que no quede fijo
-            document.getElementById('user-menu-dropdown').classList.remove('active');
-            
-            volverInicio();
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'block';
-            document.getElementById('back-container').style.display = 'block';
-            
             const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando tus citas...</p>";
-
+            contenedor.innerHTML = "<p>Cargando...</p>";
             try {
                 const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
                 const citas = await res.json();
                 contenedor.innerHTML = "";
-
-                if(citas.length === 0) {
-                    contenedor.innerHTML = "<p>No tienes citas agendadas.</p>";
-                    return;
-                }
-
                 citas.forEach(cita => {
-                    const fechaCita = new Date(`${cita.fecha}T${cita.hora}`);
-                    const ahora = new Date();
-                    const diffHoras = (fechaCita - ahora) / (1000 * 60 * 60);
-
-                    const nombreNegocio = cita.barbero || cita.negocio || "Servicio Agendate";
-
-                    let accionHtml = "";
-                    if (cita.estado === 'cancelada') {
-                        accionHtml = '<small style="color:#ef4444; font-weight:800;">CANCELADA</small>';
-                    } else if (diffHoras > 12) {
-                        accionHtml = `<button class="btn-cancelar" onclick="cancelarCita('${cita._id}', '${cita.reservaId}')">Cancelar</button>`;
-                    } else {
-                        accionHtml = '<small style="color:#999">No cancelable (menos de 12h)</small>';
-                    }
-
                     const card = document.createElement('div');
                     card.className = 'cita-card';
-                    if(cita.estado === 'cancelada') card.style.opacity = "0.7";
-
-                    card.innerHTML = `
-                        <div>
-                            <strong style="color:var(--accent)">#${cita.reservaId || 'SIN-ID'}</strong><br>
-                            <span style="font-size:18px; font-weight:800;">${nombreNegocio}</span><br>
-                            <small>${cita.fecha} | ${cita.hora}</small>
-                        </div>
-                        ${accionHtml}
-                    `;
+                    card.innerHTML = `<div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.fecha}</small></div>`;
                     contenedor.appendChild(card);
                 });
-            } catch (e) { contenedor.innerHTML = "Error al obtener citas."; }
-        }
-
-        async function cancelarCita(id, resId) {
-            if(!confirm("¿Estás seguro de cancelar esta reserva? Te enviaremos un correo de confirmación.")) return;
-            try {
-                const res = await fetch(`${api}/cancelar-cita`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        id: id, 
-                        email: usuarioEmail,
-                        reservaId: resId 
-                    })
-                });
-                if(res.ok) {
-                    alert("Cita cancelada exitosamente.");
-                    mostrarMisCitas();
-                }
-            } catch (e) { alert("Error al cancelar."); }
+            } catch (e) { contenedor.innerHTML = "Error."; }
         }
 
         async function cargarHorasDisponibles() {
-            const fechaInput = document.getElementById('fecha-reserva').value;
+            const fecha = document.getElementById('fecha-reserva').value;
             const barbero = document.getElementById('p-nombre').innerText;
             const contenedor = document.getElementById('contenedor-horas');
-            
-            if(!fechaInput) return;
-            contenedor.innerHTML = "<p style='grid-column: span 3; text-align:center;'>Buscando disponibilidad...</p>";
-
+            contenedor.innerHTML = "Buscando...";
             try {
-                const res = await fetch(`${api}/disponibilidad?fecha=${fechaInput}&barbero=${barbero}`);
+                const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
                 const data = await res.json();
-                
-                const horarioBase = ["08:00", "09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
                 contenedor.innerHTML = "";
-                horaSeleccionada = null;
-
-                const ahora = new Date();
-                const fechaHoy = ahora.toISOString().split('T')[0];
-                const horaActual = ahora.getHours();
-                const minutosActuales = ahora.getMinutes();
-
-                horarioBase.forEach(hora => {
-                    const [hStr, mStr] = hora.split(':');
-                    const hNum = parseInt(hStr);
-                    const mNum = parseInt(mStr);
-                    
+                const horas = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
+                horas.forEach(h => {
                     const btn = document.createElement('button');
-                    btn.innerText = hora;
-                    btn.className = 'hora-btn';
-                    
-                    const estaOcupada = data.ocupadas && data.ocupadas.includes(hora);
-                    const esPasada = (fechaInput === fechaHoy) && (hNum < horaActual || (hNum === horaActual && mNum <= minutosActuales));
-
-                    if(estaOcupada || esPasada) {
-                        btn.disabled = true;
-                    } else {
-                        btn.onclick = () => {
-                            document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('seleccionada'));
-                            btn.classList.add('seleccionada');
-                            horaSeleccionada = hora;
-                        };
-                    }
+                    btn.innerText = h; btn.className = 'hora-btn';
+                    if(data.ocupadas && data.ocupadas.includes(h)) btn.disabled = true;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('seleccionada'));
+                        btn.classList.add('seleccionada'); horaSeleccionada = h;
+                    };
                     contenedor.appendChild(btn);
                 });
-            } catch (e) { contenedor.innerHTML = "Error al cargar disponibilidad"; }
+            } catch (e) { }
         }
 
         async function enviarReserva() {
             if(!usuarioLogueado) return abrirAuth();
-            
-            const nombre = document.getElementById('reserva-nombre').value.trim();
-            const telefono = document.getElementById('reserva-telefono').value.trim();
-            const fecha = document.getElementById('fecha-reserva').value;
-
-            if(!nombre || !telefono || !fecha || !horaSeleccionada) {
-                alert("⚠️ Por favor completa todos los datos.");
-                return;
-            }
-
-            const resId = "AG-" + Math.floor(1000 + Math.random() * 9000);
-            const btn = document.getElementById('btn-finalizar-reserva');
-            btn.innerText = "Agendando..."; btn.disabled = true;
-
             const datos = {
-                clienteNombre: nombre,
-                clienteTelefono: telefono,
                 clienteEmail: usuarioEmail,
                 barbero: document.getElementById('p-nombre').innerText,
-                fecha: fecha,
-                hora: horaSeleccionada,
-                reservaId: resId
+                fecha: document.getElementById('fecha-reserva').value,
+                hora: horaSeleccionada
             };
-
             try {
                 const res = await fetch(`${api}/reservar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
-                if(res.ok) {
-                    alert(`✨ ¡Cita agendada! Tu número de reserva es: ${resId}. Revisa tu correo.`);
-                    location.reload();
-                } else { alert("No se pudo agendar. Intenta otra hora."); }
-            } catch (e) { alert("Error al conectar con el servidor"); }
-            finally { btn.innerText = "AGENDAR UNA CITA"; btn.disabled = false; }
+                if(res.ok) { alert("¡Agendado!"); irA('inicio'); }
+            } catch (e) { }
         }
 
-        function volverInicio() {
-            document.getElementById('wrapper-cats').style.display = 'block';
-            document.getElementById('hero-area').style.display = 'block';
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'none';
-            document.getElementById('back-container').style.display = 'none';
-            document.getElementById('section-title').innerText = "Explora Categorías";
-        }
-
-        async function cargarNegocios(tipo) {
-            categoriaActual = tipo;
-            const data = negociosData[tipo] || negociosData['otros'];
-            
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('back-container').style.display = 'block';
-            document.getElementById('perfil-detalle').style.display = 'block';
-            
-            document.getElementById('p-nombre').innerText = data.nombre;
-            document.getElementById('p-ubicacion').innerText = data.loc;
-            document.getElementById('p-imagen').src = data.img;
-
-            const inputFecha = document.getElementById('fecha-reserva');
-            const hoy = new Date().toISOString().split('T')[0];
-            inputFecha.setAttribute('min', hoy);
-            
-            document.getElementById('btn-atras-dinamico').onclick = () => volverInicio();
-        }
-
-        const containerCats = document.getElementById('categorias');
-        const arrowL = document.getElementById('arrow-l');
-
-        function scrollCat(val) { 
-            containerCats.scrollLeft += val; 
-        }
-
-        containerCats.addEventListener('scroll', () => {
-            if (containerCats.scrollLeft > 10) {
-                arrowL.style.display = 'flex';
-            } else {
-                arrowL.style.display = 'none';
-            }
-        });
+        function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
     </script>
 </body>
 </html>

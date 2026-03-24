@@ -21,7 +21,7 @@ mongoose.connect(mongoURI)
 // --- 🏗️ MODELOS DE DATOS ---
 
 const Negocio = mongoose.model('Negocio', {
-    idSlug: String,      
+    idSlug: { type: String, unique: true }, // Asegura que no se repitan URLs
     nombre: String,
     ubicacion: String,
     imagen: String,
@@ -57,18 +57,50 @@ let apiInstance = new Brevo.TransactionalEmailsApi();
 let apiKey = apiInstance.authentications['apiKey'];
 apiKey.apiKey = process.env.BREVO_KEY; 
 
+// --- 🛠️ FUNCIONES DE APOYO (NUEVAS) ---
+
+// Convierte "Peluquería Don Juan" en "peluqueria-don-juan"
+function generarSlug(texto) {
+    return texto.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quita acentos
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)+/g, '');
+}
+
 // --- 🚀 RUTAS DEL SISTEMA ---
+
+// CAMBIO 1: Ruta secreta para entrar al administrador
+// Solo tú sabrás que al entrar a /admin-control-777 se carga el panel
+app.get('/admin-control-777', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// NUEVA RUTA: Guardar un nuevo negocio desde el Panel Admin
+// CAMBIO 2: Guardar negocio con generación automática de Slug
 app.post('/api/negocios', async (req, res) => {
     try {
-        const nuevoNegocio = new Negocio(req.body);
+        const { nombre, ubicacion, imagen, categoria } = req.body;
+        
+        // Generamos el slug único basado en el nombre
+        let slugBase = generarSlug(nombre);
+        
+        // Verificamos si ya existe para evitar errores de duplicidad
+        const existe = await Negocio.findOne({ idSlug: slugBase });
+        const slugFinal = existe ? `${slugBase}-${Math.floor(1000 + Math.random() * 9000)}` : slugBase;
+
+        const nuevoNegocio = new Negocio({
+            idSlug: slugFinal,
+            nombre,
+            ubicacion,
+            imagen,
+            categoria
+        });
+
         await nuevoNegocio.save();
-        res.status(201).json({ mensaje: "Negocio creado con éxito" });
+        res.status(201).json({ success: true, mensaje: "Negocio creado", slug: slugFinal });
     } catch (error) {
         res.status(500).json({ mensaje: "Error al guardar el negocio" });
     }

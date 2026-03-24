@@ -14,7 +14,7 @@ const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberap
 mongoose.connect(mongoURI)
     .then(() => {
         console.log("✅ Conectado a la Base de Datos en la Nube");
-        cargarDatosIniciales(); // <--- Activa la creación de categorías
+        cargarDatosIniciales(); 
     })
     .catch(err => console.error("❌ Error de conexión:", err));
 
@@ -61,6 +61,17 @@ apiKey.apiKey = process.env.BREVO_KEY;
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
+});
+
+// NUEVA RUTA: Guardar un nuevo negocio desde el Panel Admin
+app.post('/api/negocios', async (req, res) => {
+    try {
+        const nuevoNegocio = new Negocio(req.body);
+        await nuevoNegocio.save();
+        res.status(201).json({ mensaje: "Negocio creado con éxito" });
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al guardar el negocio" });
+    }
 });
 
 // RUTA: Obtener un negocio específico

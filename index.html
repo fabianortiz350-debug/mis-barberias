@@ -140,6 +140,11 @@
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
 
         footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
+
+        /* --- NUEVO: ESTILOS PANEL ADMIN --- */
+        #seccion-admin { display: none; padding: 40px 5%; max-width: 600px; margin: auto; animation: fadeIn 0.4s ease; }
+        .admin-card { background: white; padding: 30px; border-radius: 30px; border: 2px solid var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
+        .btn-secreto { width: 10px; height: 10px; background: transparent; display: inline-block; cursor: pointer; margin-left: 5px; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -194,6 +199,31 @@
 
         <div id="lista-negocios"></div>
 
+        <div id="seccion-admin">
+            <div class="admin-card">
+                <h2 style="margin-top:0">🚀 Crear Negocio Profesional</h2>
+                <label>Nombre del Negocio:</label>
+                <input type="text" id="adm-nombre" class="input-vip" placeholder="Ej: Barbería El Rey">
+                
+                <label>Categoría:</label>
+                <select id="adm-cat" class="input-vip">
+                    <option value="barberia">Barbería</option>
+                    <option value="spa">Spa</option>
+                    <option value="odontologia">Odontología</option>
+                    <option value="otros">Otros</option>
+                </select>
+
+                <label>Ubicación:</label>
+                <input type="text" id="adm-loc" class="input-vip" placeholder="Barrio, Ciudad">
+
+                <label>Link de Imagen:</label>
+                <input type="text" id="adm-img" class="input-vip" placeholder="URL de la foto">
+
+                <button class="btn-book" onclick="guardarNuevoNegocio()" style="background:var(--accent); height:50px">PUBLICAR AHORA</button>
+                <button class="btn-back" onclick="irA('inicio')" style="width:100%; margin-top:10px; justify-content:center">Cancelar</button>
+            </div>
+        </div>
+
         <div id="perfil-detalle">
             <img id="p-imagen" class="foto-perfil" src="" alt="Negocio">
             <h1 id="p-nombre" style="font-weight: 800; margin: 0 0 10px 0; font-size: 32px;"></h1>
@@ -201,19 +231,13 @@
             
             <div class="reserva-contenedor">
                 <h3 style="font-weight: 800; margin-top: 0;">Reserva tu espacio</h3>
-                
                 <label style="font-size: 14px; font-weight: 600;">1. Datos de contacto:</label>
                 <input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre completo" required>
                 <input type="tel" id="reserva-telefono" class="input-vip" placeholder="Teléfono" required>
-
                 <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Selecciona el día:</label>
                 <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
-                
                 <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Elige la hora:</label>
-                <div id="contenedor-horas" class="grid-horas">
-                    <p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p>
-                </div>
-
+                <div id="contenedor-horas" class="grid-horas"><p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p></div>
                 <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="background: var(--primary); height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR UNA CITA</button>
             </div>
         </div>
@@ -229,12 +253,10 @@
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
             <h2 id="auth-titulo" style="font-weight: 800; margin-bottom: 5px;">Bienvenido</h2>
             <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tu correo para recibir un código de acceso</p>
-            
             <div id="auth-formularios">
                 <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
                 <button id="btn-principal-auth" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
             </div>
-
             <div id="auth-paso-2" style="display:none;">
                 <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
                 <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
@@ -245,7 +267,7 @@
 
     <footer>
         <div class="footer-bottom" style="text-align: center; padding: 20px;">
-            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
+            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.<span class="btn-secreto" onclick="irA('admin')">.</span></p>
         </div>
     </footer>
 
@@ -255,27 +277,15 @@
         let usuarioLogueado = false;
         let horaSeleccionada = null;
 
-        // --- SISTEMA DE NAVEGACIÓN ---
         function irA(ruta, param = null) {
-            const path = param ? `/${ruta}/${param}` : `/${ruta}`;
-            window.history.pushState({ruta, param}, '', path);
             renderizarVista(ruta, param);
         }
 
-        window.onpopstate = function(e) {
-            if(e.state) renderizarVista(e.state.ruta, e.state.param);
-            else renderizarVista('inicio');
-        };
-
         async function renderizarVista(ruta, param) {
-            // Reset de visibilidad
             document.getElementById('user-menu-dropdown').classList.remove('active');
-            document.getElementById('wrapper-cats').style.display = 'none';
-            document.getElementById('hero-area').style.display = 'none';
-            document.getElementById('lista-negocios').style.display = 'none';
-            document.getElementById('perfil-detalle').style.display = 'none';
-            document.getElementById('seccion-mis-citas').style.display = 'none';
-            document.getElementById('back-container').style.display = 'none';
+            ['wrapper-cats','hero-area','lista-negocios','perfil-detalle','seccion-mis-citas','back-container','seccion-admin'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
 
             if(ruta === 'inicio') {
                 document.getElementById('wrapper-cats').style.display = 'block';
@@ -286,6 +296,9 @@
                 document.getElementById('back-container').style.display = 'block';
                 document.getElementById('section-title').innerText = "Negocios Disponibles";
                 cargarNegociosPorCategoria(param);
+            } else if(ruta === 'admin') {
+                document.getElementById('seccion-admin').style.display = 'block';
+                document.getElementById('section-title').innerText = "Panel de Control";
             } else if(ruta === 'citas') {
                 document.getElementById('seccion-mis-citas').style.display = 'block';
                 document.getElementById('back-container').style.display = 'block';
@@ -299,7 +312,7 @@
             window.scrollTo(0,0);
         }
 
-        // --- CARGA DE DATOS DESDE EL BACKEND ---
+        // --- CARGA DE DATOS ---
         async function cargarNegociosPorCategoria(cat) {
             const contenedor = document.getElementById('lista-negocios');
             contenedor.innerHTML = "<p>Buscando...</p>";
@@ -307,24 +320,55 @@
                 const res = await fetch(`${api}/api/categorias/${cat}`);
                 const negocios = await res.json();
                 contenedor.innerHTML = "";
-                if(negocios.length === 0) {
-                    contenedor.innerHTML = "<p>No hay negocios en esta categoría.</p>";
+                if(!negocios || negocios.length === 0) {
+                    contenedor.innerHTML = "<p>No hay negocios aquí. ¡Crea el primero desde el Panel!</p>";
                     return;
                 }
                 negocios.forEach(n => {
-                    const card = document.createElement('div');
-                    card.className = 'biz-card';
-                    card.innerHTML = `
-                        <img src="${n.imagen}" alt="${n.nombre}">
-                        <div class="biz-info">
-                            <h3 style="margin:0">${n.nombre}</h3>
-                            <p style="font-size:12px; color:#666">${n.ubicacion}</p>
-                            <button class="btn-book" onclick="irA('negocio', '${n.idSlug}')">Ver Perfil</button>
+                    contenedor.innerHTML += `
+                        <div class="biz-card">
+                            <img src="${n.imagen}" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'">
+                            <div class="biz-info">
+                                <h3 style="margin:0">${n.nombre}</h3>
+                                <p style="font-size:12px; color:#666">${n.ubicacion}</p>
+                                <button class="btn-book" onclick="irA('negocio', '${n.idSlug}')">Ver Perfil</button>
+                            </div>
                         </div>
                     `;
-                    contenedor.appendChild(card);
                 });
-            } catch (e) { contenedor.innerHTML = "Error al cargar."; }
+            } catch (e) { contenedor.innerHTML = "Error al conectar con Render."; }
+        }
+
+        // --- NUEVA FUNCIÓN: GUARDAR NEGOCIO ---
+        async function guardarNuevoNegocio() {
+            const nombre = document.getElementById('adm-nombre').value;
+            const cat = document.getElementById('adm-cat').value;
+            const loc = document.getElementById('adm-loc').value;
+            const img = document.getElementById('adm-img').value;
+
+            if(!nombre || !loc) return alert("Completa al menos nombre y ubicación");
+
+            const datos = {
+                idSlug: nombre.toLowerCase().replace(/ /g, "-").normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+                nombre: nombre,
+                categoria: cat,
+                ubicacion: loc,
+                imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400"
+            };
+
+            try {
+                const res = await fetch(`${api}/api/negocios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+                if(res.ok) {
+                    alert("¡Negocio publicado con éxito!");
+                    irA('inicio');
+                } else {
+                    alert("Error del servidor al guardar.");
+                }
+            } catch (e) { alert("No se pudo conectar con el servidor."); }
         }
 
         async function cargarPerfilNegocio(idSlug) {
@@ -342,12 +386,7 @@
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
             if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
-            
-            const path = window.location.pathname;
-            if(path.includes('/citas')) renderizarVista('citas');
-            else if(path.includes('/categoria/')) renderizarVista('categoria', path.split('/').pop());
-            else if(path.includes('/negocio/')) renderizarVista('negocio', path.split('/').pop());
-            else renderizarVista('inicio');
+            irA('inicio');
         }
 
         function loguearUsuarioGlobal(email) {
@@ -401,7 +440,6 @@
 
         function cerrarSesion() { localStorage.clear(); location.href = "/"; }
 
-        // --- CITAS Y RESERVAS ---
         async function mostrarMisCitas() {
             const contenedor = document.getElementById('contenedor-citas');
             contenedor.innerHTML = "<p>Cargando...</p>";
@@ -409,12 +447,9 @@
                 const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
                 const citas = await res.json();
                 contenedor.innerHTML = "";
-                if(citas.length === 0) { contenedor.innerHTML = "<p>No tienes citas aún.</p>"; return; }
+                if(!citas || citas.length === 0) { contenedor.innerHTML = "<p>No tienes citas aún.</p>"; return; }
                 citas.forEach(cita => {
-                    const card = document.createElement('div');
-                    card.className = 'cita-card';
-                    card.innerHTML = `<div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.fecha} - ${cita.hora}</small></div>`;
-                    contenedor.appendChild(card);
+                    contenedor.innerHTML += `<div class="cita-card"><div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.fecha} - ${cita.hora}</small></div></div>`;
                 });
             } catch (e) { contenedor.innerHTML = "Error."; }
         }
@@ -447,7 +482,6 @@
             const nombre = document.getElementById('reserva-nombre').value;
             const tel = document.getElementById('reserva-telefono').value;
             const fecha = document.getElementById('fecha-reserva').value;
-
             if(!nombre || !tel || !fecha || !horaSeleccionada) return alert("Completa todos los datos");
 
             const datos = {

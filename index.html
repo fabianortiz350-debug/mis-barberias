@@ -353,10 +353,15 @@
 
         function cerrarSesion() {
             localStorage.clear();
+            // Cerramos el menú antes de recargar
+            document.getElementById('user-menu-dropdown').classList.remove('active');
             location.reload();
         }
 
         async function mostrarMisCitas() {
+            // Cerramos el menú desplegable para que no quede fijo
+            document.getElementById('user-menu-dropdown').classList.remove('active');
+            
             volverInicio();
             document.getElementById('wrapper-cats').style.display = 'none';
             document.getElementById('hero-area').style.display = 'none';
@@ -444,7 +449,6 @@
                 contenedor.innerHTML = "";
                 horaSeleccionada = null;
 
-                // --- LÓGICA DE TIEMPO REAL ---
                 const ahora = new Date();
                 const fechaHoy = ahora.toISOString().split('T')[0];
                 const horaActual = ahora.getHours();
@@ -459,10 +463,7 @@
                     btn.innerText = hora;
                     btn.className = 'hora-btn';
                     
-                    // Condición 1: Ya está ocupada en la DB
                     const estaOcupada = data.ocupadas && data.ocupadas.includes(hora);
-                    
-                    // Condición 2: Es hoy y la hora ya pasó
                     const esPasada = (fechaInput === fechaHoy) && (hNum < horaActual || (hNum === horaActual && mNum <= minutosActuales));
 
                     if(estaOcupada || esPasada) {
@@ -542,7 +543,6 @@
             document.getElementById('p-ubicacion').innerText = data.loc;
             document.getElementById('p-imagen').src = data.img;
 
-            // --- BLOQUEAR DÍAS PASADOS EN EL CALENDARIO ---
             const inputFecha = document.getElementById('fecha-reserva');
             const hoy = new Date().toISOString().split('T')[0];
             inputFecha.setAttribute('min', hoy);

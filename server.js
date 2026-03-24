@@ -15,7 +15,17 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
     .catch(err => console.error("❌ Error de conexión:", err));
 
-// MODELO - Se añade el campo 'estado' para que la cita no se borre físicamente
+// --- 🏗️ MODELOS DE DATOS ---
+
+// NUEVO: Modelo para los Negocios/Barberías
+const Negocio = mongoose.model('Negocio', {
+    idSlug: String,      // Ejemplo: 'barberia-central'
+    nombre: String,
+    ubicacion: String,
+    imagen: String,
+    categoria: String    // Ejemplo: 'barberia', 'spa'
+});
+
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
@@ -24,7 +34,7 @@ const Cita = mongoose.model('Cita', {
     fecha: String,
     hora: String,
     reservaId: String,
-    estado: { type: String, default: 'confirmada' } // 'confirmada' o 'cancelada'
+    estado: { type: String, default: 'confirmada' } 
 });
 
 const Usuario = mongoose.model('Usuario', {
@@ -33,6 +43,8 @@ const Usuario = mongoose.model('Usuario', {
     fechaExpiracion: Date, 
     verificado: { type: Boolean, default: false }
 });
+
+// --- ⚙️ CONFIGURACIONES EXTERNAS ---
 
 const calendar = google.calendar({
     version: 'v3',
@@ -43,11 +55,38 @@ let apiInstance = new Brevo.TransactionalEmailsApi();
 let apiKey = apiInstance.authentications['apiKey'];
 apiKey.apiKey = process.env.BREVO_KEY; 
 
+// --- 🚀 RUTAS DEL SISTEMA ---
+
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// --- ✅ RUTA: ENVIAR CÓDIGO ---
+// NUEVA RUTA: Obtener un negocio específico para la vista de perfil
+app.get('/api/negocios/:id', async (req, res) => {
+    try {
+        const negocio = await Negocio.findOne({ idSlug: req.params.id });
+        if (negocio) {
+            res.json(negocio);
+        } else {
+            res.status(404).json({ mensaje: "Negocio no encontrado" });
+        }
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al buscar el negocio" });
+    }
+});
+
+// NUEVA RUTA: Listar negocios por categoría (para los filtros)
+app.get('/api/categorias/:cat', async (req, res) => {
+    try {
+        const lista = await Negocio.find({ categoria: req.params.cat });
+        res.json(lista);
+    } catch (error) {
+        res.status(500).json({ mensaje: "Error al filtrar categorías" });
+    }
+});
+
+// --- ✅ RUTAS DE AUTENTICACIÓN (Sin cambios) ---
+
 app.post('/api/auth/enviar-codigo', async (req, res) => {
     const { correo, htmlCustom } = req.body;
     const codigo = Math.floor(100000 + Math.random() * 900000).toString();
@@ -77,7 +116,6 @@ app.post('/api/auth/enviar-codigo', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: VERIFICAR CÓDIGO ---
 app.post('/api/auth/verificar', async (req, res) => {
     const { correo, codigo } = req.body;
     try {
@@ -96,11 +134,11 @@ app.post('/api/auth/verificar', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: DISPONIBILIDAD (Libera el espacio si está cancelada) ---
+// --- ✅ RUTAS DE CITAS Y DISPONIBILIDAD (Sin cambios) ---
+
 app.get('/disponibilidad', async (req, res) => {
     try {
         const { fecha, barbero } = req.query;
-        // Solo bloqueamos las horas de las citas que siguen 'confirmadas'
         const citas = await Cita.find({ fecha, barbero, estado: 'confirmada' });
         res.json({ ocupadas: citas.map(c => c.hora), bloqueadas: [] });
     } catch (error) {
@@ -108,11 +146,9 @@ app.get('/disponibilidad', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: MIS CITAS (De más reciente a antigua, limitado a 10) ---
 app.get('/mis-citas', async (req, res) => {
     try {
         const { email } = req.query;
-        // Orden descendente por fecha (-1) y límite de 10 resultados
         const citas = await Cita.find({ clienteEmail: email })
                                .sort({ fecha: -1, hora: -1 })
                                .limit(10);
@@ -122,11 +158,9 @@ app.get('/mis-citas', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: CANCELAR CITA (No borra, marca como cancelada) ---
 app.post('/cancelar-cita', async (req, res) => {
     try {
         const { id, email } = req.body;
-        // Buscamos y actualizamos el estado
         const citaInfo = await Cita.findOneAndUpdate(
             { _id: id, clienteEmail: email },
             { estado: 'cancelada' },
@@ -157,7 +191,6 @@ app.post('/cancelar-cita', async (req, res) => {
     }
 });
 
-// --- ✅ RUTA: RESERVAR CITA ---
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
@@ -170,7 +203,7 @@ app.post('/reservar', async (req, res) => {
             fecha, 
             hora, 
             reservaId,
-            estado: 'confirmada' // Estado inicial al crear
+            estado: 'confirmada' 
         });
         await nuevaCita.save();
 
@@ -189,7 +222,6 @@ app.post('/reservar', async (req, res) => {
                         <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
                         <p style="margin:5px 0;">📍 <b>Lugar:</b> ${barbero}</p>
                     </div>
-                    
                     <div style="background:#fff5f5; padding:15px; border-radius:10px; border:1px solid #feb2b2; text-align:center;">
                         <p style="margin:0; color:#c53030; font-size:14px; font-weight:bold;">⚠️ INFORMACIÓN IMPORTANTE</p>
                         <p style="margin:8px 0 0; color:#4a5568; font-size:13px; line-height:1.4;">

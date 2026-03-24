@@ -12,18 +12,20 @@ app.use(express.static(__dirname));
 
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
 mongoose.connect(mongoURI)
-    .then(() => console.log("✅ Conectado a la Base de Datos en la Nube"))
+    .then(() => {
+        console.log("✅ Conectado a la Base de Datos en la Nube");
+        cargarDatosIniciales(); // <--- Activa la creación de categorías
+    })
     .catch(err => console.error("❌ Error de conexión:", err));
 
 // --- 🏗️ MODELOS DE DATOS ---
 
-// NUEVO: Modelo para los Negocios/Barberías
 const Negocio = mongoose.model('Negocio', {
-    idSlug: String,      // Ejemplo: 'barberia-central'
+    idSlug: String,      
     nombre: String,
     ubicacion: String,
     imagen: String,
-    categoria: String    // Ejemplo: 'barberia', 'spa'
+    categoria: String    
 });
 
 const Cita = mongoose.model('Cita', {
@@ -61,7 +63,7 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
-// NUEVA RUTA: Obtener un negocio específico para la vista de perfil
+// RUTA: Obtener un negocio específico
 app.get('/api/negocios/:id', async (req, res) => {
     try {
         const negocio = await Negocio.findOne({ idSlug: req.params.id });
@@ -75,7 +77,7 @@ app.get('/api/negocios/:id', async (req, res) => {
     }
 });
 
-// NUEVA RUTA: Listar negocios por categoría (para los filtros)
+// RUTA: Listar negocios por categoría
 app.get('/api/categorias/:cat', async (req, res) => {
     try {
         const lista = await Negocio.find({ categoria: req.params.cat });
@@ -85,7 +87,7 @@ app.get('/api/categorias/:cat', async (req, res) => {
     }
 });
 
-// --- ✅ RUTAS DE AUTENTICACIÓN (Sin cambios) ---
+// --- ✅ RUTAS DE AUTENTICACIÓN ---
 
 app.post('/api/auth/enviar-codigo', async (req, res) => {
     const { correo, htmlCustom } = req.body;
@@ -134,7 +136,7 @@ app.post('/api/auth/verificar', async (req, res) => {
     }
 });
 
-// --- ✅ RUTAS DE CITAS Y DISPONIBILIDAD (Sin cambios) ---
+// --- ✅ RUTAS DE CITAS Y DISPONIBILIDAD ---
 
 app.get('/disponibilidad', async (req, res) => {
     try {
@@ -171,16 +173,7 @@ app.post('/cancelar-cita', async (req, res) => {
 
         let emailCancel = new Brevo.SendSmtpEmail();
         emailCancel.subject = `🚫 Cita Cancelada - Agendate Live`;
-        emailCancel.htmlContent = `
-            <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #ff4d4d;border-radius:20px;padding:20px;background:#fff;">
-                <div style="text-align:center;background:#1a1a1a;padding:15px;border-radius:15px 15px 0 0;">
-                    <h2 style="color:#ff4d4d;margin:0;">Cita Cancelada</h2>
-                </div>
-                <div style="padding:20px;color:#333;">
-                    <p>Hola <b>${citaInfo.clienteNombre}</b>,</p>
-                    <p>Confirmamos que tu cita ha sido <b>cancelada exitosamente</b>.</p>
-                </div>
-            </div>`;
+        emailCancel.htmlContent = `<p>Hola <b>${citaInfo.clienteNombre}</b>, tu cita ha sido cancelada exitosamente.</p>`;
         emailCancel.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailCancel.to = [{ "email": email }];
         await apiInstance.sendTransacEmail(emailCancel);
@@ -194,53 +187,45 @@ app.post('/cancelar-cita', async (req, res) => {
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId } = req.body;
-        
         const nuevaCita = new Cita({ 
-            clienteNombre, 
-            clienteTelefono, 
-            clienteEmail, 
-            barbero, 
-            fecha, 
-            hora, 
-            reservaId,
-            estado: 'confirmada' 
+            clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, estado: 'confirmada' 
         });
         await nuevaCita.save();
 
         let emailConfirm = new Brevo.SendSmtpEmail();
         emailConfirm.subject = `✨ Confirmación #${reservaId} - Agendate Live`;
-        emailConfirm.htmlContent = `
-            <div style="font-family:sans-serif;max-width:500px;margin:auto;border:1px solid #d4af37;border-radius:20px;padding:20px;background:#fff;">
-                <div style="text-align:center;background:#1a1a1a;padding:15px;border-radius:15px 15px 0 0;">
-                    <h2 style="color:#d4af37;margin:0;">Reserva Confirmada</h2>
-                </div>
-                <div style="padding:20px;color:#333;">
-                    <p>Hola <b>${clienteNombre}</b>,</p>
-                    <p>Tu cita se ha agendado con el código: <b>${reservaId}</b>.</p>
-                    <div style="background:#f9f9f9;padding:15px;border-radius:10px;margin-bottom:20px;border-left:4px solid #d4af37;">
-                        <p style="margin:5px 0;">📅 <b>Fecha:</b> ${fecha}</p>
-                        <p style="margin:5px 0;">⏰ <b>Hora:</b> ${hora}</p>
-                        <p style="margin:5px 0;">📍 <b>Lugar:</b> ${barbero}</p>
-                    </div>
-                    <div style="background:#fff5f5; padding:15px; border-radius:10px; border:1px solid #feb2b2; text-align:center;">
-                        <p style="margin:0; color:#c53030; font-size:14px; font-weight:bold;">⚠️ INFORMACIÓN IMPORTANTE</p>
-                        <p style="margin:8px 0 0; color:#4a5568; font-size:13px; line-height:1.4;">
-                            Para cancelar o reprogramar, debes hacerlo desde la sección <b>"Mis Citas"</b> en nuestra aplicación con un mínimo de <b>12 horas de antelación</b>.
-                        </p>
-                    </div>
-                    <p style="font-size:12px; color:#999; margin-top:25px; text-align:center;">Gracias por confiar en Agendate Live.</p>
-                </div>
-            </div>`;
+        emailConfirm.htmlContent = `<p>Tu cita se ha agendado con el código: <b>${reservaId}</b>.</p>`;
         emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailConfirm.to = [{ "email": clienteEmail }];
 
         await apiInstance.sendTransacEmail(emailConfirm);
         res.status(200).json({ message: "Cita guardada", reservaId });
-
     } catch (e) {
         res.status(500).json({ error: "Error en el servidor" });
     }
 });
+
+// --- 💾 FUNCIÓN DE CARGA DE CATEGORÍAS ---
+async function cargarDatosIniciales() {
+    try {
+        const conteo = await Negocio.countDocuments();
+        if (conteo === 0) {
+            await Negocio.insertMany([
+                { idSlug: 'barberia-1', nombre: 'Barbería Pro', ubicacion: 'Calle 1', imagen: 'https://via.placeholder.com/500', categoria: 'barberia' },
+                { idSlug: 'spa-1', nombre: 'Spa Relax', ubicacion: 'Calle 2', imagen: 'https://via.placeholder.com/500', categoria: 'spa' },
+                { idSlug: 'odontologia-1', nombre: 'Odonto Salud', ubicacion: 'Calle 3', imagen: 'https://via.placeholder.com/500', categoria: 'odontologia' },
+                { idSlug: 'veterinaria-1', nombre: 'Vet Care', ubicacion: 'Calle 4', imagen: 'https://via.placeholder.com/500', categoria: 'veterinaria' },
+                { idSlug: 'gastronomia-1', nombre: 'Restaurante Gourmet', ubicacion: 'Calle 5', imagen: 'https://via.placeholder.com/500', categoria: 'gastronomia' },
+                { idSlug: 'turismo-1', nombre: 'Tour Aventura', ubicacion: 'Calle 6', imagen: 'https://via.placeholder.com/500', categoria: 'turismo' },
+                { idSlug: 'automotriz-1', nombre: 'Taller Motor', ubicacion: 'Calle 7', imagen: 'https://via.placeholder.com/500', categoria: 'automotriz' },
+                { idSlug: 'otros-1', nombre: 'Servicio General', ubicacion: 'Calle 8', imagen: 'https://via.placeholder.com/500', categoria: 'otros' }
+            ]);
+            console.log("✅ Categorías iniciales creadas");
+        }
+    } catch (error) {
+        console.error("❌ Error al cargar datos:", error);
+    }
+}
 
 const PORT = process.env.PORT || 10000; 
 app.listen(PORT, () => console.log(`🚀 Servidor listo en puerto ${PORT}`));

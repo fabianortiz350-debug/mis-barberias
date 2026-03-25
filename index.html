@@ -14,6 +14,7 @@
             --pastel-purple: #f3e5f5;
             --pastel-blue: #e3f2fd; 
             --pastel-orange: #fff3e0;
+            --danger: #ff4444;
         }
         
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); overflow-x: hidden; }
@@ -41,7 +42,7 @@
         .user-menu.active { display: flex; animation: slideDown 0.3s ease; }
         .user-menu-item { padding: 12px 20px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: 0.2s; border-bottom: 1px solid #f5f5f5; text-align: left; }
         .user-menu-item:hover { background: #f9f9f9; color: var(--accent); }
-        .user-menu-item:last-child { border-bottom: none; color: #ff4444; }
+        .user-menu-item:last-child { border-bottom: none; color: var(--danger); }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         /* --- BUSCADOR --- */
@@ -116,9 +117,9 @@
         
         /* --- ESTILOS MIS CITAS --- */
         .cita-card { background: white; border: 1px solid #eee; padding: 20px; border-radius: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-cancelar { background: #fee2e2; color: #ef4444; border: none; padding: 8px 15px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12px; }
+        .btn-cancelar { background: #fee2e2; color: var(--danger); border: none; padding: 8px 15px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 12px; }
 
-        /* --- SELECTOR DE HORAS VIP --- */
+        /* --- RESERVAS --- */
         .reserva-contenedor { background: #f9f9f9; padding: 20px; border-radius: 24px; margin-top: 20px; border: 1px solid #eee; }
         .input-vip { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #ddd; margin: 10px 0; font-family: inherit; box-sizing: border-box; }
         .grid-horas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
@@ -127,8 +128,15 @@
         .hora-btn.seleccionada { background: var(--accent); color: white; border-color: var(--accent); }
         .hora-btn:disabled { background: #eee; color: #bbb; cursor: not-allowed; border: none; }
 
-        /* --- MODAL AUTH --- */
-        #modal-auth {
+        /* --- PANEL ADMIN AVANZADO --- */
+        #seccion-admin { display: none; padding: 20px 0; max-width: 800px; margin: auto; animation: fadeIn 0.4s ease; }
+        .admin-card { background: white; padding: 30px; border-radius: 30px; border: 1px solid #eee; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 30px; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #f5f5f5; }
+        .btn-delete { background: #ffebeb; color: var(--danger); border: none; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; }
+        .btn-qr-copy { background: #25d366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
+
+        /* --- MODALES --- */
+        #modal-auth, #modal-admin-login {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;
         }
@@ -136,18 +144,11 @@
             background: white; padding: 30px; border-radius: 25px; width: 90%; max-width: 400px; 
             position: relative; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; font-weight: bold; color: #999; }
+        .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 24px; color: #999; }
         .auth-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; }
 
-        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 60px 5% 30px; margin-top: 50px; }
-
-        /* --- NUEVO: ESTILOS PANEL ADMIN --- */
-        #seccion-admin { display: none; padding: 40px 5%; max-width: 600px; margin: auto; animation: fadeIn 0.4s ease; }
-        .admin-card { background: white; padding: 30px; border-radius: 30px; border: 2px solid var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
-        .btn-secreto { width: 10px; height: 10px; background: transparent; display: inline-block; cursor: pointer; margin-left: 5px; }
-        
-        /* NUEVO: Botón Copiar QR */
-        .btn-qr-copy { background: #25d366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
+        footer { background: #fdfdfd; border-top: 1px solid #eee; padding: 40px 5% 20px; margin-top: 50px; text-align: center; }
+        .btn-secreto-footer { opacity: 0.1; cursor: pointer; font-size: 10px; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -156,9 +157,8 @@
         <div class="nav-top-row">
             <div class="logo" onclick="irA('inicio')">AGENDATE<span>LIVE</span></div>
             <div class="nav-actions">
-                <span id="flag-icon" class="lang-selector">🇨🇴</span>
+                <span class="lang-selector">🇨🇴</span>
                 <button class="btn-auth" id="btn-auth-main" onclick="abrirAuth()">Iniciar sesión</button>
-                
                 <div class="user-menu" id="user-menu-dropdown">
                     <div class="user-menu-item" onclick="irA('citas')">📅 Mis Citas</div>
                     <div class="user-menu-item" onclick="cerrarSesion()">🚪 Cerrar Sesión</div>
@@ -167,8 +167,8 @@
         </div>
         
         <div class="search-container">
-            <div class="search-box"><input type="text" id="query" placeholder="Código, Negocio o Servicio"></div>
-            <div class="search-box" style="flex: 0.6;"><input type="text" id="loc" placeholder="Ubicación"></div>
+            <div class="search-box"><input type="text" placeholder="Código o Negocio"></div>
+            <div class="search-box" style="flex: 0.6;"><input type="text" placeholder="Ubicación"></div>
             <button style="background:var(--accent); color:white; border:none; width:34px; height:34px; border-radius:50%; cursor:pointer;">🔍</button>
         </div>
     </nav>
@@ -183,7 +183,7 @@
     </div>
 
     <div class="section-content">
-        <h2 id="section-title" style="font-weight: 800; font-size: 24px; margin-bottom: 5px;">Explora Categorías</h2>
+        <h2 id="section-title" style="font-weight: 800; font-size: 24px;">Explora Categorías</h2>
         
         <div class="category-wrapper-pro" id="wrapper-cats">
             <div class="nav-arrow arrow-left" id="arrow-l" onclick="scrollCat(-220)">❮</div>
@@ -204,91 +204,82 @@
 
         <div id="seccion-admin">
             <div class="admin-card">
-                <h2 style="margin-top:0">🚀 Crear Negocio Profesional</h2>
-                <label>Nombre del Negocio:</label>
-                <input type="text" id="adm-nombre" class="input-vip" placeholder="Ej: Barbería El Rey">
-                
-                <label>Categoría:</label>
+                <h3 style="margin-top:0">🚀 Crear Negocio Profesional</h3>
+                <input type="text" id="adm-nombre" class="input-vip" placeholder="Nombre (Ej: Barber Pro)">
                 <select id="adm-cat" class="input-vip">
                     <option value="barberia">Barbería</option>
                     <option value="spa">Spa</option>
                     <option value="odontologia">Odontología</option>
-                    <option value="otros">Otros</option>
                 </select>
-
-                <label>Ubicación:</label>
-                <input type="text" id="adm-loc" class="input-vip" placeholder="Barrio, Ciudad">
-
-                <label>Link de Imagen:</label>
-                <input type="text" id="adm-img" class="input-vip" placeholder="URL de la foto">
-
-                <button class="btn-book" onclick="guardarNuevoNegocio()" style="background:var(--accent); height:50px">PUBLICAR AHORA</button>
-                <div id="success-url-panel" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
-                    <p style="font-size:12px; color:green; font-weight:bold;">¡Negocio creado con éxito!</p>
+                <input type="text" id="adm-loc" class="input-vip" placeholder="Ubicación (Barrio, Ciudad)">
+                <input type="text" id="adm-img" class="input-vip" placeholder="URL Foto">
+                <button class="btn-book" onclick="guardarNuevoNegocio()" style="background:var(--accent); margin-top:15px">PUBLICAR AHORA</button>
+                <div id="success-url-panel" style="display:none; margin-top:15px; padding:15px; background:var(--pastel-green); border-radius:15px;">
                     <button class="btn-qr-copy" id="btn-copy-new-url">Copiar Enlace para QR</button>
                 </div>
-                <button class="btn-back" onclick="irA('inicio')" style="width:100%; margin-top:10px; justify-content:center">Cerrar</button>
+            </div>
+
+            <div class="admin-card">
+                <h3 style="margin-top:0">📋 Gestionar Negocios</h3>
+                <div id="admin-lista-gestion"></div>
             </div>
         </div>
 
         <div id="perfil-detalle">
-            <img id="p-imagen" class="foto-perfil" src="" alt="Negocio">
-            <h1 id="p-nombre" style="font-weight: 800; margin: 0 0 10px 0; font-size: 32px;"></h1>
-            <p id="p-ubicacion" style="color: #666; font-size: 16px; margin-bottom: 30px;"></p>
-            
+            <img id="p-imagen" class="foto-perfil" src="">
+            <h1 id="p-nombre" style="font-weight: 800; margin-bottom: 5px;"></h1>
+            <p id="p-ubicacion" style="color: #666; margin-bottom: 25px;"></p>
             <div class="reserva-contenedor">
-                <h3 style="font-weight: 800; margin-top: 0;">Reserva tu espacio</h3>
-                <label style="font-size: 14px; font-weight: 600;">1. Datos de contacto:</label>
-                <input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre completo" required>
-                <input type="tel" id="reserva-telefono" class="input-vip" placeholder="Teléfono" required>
-                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Selecciona el día:</label>
+                <h3 style="margin-top: 0;">Reserva tu espacio</h3>
+                <input type="text" id="reserva-nombre" class="input-vip" placeholder="Tu Nombre">
+                <input type="tel" id="reserva-telefono" class="input-vip" placeholder="Tu Teléfono">
                 <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
-                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Elige la hora:</label>
-                <div id="contenedor-horas" class="grid-horas"><p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p></div>
-                <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="background: var(--primary); height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR UNA CITA</button>
+                <div id="contenedor-horas" class="grid-horas"></div>
+                <button class="btn-book" onclick="enviarReserva()" style="height: 55px; font-size: 16px;">AGENDAR AHORA</button>
             </div>
         </div>
 
         <div id="seccion-mis-citas">
-            <h2 style="font-weight: 800;">Tus Citas Reservadas</h2>
             <div id="contenedor-citas"></div>
+        </div>
+    </div>
+
+    <div id="modal-admin-login">
+        <div class="modal-content">
+            <span class="close-modal" onclick="document.getElementById('modal-admin-login').style.display='none'">&times;</span>
+            <h2 style="font-weight: 800;">Acceso Master</h2>
+            <input type="password" id="pass-admin" class="auth-input" placeholder="Contraseña Admin">
+            <button class="btn-book" onclick="verificarPassAdmin()">Entrar al Panel</button>
         </div>
     </div>
 
     <div id="modal-auth">
         <div class="modal-content">
             <span class="close-modal" onclick="cerrarAuth()">&times;</span>
-            <h2 id="auth-titulo" style="font-weight: 800; margin-bottom: 5px;">Bienvenido</h2>
-            <p id="auth-instruccion" style="font-size: 14px; color: #666; margin-bottom: 20px;">Ingresa tu correo para recibir un código de acceso</p>
+            <h2 id="auth-titulo">Bienvenido</h2>
             <div id="auth-formularios">
                 <input type="email" id="auth-email" class="auth-input" placeholder="correo@ejemplo.com">
-                <button id="btn-principal-auth" class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
+                <button class="btn-book" onclick="solicitarCodigo()">Enviar Código</button>
             </div>
             <div id="auth-paso-2" style="display:none;">
-                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código de 6 dígitos" maxlength="6" style="text-align:center; letter-spacing: 5px; font-size: 20px;">
-                <button class="btn-book" onclick="confirmarCodigo()" style="background: var(--accent);">Verificar e Ingresar</button>
-                <p style="font-size: 12px; margin-top: 15px; color: #888; cursor: pointer;" onclick="regresarInicioAuth()">← Usar otro correo</p>
+                <input type="text" id="auth-codigo" class="auth-input" placeholder="Código 6 dígitos" maxlength="6">
+                <button class="btn-book" onclick="confirmarCodigo()">Verificar</button>
             </div>
         </div>
     </div>
 
     <footer>
-        <div class="footer-bottom" style="text-align: center; padding: 20px;">
-            <p>&copy; 2026 Agendate Live. Todos los derechos reservados.</p>
-        </div>
+        <p>&copy; 2026 Agendate Live <span class="btn-secreto-footer" onclick="abrirLoginAdmin()">.</span></p>
     </footer>
 
     <script>
         const api = "https://mis-barberias.onrender.com"; 
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
+        let isAdmin = false;
         let horaSeleccionada = null;
 
         function irA(ruta, param = null) {
-            renderizarVista(ruta, param);
-        }
-
-        async function renderizarVista(ruta, param) {
             document.getElementById('user-menu-dropdown').classList.remove('active');
             ['wrapper-cats','hero-area','lista-negocios','perfil-detalle','seccion-mis-citas','back-container','seccion-admin'].forEach(id => {
                 document.getElementById(id).style.display = 'none';
@@ -298,77 +289,74 @@
                 document.getElementById('wrapper-cats').style.display = 'block';
                 document.getElementById('hero-area').style.display = 'block';
                 document.getElementById('section-title').innerText = "Explora Categorías";
-                window.location.hash = ''; // Limpiar hash al ir a inicio
+                window.location.hash = '';
             } else if(ruta === 'categoria') {
                 document.getElementById('lista-negocios').style.display = 'grid';
                 document.getElementById('back-container').style.display = 'block';
                 document.getElementById('section-title').innerText = "Negocios Disponibles";
                 cargarNegociosPorCategoria(param);
-            } else if(ruta === 'admin') {
-                // SEGURIDAD: Solo permite entrar si la URL es la secreta
-                if(window.location.pathname === '/admin-control-777') {
-                    document.getElementById('seccion-admin').style.display = 'block';
-                    document.getElementById('section-title').innerText = "Panel de Control";
-                } else {
-                    irA('inicio');
-                }
-            } else if(ruta === 'citas') {
-                document.getElementById('seccion-mis-citas').style.display = 'block';
-                document.getElementById('back-container').style.display = 'block';
-                document.getElementById('section-title').innerText = "Tus Citas";
-                mostrarMisCitas();
+            } else if(ruta === 'admin' && isAdmin) {
+                document.getElementById('seccion-admin').style.display = 'block';
+                document.getElementById('section-title').innerText = "Panel Master";
+                cargarListaGestionAdmin();
             } else if(ruta === 'negocio') {
                 document.getElementById('perfil-detalle').style.display = 'block';
                 document.getElementById('back-container').style.display = 'block';
-                window.location.hash = 'negocio/' + param;
                 cargarPerfilNegocio(param);
             }
             window.scrollTo(0,0);
         }
 
-        // --- CARGA DE DATOS ---
-        async function cargarNegociosPorCategoria(cat) {
-            const contenedor = document.getElementById('lista-negocios');
-            contenedor.innerHTML = "<p>Buscando...</p>";
+        // --- SEGURIDAD ---
+        function abrirLoginAdmin() { document.getElementById('modal-admin-login').style.display = 'flex'; }
+        function verificarPassAdmin() {
+            const pass = document.getElementById('pass-admin').value;
+            if(pass === "admin123") { // CAMBIA TU CLAVE AQUÍ
+                isAdmin = true;
+                document.getElementById('modal-admin-login').style.display = 'none';
+                irA('admin');
+            } else { alert("Clave incorrecta"); }
+        }
+
+        // --- GESTIÓN ADMIN (Borrar y Crear) ---
+        async function cargarListaGestionAdmin() {
+            const lista = document.getElementById('admin-lista-gestion');
+            lista.innerHTML = "Cargando...";
             try {
-                const res = await fetch(`${api}/api/categorias/${cat}`);
+                const res = await fetch(`${api}/api/negocios`);
                 const negocios = await res.json();
-                contenedor.innerHTML = "";
-                if(!negocios || negocios.length === 0) {
-                    contenedor.innerHTML = "<p>No hay negocios aquí.</p>";
-                    return;
-                }
+                lista.innerHTML = "";
                 negocios.forEach(n => {
-                    contenedor.innerHTML += `
-                        <div class="biz-card">
-                            <img src="${n.imagen}" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'">
-                            <div class="biz-info">
-                                <h3 style="margin:0">${n.nombre}</h3>
-                                <p style="font-size:12px; color:#666">${n.ubicacion}</p>
-                                <button class="btn-book" onclick="irA('negocio', '${n.idSlug}')">Ver Perfil</button>
-                            </div>
+                    lista.innerHTML += `
+                        <div class="admin-list-item">
+                            <span><strong>${n.nombre}</strong></span>
+                            <button class="btn-delete" onclick="eliminarNegocio('${n.idSlug || n.slug}')">Eliminar</button>
                         </div>
                     `;
                 });
-            } catch (e) { contenedor.innerHTML = "Error al conectar."; }
+            } catch (e) { lista.innerHTML = "Error al cargar."; }
         }
 
-        // --- GUARDAR NEGOCIO (URL DINÁMICA) ---
+        async function eliminarNegocio(slug) {
+            if(!confirm("¿Borrar permanentemente este negocio?")) return;
+            try {
+                const res = await fetch(`${api}/api/negocios/${slug}`, { method: 'DELETE' });
+                if(res.ok) { alert("Eliminado"); cargarListaGestionAdmin(); }
+            } catch (e) { alert("Error al borrar"); }
+        }
+
         async function guardarNuevoNegocio() {
             const nombre = document.getElementById('adm-nombre').value;
             const cat = document.getElementById('adm-cat').value;
             const loc = document.getElementById('adm-loc').value;
             const img = document.getElementById('adm-img').value;
-
-            if(!nombre || !loc) return alert("Completa al menos nombre y ubicación");
-
-            const datos = { nombre, categoria: cat, ubicacion: loc, imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400" };
+            if(!nombre || !loc) return alert("Faltan datos");
 
             try {
                 const res = await fetch(`${api}/api/negocios`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
+                    body: JSON.stringify({ nombre, categoria: cat, ubicacion: loc, imagen: img })
                 });
                 const resData = await res.json();
                 if(res.ok) {
@@ -376,63 +364,74 @@
                     const fullUrl = `${window.location.origin}/#negocio/${resData.slug}`;
                     document.getElementById('btn-copy-new-url').onclick = () => {
                         navigator.clipboard.writeText(fullUrl);
-                        alert("¡Enlace copiado para tu QR!: " + fullUrl);
+                        alert("Copiado!");
                     };
-                } else {
-                    alert("Error al guardar.");
+                    cargarListaGestionAdmin();
                 }
-            } catch (e) { alert("Error de conexión."); }
+            } catch (e) { alert("Error al guardar"); }
         }
 
-        async function cargarPerfilNegocio(idSlug) {
+        // --- FUNCIONES DE CARGA ---
+        async function cargarNegociosPorCategoria(cat) {
+            const contenedor = document.getElementById('lista-negocios');
+            contenedor.innerHTML = "Buscando...";
             try {
-                const res = await fetch(`${api}/api/negocios/${idSlug}`);
+                const res = await fetch(`${api}/api/categorias/${cat}`);
+                const negocios = await res.json();
+                contenedor.innerHTML = "";
+                negocios.forEach(n => {
+                    contenedor.innerHTML += `
+                        <div class="biz-card">
+                            <img src="${n.imagen}" onerror="this.src='https://via.placeholder.com/400'">
+                            <div class="biz-info">
+                                <h3>${n.nombre}</h3>
+                                <p>${n.ubicacion}</p>
+                                <button class="btn-book" onclick="irA('negocio', '${n.idSlug || n.slug}')">Ver Perfil</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) { contenedor.innerHTML = "Error de conexión."; }
+        }
+
+        async function cargarPerfilNegocio(slug) {
+            try {
+                const res = await fetch(`${api}/api/negocios/${slug}`);
                 const n = await res.json();
                 document.getElementById('p-nombre').innerText = n.nombre;
                 document.getElementById('p-ubicacion').innerText = n.ubicacion;
                 document.getElementById('p-imagen').src = n.imagen;
-                document.getElementById('section-title').innerText = "Detalle del Negocio";
-            } catch (e) { alert("Error al cargar perfil"); }
+                window.location.hash = 'negocio/' + slug;
+            } catch (e) { alert("Error perfil"); }
         }
 
-        // --- AUTH Y SESIÓN ---
+        // --- SESIÓN Y AUTH ---
         function verificarSesionAlCargar() {
-            const emailGuardado = localStorage.getItem('agendate_user_email');
-            if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
-            
-            // LÓGICA DE URL/QR: Si la URL tiene un #negocio/nombre, ábrelo directamente
+            const email = localStorage.getItem('agendate_user_email');
+            if(email) loguearUsuarioGlobal(email);
             const hash = window.location.hash;
-            if(hash.startsWith('#negocio/')) {
-                const slug = hash.split('/')[1];
-                irA('negocio', slug);
-            } else if(window.location.pathname === '/admin-control-777') {
-                irA('admin');
-            } else {
-                irA('inicio');
-            }
+            if(hash.startsWith('#negocio/')) irA('negocio', hash.split('/')[1]);
+            else irA('inicio');
         }
 
         function loguearUsuarioGlobal(email) {
             usuarioEmail = email; usuarioLogueado = true;
             localStorage.setItem('agendate_user_email', email);
-            const btnAuth = document.getElementById('btn-auth-main');
-            btnAuth.innerHTML = `Hola, ${email.split('@')[0]} ▾`;
-            btnAuth.style.background = "var(--accent)";
+            const btn = document.getElementById('btn-auth-main');
+            btn.innerHTML = `${email.split('@')[0]} ▾`;
+            btn.style.background = "var(--accent)";
         }
 
         function abrirAuth() { 
             if(usuarioLogueado) document.getElementById('user-menu-dropdown').classList.toggle('active');
-            else { regresarInicioAuth(); document.getElementById('modal-auth').style.display = 'flex'; }
+            else document.getElementById('modal-auth').style.display = 'flex'; 
         }
         function cerrarAuth() { document.getElementById('modal-auth').style.display = 'none'; }
-        function regresarInicioAuth() {
-            document.getElementById('auth-formularios').style.display = 'block';
-            document.getElementById('auth-paso-2').style.display = 'none';
-        }
+        function cerrarSesion() { localStorage.clear(); location.href = "/"; }
 
         async function solicitarCodigo() {
-            const email = document.getElementById('auth-email').value.trim();
-            if(!email.includes("@")) return alert("Ingresa un correo válido");
+            const email = document.getElementById('auth-email').value;
+            if(!email.includes("@")) return alert("Email inválido");
             usuarioEmail = email;
             try {
                 const res = await fetch(`${api}/api/auth/enviar-codigo`, {
@@ -440,7 +439,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ correo: email })
                 });
-                if (res.ok) {
+                if(res.ok) {
                     document.getElementById('auth-formularios').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
                 }
@@ -448,46 +447,28 @@
         }
 
         async function confirmarCodigo() {
-            const codigo = document.getElementById('auth-codigo').value.trim();
+            const codigo = document.getElementById('auth-codigo').value;
             try {
                 const res = await fetch(`${api}/api/auth/verificar`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: usuarioEmail, codigo: codigo })
+                    body: JSON.stringify({ correo: usuarioEmail, codigo })
                 });
                 const data = await res.json();
-                if (data.success) { loguearUsuarioGlobal(usuarioEmail); cerrarAuth(); }
-                else { alert(data.mensaje); }
-            } catch (e) { alert("Error"); }
-        }
-
-        function cerrarSesion() { localStorage.clear(); location.href = "/"; }
-
-        async function mostrarMisCitas() {
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando...</p>";
-            try {
-                const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
-                const citas = await res.json();
-                contenedor.innerHTML = "";
-                if(!citas || citas.length === 0) { contenedor.innerHTML = "<p>No tienes citas aún.</p>"; return; }
-                citas.forEach(cita => {
-                    contenedor.innerHTML += `<div class="cita-card"><div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.fecha} - ${cita.hora}</small></div></div>`;
-                });
-            } catch (e) { contenedor.innerHTML = "Error."; }
+                if(data.success) { loguearUsuarioGlobal(usuarioEmail); cerrarAuth(); }
+            } catch (e) { alert("Código incorrecto"); }
         }
 
         async function cargarHorasDisponibles() {
             const fecha = document.getElementById('fecha-reserva').value;
             const barbero = document.getElementById('p-nombre').innerText;
             const contenedor = document.getElementById('contenedor-horas');
-            contenedor.innerHTML = "Buscando...";
+            contenedor.innerHTML = "...";
             try {
                 const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
                 const data = await res.json();
                 contenedor.innerHTML = "";
-                const horas = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
-                horas.forEach(h => {
+                ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"].forEach(h => {
                     const btn = document.createElement('button');
                     btn.innerText = h; btn.className = 'hora-btn';
                     if(data.ocupadas && data.ocupadas.includes(h)) btn.disabled = true;
@@ -497,7 +478,7 @@
                     };
                     contenedor.appendChild(btn);
                 });
-            } catch (e) { contenedor.innerHTML = "Error al cargar horas."; }
+            } catch (e) { contenedor.innerHTML = "Error horas."; }
         }
 
         async function enviarReserva() {
@@ -505,16 +486,12 @@
             const nombre = document.getElementById('reserva-nombre').value;
             const tel = document.getElementById('reserva-telefono').value;
             const fecha = document.getElementById('fecha-reserva').value;
-            if(!nombre || !tel || !fecha || !horaSeleccionada) return alert("Completa todos los datos");
+            if(!nombre || !tel || !fecha || !horaSeleccionada) return alert("Datos incompletos");
 
             const datos = {
-                clienteNombre: nombre,
-                clienteTelefono: tel,
-                clienteEmail: usuarioEmail,
+                clienteNombre: nombre, clienteTelefono: tel, clienteEmail: usuarioEmail,
                 barbero: document.getElementById('p-nombre').innerText,
-                fecha: fecha,
-                hora: horaSeleccionada,
-                reservaId: 'AL' + Math.floor(1000 + Math.random() * 9000)
+                fecha, hora: horaSeleccionada, reservaId: 'AL' + Math.floor(1000 + Math.random() * 9000)
             };
             try {
                 const res = await fetch(`${api}/reservar`, {
@@ -522,8 +499,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
-                if(res.ok) { alert("¡Cita agendada exitosamente!"); irA('inicio'); }
-            } catch (e) { alert("Error al reservar"); }
+                if(res.ok) { alert("¡Cita agendada!"); irA('inicio'); }
+            } catch (e) { alert("Error reserva"); }
         }
 
         function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }

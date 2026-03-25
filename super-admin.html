@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin | Agendate Live</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --primary: #1a1a1a; 
+            --accent: #d4af37; 
+            --bg: #f8f9fa;
+        }
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
+
+        /* Header */
+        header { background: var(--primary); color: white; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 20px; }
+        .logo span { color: var(--accent); }
+
+        /* Contenedor Principal */
+        .admin-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        
+        .card { 
+            background: white; padding: 30px; border-radius: 25px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #eee;
+        }
+
+        h1 { font-size: 24px; font-weight: 800; margin-bottom: 25px; border-bottom: 2px solid var(--accent); display: inline-block; }
+
+        /* Formulario */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 700; font-size: 14px; margin-bottom: 8px; color: #555; }
+        
+        input, select { 
+            width: 100%; padding: 12px 15px; border-radius: 12px; 
+            border: 2px solid #eee; font-family: inherit; font-size: 15px; 
+            box-sizing: border-box; transition: 0.3s;
+        }
+
+        input:focus { border-color: var(--accent); outline: none; }
+
+        .btn-save { 
+            width: 100%; background: var(--primary); color: white; border: none; 
+            padding: 16px; border-radius: 15px; font-weight: 800; cursor: pointer; 
+            font-size: 16px; transition: 0.3s; margin-top: 10px;
+        }
+
+        .btn-save:hover { background: #333; transform: translateY(-2px); }
+
+        /* Feedback */
+        #status-msg { 
+            margin-top: 20px; padding: 15px; border-radius: 12px; 
+            display: none; font-weight: 600; text-align: center;
+        }
+
+        .success { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        
+        /* Lista de enlaces generados */
+        .result-box { 
+            margin-top: 25px; padding: 20px; background: #fff3e0; 
+            border-radius: 15px; border: 1px dashed #ffa726; display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">AGENDATE<span>LIVE</span> | SUPER ADMIN</div>
+        <div style="font-size: 12px; opacity: 0.7;">Control Central de Negocios</div>
+    </header>
+
+    <div class="admin-container">
+        <div class="card">
+            <h1>🚀 Registrar Nuevo Negocio</h1>
+            
+            <div class="form-group">
+                <label>Nombre del Establecimiento:</label>
+                <input type="text" id="nombre" placeholder="Ej: Barbería Royal Gold">
+            </div>
+
+            <div class="form-group">
+                <label>Categoría Principal:</label>
+                <select id="categoria">
+                    <option value="barberia">💈 Barbería</option>
+                    <option value="spa">💅 Spa / Estética</option>
+                    <option value="odontologia">🦷 Odontología</option>
+                    <option value="veterinaria">🐾 Veterinaria</option>
+                    <option value="gastronomia">🍽️ Gastronomía</option>
+                    <option value="turismo">✈️ Turismo</option>
+                    <option value="automotriz">🔧 Automotriz</option>
+                    <option value="otros">✨ Otros</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Ubicación (Barrio / Ciudad):</label>
+                <input type="text" id="ubicacion" placeholder="Ej: Chapinero, Bogotá">
+            </div>
+
+            <div class="form-group">
+                <label>Correo del Dueño (Para gestión):</label>
+                <input type="email" id="adminEmail" placeholder="correo@dueno.com">
+                <small style="color: #888; font-size: 11px;">* Con este correo el dueño podrá entrar a su panel.</small>
+            </div>
+
+            <div class="form-group">
+                <label>URL de Imagen de Portada:</label>
+                <input type="text" id="imagen" placeholder="https://link-de-la-foto.jpg">
+            </div>
+
+            <button class="btn-save" onclick="crearNegocio()">CREAR Y ACTIVAR NEGOCIO</button>
+
+            <div id="status-msg"></div>
+
+            <div class="result-box" id="result-box">
+                <p style="margin: 0 0 10px 0; font-weight: 800;">✅ Negocio creado con éxito</p>
+                <p style="font-size: 13px; color: #666;">Enlace para el cliente (QR):</p>
+                <code id="link-cliente" style="display: block; background: white; padding: 10px; border-radius: 8px; margin-bottom: 10px; word-break: break-all;"></code>
+                <button onclick="copiarLink()" style="background: var(--accent); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 700; cursor: pointer;">Copiar Enlace</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const api = "https://mis-barberias.onrender.com";
+
+        async function crearNegocio() {
+            const btn = document.querySelector('.btn-save');
+            const msg = document.getElementById('status-msg');
+            const resultBox = document.getElementById('result-box');
+            
+            const datos = {
+                nombre: document.getElementById('nombre').value.trim(),
+                categoria: document.getElementById('categoria').value,
+                ubicacion: document.getElementById('ubicacion').value.trim(),
+                adminEmail: document.getElementById('adminEmail').value.trim(),
+                imagen: document.getElementById('imagen').value.trim() || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400"
+            };
+
+            if(!datos.nombre || !datos.adminEmail || !datos.ubicacion) {
+                alert("Por favor completa los campos obligatorios.");
+                return;
+            }
+
+            btn.innerText = "PROCESANDO...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${api}/api/negocios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                const data = await res.json();
+
+                if(res.ok) {
+                    msg.innerText = "¡Negocio guardado en la base de datos!";
+                    msg.className = "success";
+                    msg.style.display = "block";
+                    
+                    // Generar link para el cliente
+                    const fullUrl = `${window.location.origin}/index.html#negocio/${data.slug}`;
+                    document.getElementById('link-cliente').innerText = fullUrl;
+                    resultBox.style.display = "block";
+                    
+                    // Limpiar formulario
+                    document.getElementById('nombre').value = "";
+                } else {
+                    throw new Error(data.error || "Error al crear");
+                }
+            } catch (e) {
+                alert("Error: " + e.message);
+                btn.disabled = false;
+                btn.innerText = "CREAR Y ACTIVAR NEGOCIO";
+            }
+        }
+
+        function copiarLink() {
+            const link = document.getElementById('link-cliente').innerText;
+            navigator.clipboard.writeText(link);
+            alert("Enlace copiado. ¡Ya puedes crear el código QR!");
+        }
+    </script>
+</body>
+</html>

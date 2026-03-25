@@ -244,7 +244,7 @@
                 
                 <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Elige el servicio:</label>
                 <select id="reserva-servicio" class="input-vip">
-                    </select>
+                </select>
 
                 <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Selecciona el día:</label>
                 <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
@@ -290,6 +290,7 @@
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
         let horaSeleccionada = null;
+        let negocioActual = null; // Para guardar horario y servicios
 
         function irA(ruta, param = null) {
             renderizarVista(ruta, param);
@@ -387,21 +388,26 @@
             try {
                 const res = await fetch(`${api}/api/negocios/${idSlug}`);
                 const n = await res.json();
+                negocioActual = n; // Guardamos en memoria global
+
                 document.getElementById('p-nombre').innerText = n.nombre;
                 document.getElementById('p-ubicacion').innerText = n.ubicacion;
                 document.getElementById('p-imagen').src = n.imagen;
                 document.getElementById('section-title').innerText = "Detalle del Negocio";
 
-                // CARGAR SERVICIOS EN EL SELECT
                 const selectServ = document.getElementById('reserva-servicio');
                 selectServ.innerHTML = "";
                 if(n.servicios && n.servicios.length > 0) {
                     n.servicios.forEach(s => {
-                        selectServ.innerHTML += `<option value="${s.nombre}" data-precio="${s.precio}">${s.nombre} - $${s.precio}</option>`;
+                        selectServ.innerHTML += `<option value="${s.nombre}" data-precio="${s.precio}">${s.nombre} - $${Number(s.precio).toLocaleString()}</option>`;
                     });
                 } else {
                     selectServ.innerHTML = `<option value="Servicio General" data-precio="0">Servicio General</option>`;
                 }
+                
+                // Limpiar horas si cambia de negocio
+                document.getElementById('contenedor-horas').innerHTML = '<p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p>';
+                document.getElementById('fecha-reserva').value = "";
 
             } catch (e) { alert("Error al cargar perfil"); }
         }
@@ -485,15 +491,25 @@
 
         async function cargarHorasDisponibles() {
             const fecha = document.getElementById('fecha-reserva').value;
+            if(!fecha) return;
             const barbero = document.getElementById('p-nombre').innerText;
             const contenedor = document.getElementById('contenedor-horas');
             contenedor.innerHTML = "Buscando...";
+            
             try {
                 const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
                 const data = await res.json();
                 contenedor.innerHTML = "";
-                const horas = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
-                horas.forEach(h => {
+
+                // Horas dinámicas según el negocio
+                let hInicio = negocioActual?.horario?.inicio || "08:00";
+                let hFin = negocioActual?.horario?.fin || "18:00";
+                
+                const inicioInt = parseInt(hInicio.split(':')[0]);
+                const finInt = parseInt(hFin.split(':')[0]);
+
+                for(let i = inicioInt; i < finInt; i++) {
+                    const h = (i < 10 ? '0'+i : i) + ":00";
                     const btn = document.createElement('button');
                     btn.innerText = h; btn.className = 'hora-btn';
                     if(data.ocupadas && data.ocupadas.includes(h)) btn.disabled = true;
@@ -502,7 +518,7 @@
                         btn.classList.add('seleccionada'); horaSeleccionada = h;
                     };
                     contenedor.appendChild(btn);
-                });
+                }
             } catch (e) { contenedor.innerHTML = "Error al cargar horas."; }
         }
 

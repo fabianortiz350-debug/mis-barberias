@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Empleado | Agendate Live</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
+        
+        nav { background: white; padding: 15px 5%; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .logo { font-weight: 800; font-size: 18px; }
+        .logo span { color: var(--accent); }
+
+        .container { padding: 20px 5%; max-width: 600px; margin: auto; }
+        
+        .header-empleado { margin-bottom: 25px; }
+        .header-empleado h1 { margin: 0; font-size: 24px; }
+        .header-empleado p { color: #666; margin: 5px 0; }
+
+        .card-cita { 
+            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;
+            display: flex; flex-direction: column; gap: 10px; position: relative;
+        }
+        .hora-tag { background: var(--primary); color: white; padding: 5px 12px; border-radius: 10px; font-weight: 700; font-size: 14px; align-self: flex-start; }
+        .cliente-name { font-weight: 800; font-size: 18px; margin: 0; }
+        .servicio-name { color: var(--accent); font-weight: 600; font-size: 14px; }
+        
+        .btn-atendido { 
+            background: #e8f5e9; color: #2e7d32; border: none; padding: 12px; 
+            border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 10px; width: 100%;
+        }
+        .btn-atendido:hover { background: #2e7d32; color: white; }
+
+        .no-citas { text-align: center; padding: 50px 20px; color: #888; }
+        .badge-status { position: absolute; top: 20px; right: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+    </style>
+</head>
+<body onload="inicializarPanel()">
+
+    <nav>
+        <div class="logo">AGENDATE<span>LIVE</span> | Staff</div>
+        <button onclick="cerrarSesion()" style="border:none; background:none; font-weight:700; color:#ff4444; cursor:pointer;">Salir</button>
+    </nav>
+
+    <div class="container">
+        <div class="header-empleado">
+            <h1 id="txt-bienvenida">Hola, ...</h1>
+            <p id="txt-negocio">Cargando agenda del negocio...</p>
+            <input type="date" id="filtro-fecha" class="btn-atendido" style="background:white; border:1px solid #ddd; color:black;" onchange="cargarAgenda()">
+        </div>
+
+        <div id="lista-agenda">
+            </div>
+    </div>
+
+    <script>
+        const api = "https://mis-barberias.onrender.com";
+        let nombreNegocio = "";
+
+        function inicializarPanel() {
+            // El empleado entra por una URL tipo: panel-empleado.html?negocio=Barberia-El-Rey
+            const params = new URLSearchParams(window.location.search);
+            nombreNegocio = params.get('negocio');
+
+            if (!nombreNegocio) {
+                alert("Falta el identificador del negocio.");
+                return;
+            }
+
+            document.getElementById('txt-negocio').innerText = nombreNegocio.replace(/-/g, ' ');
+            document.getElementById('txt-bienvenida').innerText = "Agenda del Día";
+            
+            // Poner fecha de hoy por defecto
+            document.getElementById('filtro-fecha').valueAsDate = new Date();
+            
+            cargarAgenda();
+        }
+
+        async function cargarAgenda() {
+            const fecha = document.getElementById('filtro-fecha').value;
+            const contenedor = document.getElementById('lista-agenda');
+            contenedor.innerHTML = "<p>Actualizando lista...</p>";
+
+            try {
+                // Usamos el endpoint que ya tenemos pero filtrado por negocio y fecha
+                const res = await fetch(`${api}/api/citas/negocio/${nombreNegocio}?fecha=${fecha}`);
+                const citas = await res.json();
+
+                contenedor.innerHTML = "";
+
+                if (!citas || citas.length === 0) {
+                    contenedor.innerHTML = `<div class="no-citas">☕ No hay citas agendadas para esta fecha.</div>`;
+                    return;
+                }
+
+                // Ordenar por hora
+                citas.sort((a, b) => a.hora.localeCompare(b.hora));
+
+                citas.forEach(cita => {
+                    const card = `
+                        <div class="card-cita" id="cita-${cita._id}">
+                            <div class="hora-tag">${cita.hora}</div>
+                            <div class="badge-status" style="color: ${cita.estado === 'atendido' ? '#2e7d32' : '#d4af37'}">
+                                ${cita.estado || 'Pendiente'}
+                            </div>
+                            <p class="cliente-name">${cita.clienteNombre}</p>
+                            <span class="servicio-name">${cita.servicio}</span>
+                            <p style="margin:0; font-size:13px; color:#666;">📞 ${cita.clienteTelefono}</p>
+                            
+                            ${cita.estado !== 'atendido' ? 
+                                `<button class="btn-atendido" onclick="marcarAtendido('${cita._id}')">MARCAR COMO ATENDIDO</button>` 
+                                : ''}
+                        </div>
+                    `;
+                    contenedor.innerHTML += card;
+                });
+            } catch (e) {
+                contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>";
+            }
+        }
+
+        async function marcarAtendido(id) {
+            if(!confirm("¿Confirmas que el servicio fue realizado?")) return;
+
+            try {
+                const res = await fetch(`${api}/api/citas/atender/${id}`, { method: 'PUT' });
+                if(res.ok) {
+                    alert("¡Buen trabajo!");
+                    cargarAgenda();
+                }
+            } catch (e) {
+                alert("Error al actualizar.");
+            }
+        }
+
+        function cerrarSesion() {
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

@@ -25,7 +25,7 @@ const Negocio = mongoose.model('Negocio', {
     ubicacion: String,
     imagen: String,
     categoria: String,
-    // NUEVO: Para ser profesional estilo Booksy
+    adminEmail: String, // NUEVO: Correo del dueño/administrador del local
     servicios: [{ nombre: String, precio: Number }], 
     horario: {
         inicio: { type: String, default: "08:00" },
@@ -37,9 +37,9 @@ const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
     clienteEmail: String, 
-    barbero: String, // Este campo actúa como el ID del negocio o profesional
-    servicio: String, // NUEVO: Qué se va a hacer el cliente
-    precio: Number,   // NUEVO: Cuánto va a pagar
+    barbero: String, 
+    servicio: String, 
+    precio: Number,   
     fecha: String,
     hora: String,
     reservaId: String,
@@ -71,14 +71,15 @@ function generarSlug(texto) {
 
 app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
-app.get('/admin-control-777', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+// Servir el panel de Super Admin
+app.get('/super-admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'super-admin.html'));
 });
 
-// Guardar negocio con servicios básicos por defecto
+// Guardar negocio (Actualizado para capturar adminEmail)
 app.post('/api/negocios', async (req, res) => {
     try {
-        const { nombre, ubicacion, imagen, categoria } = req.body;
+        const { nombre, ubicacion, imagen, categoria, adminEmail } = req.body;
         let slugBase = generarSlug(nombre);
         const existe = await Negocio.findOne({ idSlug: slugBase });
         const slugFinal = existe ? `${slugBase}-${Math.floor(1000 + Math.random() * 9000)}` : slugBase;
@@ -89,13 +90,25 @@ app.post('/api/negocios', async (req, res) => {
             ubicacion,
             imagen,
             categoria,
-            servicios: [{ nombre: "Servicio General", precio: 0 }] // Servicio base
+            adminEmail, // Se guarda el correo del dueño
+            servicios: [{ nombre: "Servicio General", precio: 0 }] 
         });
 
         await nuevoNegocio.save();
         res.status(201).json({ success: true, slug: slugFinal });
     } catch (error) {
         res.status(500).json({ mensaje: "Error al guardar" });
+    }
+});
+
+// NUEVA RUTA: Para que el dueño actualice su negocio (servicios/horarios)
+app.put('/api/negocios/:slug', async (req, res) => {
+    try {
+        const { servicios, horario } = req.body;
+        await Negocio.findOneAndUpdate({ idSlug: req.params.slug }, { servicios, horario });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: "Error al actualizar" });
     }
 });
 
@@ -138,11 +151,10 @@ app.post('/api/auth/verificar', async (req, res) => {
     }
 });
 
-// --- ✅ RESERVAS CON VALIDACIÓN PROFESIONAL ---
+// --- ✅ RESERVAS ---
 
 app.get('/disponibilidad', async (req, res) => {
     const { fecha, barbero } = req.query;
-    // Buscamos solo citas confirmadas para esa fecha y negocio
     const ocupadas = await Cita.find({ fecha, barbero, estado: 'confirmada' });
     res.json({ ocupadas: ocupadas.map(c => c.hora) });
 });
@@ -150,8 +162,6 @@ app.get('/disponibilidad', async (req, res) => {
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio } = req.body;
-
-        // CRÍTICO: Verificar si alguien más ganó la hora en el último segundo
         const choque = await Cita.findOne({ fecha, hora, barbero, estado: 'confirmada' });
         if (choque) return res.status(400).json({ error: "Esta hora ya no está disponible" });
 
@@ -160,7 +170,6 @@ app.post('/reservar', async (req, res) => {
         });
         await nuevaCita.save();
 
-        // Email de confirmación
         let emailConfirm = new Brevo.SendSmtpEmail();
         emailConfirm.subject = `Confirmación Cita #${reservaId}`;
         emailConfirm.htmlContent = `<p>Hola ${clienteNombre}, cita confirmada para el ${fecha} a las ${hora}.</p>`;
@@ -177,11 +186,17 @@ app.get('/mis-citas', async (req, res) => {
     res.json(citas);
 });
 
+// NUEVA RUTA: Para obtener los negocios que pertenecen a un dueño específico
+app.get('/api/propios/:email', async (req, res) => {
+    const negocios = await Negocio.find({ adminEmail: req.params.email });
+    res.json(negocios);
+});
+
 async function cargarDatosIniciales() {
     const conteo = await Negocio.countDocuments();
     if (conteo === 0) {
         await Negocio.insertMany([
-            { idSlug: 'barberia-pro', nombre: 'Barbería Pro', ubicacion: 'Centro', categoria: 'barberia', servicios: [{nombre: "Corte Caballero", precio: 15000}] }
+            { idSlug: 'barberia-pro', nombre: 'Barbería Pro', ubicacion: 'Centro', categoria: 'barberia', adminEmail: 'admin@test.com', servicios: [{nombre: "Corte Caballero", precio: 15000}] }
         ]);
     }
 }

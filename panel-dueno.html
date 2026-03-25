@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Dueño | Agendate Live</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; }
+        
+        header { background: var(--primary); color: white; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
+        
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        h2 { border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
+
+        /* Login simulado por ahora con Email */
+        .auth-box { text-align: center; padding: 50px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; }
+        .btn-accent { background: var(--accent); color: var(--primary); }
+
+        /* Lista de Servicios */
+        .servicio-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
+        .btn-del { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+
+        #panel-control { display: none; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-weight: 800;">AGENDATE<span>LIVE</span> | DUEÑOS</div>
+    <div id="user-display" style="font-size: 12px;"></div>
+</header>
+
+<div class="container">
+    <div id="auth-section" class="card auth-box">
+        <h3>Ingresa tu correo de dueño</h3>
+        <p style="font-size: 13px; color: #666;">Usa el correo que el Super Admin registró para tu negocio.</p>
+        <input type="email" id="owner-email" placeholder="tu@correo.com">
+        <button class="btn" onclick="cargarMisNegocios()">Entrar al Panel</button>
+    </div>
+
+    <div id="panel-control">
+        <div class="card">
+            <h2>Mi Negocio: <span id="nombre-negocio">...</span></h2>
+            <p id="slug-negocio" style="font-size: 12px; color: #888;"></p>
+        </div>
+
+        <div class="card">
+            <h3>⚙️ Gestionar Servicios y Precios</h3>
+            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="new-service-name" placeholder="Nombre (Ej: Corte Barba)">
+                <input type="number" id="new-service-price" placeholder="Precio ($)">
+                <button class="btn-accent" onclick="agregarServicio()" style="border-radius: 10px; border:none; padding: 0 15px; cursor: pointer; font-weight: 700;">+</button>
+            </div>
+            
+            <div id="lista-servicios">
+                </div>
+        </div>
+
+        <div class="card">
+            <h3>⏰ Horario de Atención</h3>
+            <div style="display: flex; gap: 20px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700;">Apertura:</label>
+                    <input type="time" id="h-inicio" value="08:00">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700;">Cierre:</label>
+                    <input type="time" id="h-fin" value="18:00">
+                </div>
+            </div>
+        </div>
+
+        <button class="btn" style="background: #2ecc71; margin-bottom: 50px;" onclick="guardarCambios()">GUARDAR TODA LA CONFIGURACIÓN</button>
+    </div>
+</div>
+
+<script>
+    const api = "https://mis-barberias.onrender.com"; // O localhost:10000 para pruebas
+    let miNegocioActual = null;
+    let serviciosLocales = [];
+
+    async function cargarMisNegocios() {
+        const email = document.getElementById('owner-email').value;
+        if(!email) return alert("Ingresa tu correo");
+
+        try {
+            const res = await fetch(`${api}/api/propios/${email}`);
+            const negocios = await res.json();
+
+            if(negocios.length > 0) {
+                miNegocioActual = negocios[0]; // Tomamos el primero por ahora
+                serviciosLocales = miNegocioActual.servicios || [];
+                
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('panel-control').style.display = 'block';
+                document.getElementById('nombre-negocio').innerText = miNegocioActual.nombre;
+                document.getElementById('slug-negocio').innerText = "ID: " + miNegocioActual.idSlug;
+                document.getElementById('h-inicio').value = miNegocioActual.horario?.inicio || "08:00";
+                document.getElementById('h-fin').value = miNegocioActual.horario?.fin || "18:00";
+                
+                renderServicios();
+            } else {
+                alert("No se encontró ningún negocio asociado a este correo.");
+            }
+        } catch (e) { alert("Error al conectar con el servidor."); }
+    }
+
+    function renderServicios() {
+        const div = document.getElementById('lista-servicios');
+        div.innerHTML = "";
+        serviciosLocales.forEach((s, index) => {
+            div.innerHTML += `
+                <div class="servicio-item">
+                    <div>
+                        <strong>${s.nombre}</strong><br>
+                        <span style="color: var(--accent)">$${s.precio.toLocaleString()}</span>
+                    </div>
+                    <button class="btn-del" onclick="eliminarServicio(${index})">Eliminar</button>
+                </div>
+            `;
+        });
+    }
+
+    function agregarServicio() {
+        const nom = document.getElementById('new-service-name').value;
+        const pre = document.getElementById('new-service-price').value;
+        if(!nom || !pre) return;
+
+        serviciosLocales.push({ nombre: nom, precio: parseInt(pre) });
+        document.getElementById('new-service-name').value = "";
+        document.getElementById('new-service-price').value = "";
+        renderServicios();
+    }
+
+    function eliminarServicio(index) {
+        serviciosLocales.splice(index, 1);
+        renderServicios();
+    }
+
+    async function guardarCambios() {
+        const horario = {
+            inicio: document.getElementById('h-inicio').value,
+            fin: document.getElementById('h-fin').value
+        };
+
+        try {
+            const res = await fetch(`${api}/api/negocios/${miNegocioActual.idSlug}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    servicios: serviciosLocales,
+                    horario: horario
+                })
+            });
+
+            if(res.ok) alert("✅ Configuración guardada con éxito.");
+            else alert("Error al guardar.");
+        } catch (e) { alert("Error de red."); }
+    }
+</script>
+</body>
+</html>

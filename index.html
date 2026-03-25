@@ -144,10 +144,10 @@
         /* --- NUEVO: ESTILOS PANEL ADMIN --- */
         #seccion-admin { display: none; padding: 40px 5%; max-width: 600px; margin: auto; animation: fadeIn 0.4s ease; }
         .admin-card { background: white; padding: 30px; border-radius: 30px; border: 2px solid var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
-        .btn-secreto { width: 10px; height: 10px; background: transparent; display: inline-block; cursor: pointer; margin-left: 5px; }
         
-        /* NUEVO: Botón Copiar QR */
+        /* NUEVO: Botón Copiar QR y Empleado */
         .btn-qr-copy { background: #25d366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
+        .btn-staff-copy { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
     </style>
 </head>
 <body onload="verificarSesionAlCargar()">
@@ -223,10 +223,13 @@
                 <input type="text" id="adm-img" class="input-vip" placeholder="URL de la foto">
 
                 <button class="btn-book" onclick="guardarNuevoNegocio()" style="background:var(--accent); height:50px">PUBLICAR AHORA</button>
+                
                 <div id="success-url-panel" style="display:none; margin-top:15px; border-top:1px solid #eee; padding-top:15px;">
                     <p style="font-size:12px; color:green; font-weight:bold;">¡Negocio creado con éxito!</p>
-                    <button class="btn-qr-copy" id="btn-copy-new-url">Copiar Enlace para QR</button>
+                    <button class="btn-qr-copy" id="btn-copy-new-url">Copiar Enlace para Clientes (QR)</button>
+                    <button class="btn-staff-copy" id="btn-copy-staff-url">Copiar Enlace para Empleados</button>
                 </div>
+                
                 <button class="btn-back" onclick="irA('inicio')" style="width:100%; margin-top:10px; justify-content:center">Cerrar</button>
             </div>
         </div>
@@ -290,7 +293,7 @@
         let usuarioEmail = ""; 
         let usuarioLogueado = false;
         let horaSeleccionada = null;
-        let negocioActual = null; // Para guardar horario y servicios
+        let negocioActual = null;
 
         function irA(ruta, param = null) {
             renderizarVista(ruta, param);
@@ -299,7 +302,8 @@
         async function renderizarVista(ruta, param) {
             document.getElementById('user-menu-dropdown').classList.remove('active');
             ['wrapper-cats','hero-area','lista-negocios','perfil-detalle','seccion-mis-citas','back-container','seccion-admin'].forEach(id => {
-                document.getElementById(id).style.display = 'none';
+                const el = document.getElementById(id);
+                if(el) el.style.display = 'none';
             });
 
             if(ruta === 'inicio') {
@@ -313,12 +317,8 @@
                 document.getElementById('section-title').innerText = "Negocios Disponibles";
                 cargarNegociosPorCategoria(param);
             } else if(ruta === 'admin') {
-                if(window.location.pathname === '/admin-control-777') {
-                    document.getElementById('seccion-admin').style.display = 'block';
-                    document.getElementById('section-title').innerText = "Panel de Control";
-                } else {
-                    irA('inicio');
-                }
+                document.getElementById('seccion-admin').style.display = 'block';
+                document.getElementById('section-title').innerText = "Panel de Control";
             } else if(ruta === 'citas') {
                 document.getElementById('seccion-mis-citas').style.display = 'block';
                 document.getElementById('back-container').style.display = 'block';
@@ -365,7 +365,9 @@
             const loc = document.getElementById('adm-loc').value;
             const img = document.getElementById('adm-img').value;
             if(!nombre || !loc) return alert("Completa al menos nombre y ubicación");
+            
             const datos = { nombre, categoria: cat, ubicacion: loc, imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400" };
+            
             try {
                 const res = await fetch(`${api}/api/negocios`, {
                     method: 'POST',
@@ -375,10 +377,20 @@
                 const resData = await res.json();
                 if(res.ok) {
                     document.getElementById('success-url-panel').style.display = 'block';
-                    const fullUrl = `${window.location.origin}/#negocio/${resData.slug}`;
+                    
+                    // URL para clientes (QR)
+                    const fullUrlCliente = `${window.location.origin}/#negocio/${resData.idSlug}`;
                     document.getElementById('btn-copy-new-url').onclick = () => {
-                        navigator.clipboard.writeText(fullUrl);
-                        alert("¡Enlace copiado para tu QR!: " + fullUrl);
+                        navigator.clipboard.writeText(fullUrlCliente);
+                        alert("¡Enlace copiado para tu QR de clientes!");
+                    };
+
+                    // URL para empleados
+                    const urlBase = window.location.origin + window.location.pathname.replace('index.html', '');
+                    const fullUrlStaff = `${urlBase}panel-empleado.html?negocio=${resData.idSlug}`;
+                    document.getElementById('btn-copy-staff-url').onclick = () => {
+                        navigator.clipboard.writeText(fullUrlStaff);
+                        alert("¡Enlace copiado! Envíalo a tus empleados.");
                     };
                 } else { alert("Error al guardar."); }
             } catch (e) { alert("Error de conexión."); }
@@ -388,7 +400,7 @@
             try {
                 const res = await fetch(`${api}/api/negocios/${idSlug}`);
                 const n = await res.json();
-                negocioActual = n; // Guardamos en memoria global
+                negocioActual = n;
 
                 document.getElementById('p-nombre').innerText = n.nombre;
                 document.getElementById('p-ubicacion').innerText = n.ubicacion;
@@ -405,7 +417,6 @@
                     selectServ.innerHTML = `<option value="Servicio General" data-precio="0">Servicio General</option>`;
                 }
                 
-                // Limpiar horas si cambia de negocio
                 document.getElementById('contenedor-horas').innerHTML = '<p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p>';
                 document.getElementById('fecha-reserva').value = "";
 
@@ -416,10 +427,11 @@
             const emailGuardado = localStorage.getItem('agendate_user_email');
             if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
             const hash = window.location.hash;
+            
             if(hash.startsWith('#negocio/')) {
                 const slug = hash.split('/')[1];
                 irA('negocio', slug);
-            } else if(window.location.pathname === '/admin-control-777') {
+            } else if(window.location.pathname.includes('/admin-control-777')) {
                 irA('admin');
             } else { irA('inicio'); }
         }
@@ -501,14 +513,9 @@
                 const data = await res.json();
                 contenedor.innerHTML = "";
 
-                // Horas dinámicas según el negocio
-                let hInicio = negocioActual?.horario?.inicio || "08:00";
-                let hFin = negocioActual?.horario?.fin || "18:00";
-                
-                const inicioInt = parseInt(hInicio.split(':')[0]);
-                const finInt = parseInt(hFin.split(':')[0]);
+                let hInicio = 8, hFin = 18; // Horario base
 
-                for(let i = inicioInt; i < finInt; i++) {
+                for(let i = hInicio; i < hFin; i++) {
                     const h = (i < 10 ? '0'+i : i) + ":00";
                     const btn = document.createElement('button');
                     btn.innerText = h; btn.className = 'hora-btn';
@@ -550,13 +557,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
-                const resData = await res.json();
                 if(res.ok) { alert("¡Cita agendada exitosamente!"); irA('inicio'); }
-                else { alert(resData.error || "Error al reservar"); }
-            } catch (e) { alert("Error de conexión"); }
+                else { alert("Error al agendar."); }
+            } catch (e) { alert("Error de servidor."); }
         }
 
-        function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }
+        function scrollCat(val) { document.getElementById('categorias').scrollBy(val, 0); }
     </script>
 </body>
 </html>

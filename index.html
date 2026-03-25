@@ -241,10 +241,17 @@
                 <label style="font-size: 14px; font-weight: 600;">1. Datos de contacto:</label>
                 <input type="text" id="reserva-nombre" class="input-vip" placeholder="Nombre completo" required>
                 <input type="tel" id="reserva-telefono" class="input-vip" placeholder="Teléfono" required>
-                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Selecciona el día:</label>
+                
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Elige el servicio:</label>
+                <select id="reserva-servicio" class="input-vip">
+                    </select>
+
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Selecciona el día:</label>
                 <input type="date" id="fecha-reserva" class="input-vip" onchange="cargarHorasDisponibles()">
-                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Elige la hora:</label>
+                
+                <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">4. Elige la hora:</label>
                 <div id="contenedor-horas" class="grid-horas"><p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p></div>
+                
                 <button class="btn-book" id="btn-finalizar-reserva" onclick="enviarReserva()" style="background: var(--primary); height: 60px; font-size: 18px; margin-top: 25px; border-radius: 20px;">AGENDAR UNA CITA</button>
             </div>
         </div>
@@ -298,14 +305,13 @@
                 document.getElementById('wrapper-cats').style.display = 'block';
                 document.getElementById('hero-area').style.display = 'block';
                 document.getElementById('section-title').innerText = "Explora Categorías";
-                window.location.hash = ''; // Limpiar hash al ir a inicio
+                window.location.hash = '';
             } else if(ruta === 'categoria') {
                 document.getElementById('lista-negocios').style.display = 'grid';
                 document.getElementById('back-container').style.display = 'block';
                 document.getElementById('section-title').innerText = "Negocios Disponibles";
                 cargarNegociosPorCategoria(param);
             } else if(ruta === 'admin') {
-                // SEGURIDAD: Solo permite entrar si la URL es la secreta
                 if(window.location.pathname === '/admin-control-777') {
                     document.getElementById('seccion-admin').style.display = 'block';
                     document.getElementById('section-title').innerText = "Panel de Control";
@@ -326,7 +332,6 @@
             window.scrollTo(0,0);
         }
 
-        // --- CARGA DE DATOS ---
         async function cargarNegociosPorCategoria(cat) {
             const contenedor = document.getElementById('lista-negocios');
             contenedor.innerHTML = "<p>Buscando...</p>";
@@ -353,17 +358,13 @@
             } catch (e) { contenedor.innerHTML = "Error al conectar."; }
         }
 
-        // --- GUARDAR NEGOCIO (URL DINÁMICA) ---
         async function guardarNuevoNegocio() {
             const nombre = document.getElementById('adm-nombre').value;
             const cat = document.getElementById('adm-cat').value;
             const loc = document.getElementById('adm-loc').value;
             const img = document.getElementById('adm-img').value;
-
             if(!nombre || !loc) return alert("Completa al menos nombre y ubicación");
-
             const datos = { nombre, categoria: cat, ubicacion: loc, imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400" };
-
             try {
                 const res = await fetch(`${api}/api/negocios`, {
                     method: 'POST',
@@ -378,9 +379,7 @@
                         navigator.clipboard.writeText(fullUrl);
                         alert("¡Enlace copiado para tu QR!: " + fullUrl);
                     };
-                } else {
-                    alert("Error al guardar.");
-                }
+                } else { alert("Error al guardar."); }
             } catch (e) { alert("Error de conexión."); }
         }
 
@@ -392,24 +391,31 @@
                 document.getElementById('p-ubicacion').innerText = n.ubicacion;
                 document.getElementById('p-imagen').src = n.imagen;
                 document.getElementById('section-title').innerText = "Detalle del Negocio";
+
+                // CARGAR SERVICIOS EN EL SELECT
+                const selectServ = document.getElementById('reserva-servicio');
+                selectServ.innerHTML = "";
+                if(n.servicios && n.servicios.length > 0) {
+                    n.servicios.forEach(s => {
+                        selectServ.innerHTML += `<option value="${s.nombre}" data-precio="${s.precio}">${s.nombre} - $${s.precio}</option>`;
+                    });
+                } else {
+                    selectServ.innerHTML = `<option value="Servicio General" data-precio="0">Servicio General</option>`;
+                }
+
             } catch (e) { alert("Error al cargar perfil"); }
         }
 
-        // --- AUTH Y SESIÓN ---
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
             if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
-            
-            // LÓGICA DE URL/QR: Si la URL tiene un #negocio/nombre, ábrelo directamente
             const hash = window.location.hash;
             if(hash.startsWith('#negocio/')) {
                 const slug = hash.split('/')[1];
                 irA('negocio', slug);
             } else if(window.location.pathname === '/admin-control-777') {
                 irA('admin');
-            } else {
-                irA('inicio');
-            }
+            } else { irA('inicio'); }
         }
 
         function loguearUsuarioGlobal(email) {
@@ -472,7 +478,7 @@
                 contenedor.innerHTML = "";
                 if(!citas || citas.length === 0) { contenedor.innerHTML = "<p>No tienes citas aún.</p>"; return; }
                 citas.forEach(cita => {
-                    contenedor.innerHTML += `<div class="cita-card"><div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.fecha} - ${cita.hora}</small></div></div>`;
+                    contenedor.innerHTML += `<div class="cita-card"><div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.servicio} | ${cita.fecha} - ${cita.hora}</small></div></div>`;
                 });
             } catch (e) { contenedor.innerHTML = "Error."; }
         }
@@ -486,7 +492,7 @@
                 const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
                 const data = await res.json();
                 contenedor.innerHTML = "";
-                const horas = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"];
+                const horas = ["08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
                 horas.forEach(h => {
                     const btn = document.createElement('button');
                     btn.innerText = h; btn.className = 'hora-btn';
@@ -505,6 +511,10 @@
             const nombre = document.getElementById('reserva-nombre').value;
             const tel = document.getElementById('reserva-telefono').value;
             const fecha = document.getElementById('fecha-reserva').value;
+            const selectServ = document.getElementById('reserva-servicio');
+            const servicio = selectServ.value;
+            const precio = selectServ.options[selectServ.selectedIndex].getAttribute('data-precio');
+
             if(!nombre || !tel || !fecha || !horaSeleccionada) return alert("Completa todos los datos");
 
             const datos = {
@@ -514,6 +524,8 @@
                 barbero: document.getElementById('p-nombre').innerText,
                 fecha: fecha,
                 hora: horaSeleccionada,
+                servicio: servicio,
+                precio: Number(precio),
                 reservaId: 'AL' + Math.floor(1000 + Math.random() * 9000)
             };
             try {
@@ -522,8 +534,10 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
+                const resData = await res.json();
                 if(res.ok) { alert("¡Cita agendada exitosamente!"); irA('inicio'); }
-            } catch (e) { alert("Error al reservar"); }
+                else { alert(resData.error || "Error al reservar"); }
+            } catch (e) { alert("Error de conexión"); }
         }
 
         function scrollCat(val) { document.getElementById('categorias').scrollLeft += val; }

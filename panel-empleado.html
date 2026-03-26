@@ -1,15 +1,72 @@
 <!DOCTYPE html>
-<html>
-<head><title>Agenda Barbero</title></head>
-<body>
-    <h1>✂️ Mi Agenda</h1>
-    <h3 id="fecha-hoy"></h3>
-    <div id="lista-citas">
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Empleado | Agendate Live</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; --success: #2ecc71; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .card-cita { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); }
+        .info h3 { margin: 0; font-size: 18px; }
+        .info p { margin: 5px 0; color: #666; font-size: 14px; }
+        .status { font-size: 12px; font-weight: 800; padding: 5px 10px; border-radius: 8px; text-transform: uppercase; }
+        .pending { background: #fff3e0; color: #ef6c00; }
+        .done { background: #e8f5e9; color: #2e7d32; }
+        .btn-done { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 10px; cursor: pointer; font-weight: 700; }
+        .btn-done:hover { background: var(--success); }
+    </style>
+</head>
+<body onload="cargarMisCitas()">
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1 style="font-weight: 800; margin: 0;">Mis Citas</h1>
+                <p id="empleado-nombre" style="color: var(--accent); font-weight: 600;"></p>
+            </div>
+            <button onclick="location.href='login.html'" style="border:none; background:none; color:red; cursor:pointer; font-weight:700;">Cerrar Sesión</button>
         </div>
+
+        <div id="lista-mis-citas">
+            </div>
+    </div>
+
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        document.getElementById('fecha-hoy').innerText = new Date().toLocaleDateString();
-        // Fetch a /api/citas/empleado/NOMBRE_USUARIO
+        const API = "https://mis-barberias.onrender.com";
+        const email = localStorage.getItem('admin_email');
+
+        async function cargarMisCitas() {
+            document.getElementById('empleado-nombre').innerText = email;
+            try {
+                const res = await fetch(`${API}/mis-citas?email=${email}`);
+                const citas = await res.json();
+                const lista = document.getElementById('lista-mis-citas');
+                lista.innerHTML = "";
+
+                citas.forEach(cita => {
+                    const div = document.createElement('div');
+                    div.className = 'card-cita';
+                    div.innerHTML = `
+                        <div class="info">
+                            <h3>${cita.clienteNombre}</h3>
+                            <p>📅 ${cita.fecha} — ⏰ ${cita.hora}</p>
+                            <span class="status ${cita.estado === 'realizada' ? 'done' : 'pending'}">${cita.estado}</span>
+                        </div>
+                        ${cita.estado !== 'realizada' ? `<button class="btn-done" onclick="marcarRealizada('${cita._id}')">✓ Finalizar</button>` : ''}
+                    `;
+                    lista.appendChild(div);
+                });
+            } catch (e) { alert("Error al cargar citas"); }
+        }
+
+        async function marcarRealizada(id) {
+            // Aquí llamarías a un nuevo endpoint en tu server.js: /api/citas/completar
+            alert("Cita marcada como realizada. (Requiere endpoint /completar)");
+        }
     </script>
 </body>
 </html>

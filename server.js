@@ -9,6 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// --- 🔌 CONEXIÓN BASE DE DATOS ---
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
 mongoose.connect(mongoURI)
     .then(() => {
@@ -46,22 +47,21 @@ const Cita = mongoose.model('Cita', {
     estado: { type: String, default: 'confirmada' } 
 });
 
-// MODELO USUARIO ACTUALIZADO CON ROLES Y PASSWORD
 const Usuario = mongoose.model('Usuario', {
     correo: { type: String, unique: true },
-    password: { type: String }, // Contraseña simple para este ejemplo
+    password: { type: String },
     rol: { type: String, enum: ['ADMIN', 'STAFF'], default: 'STAFF' },
-    nombreEmpleado: String, // Nombre tal cual aparece en las citas (ej: "Juan")
+    nombreEmpleado: String,
     codigoVerificacion: String,
     fechaExpiracion: Date
 });
 
-// --- ⚙️ CONFIGURACIONES EXTERNAS ---
+// --- ⚙️ CONFIGURACIÓN BREVO ---
 let apiInstance = new Brevo.TransactionalEmailsApi();
 let apiKey = apiInstance.authentications['apiKey'];
 apiKey.apiKey = process.env.BREVO_KEY; 
 
-// --- 🚀 RUTAS DE AUTENTICACIÓN (LOGIN) ---
+// --- 🚀 RUTAS DE AUTENTICACIÓN ---
 
 app.post('/api/login', async (req, res) => {
     const { correo, password } = req.body;
@@ -75,93 +75,103 @@ app.post('/api/login', async (req, res) => {
                 correo: user.correo 
             });
         } else {
-            res.status(401).json({ success: false, mensaje: "Correo o contraseña incorrectos" });
+            res.status(401).json({ success: false, mensaje: "Credenciales incorrectas" });
         }
-    } catch (e) { res.status(500).send(); }
+    } catch (e) { res.status(500).json({ error: "Error en login" }); }
 });
 
-// --- ✅ RUTAS PARA EL STAFF (EMPLEADOS) ---
+// --- 💇 RUTAS PARA EMPLEADOS (STAFF) ---
 
-// Obtener solo las citas de UN empleado específico
 app.get('/api/citas/empleado/:nombre', async (req, res) => {
     const { fecha } = req.query;
-    const citas = await Cita.find({ 
-        barbero: req.params.nombre, 
-        fecha: fecha 
-    }).sort({ hora: 1 });
+    const citas = await Cita.find({ barbero: req.params.nombre, fecha: fecha }).sort({ hora: 1 });
     res.json(citas);
 });
 
-// Marcar como atendido
+// --- 👑 RUTAS PARA EL DUEÑO (ADMIN) ---
+
+// Ver TODOS los negocios de un dueño
+app.get('/api/propios/:email', async (req, res) => {
+    const negocios = await Negocio.find({ adminEmail: req.params.email });
+    res.json(negocios);
+});
+
+// Ver TODAS las citas del día (Global)
+app.get('/api/admin/citas-global', async (req, res) => {
+    const { fecha, barbero } = req.query;
+    let filtro = { fecha: fecha };
+    if (barbero && barbero !== 'todos') filtro.barbero = barbero;
+    const citas = await Cita.find(filtro).sort({ hora: 1 });
+    res.json(citas);
+});
+
+// CANCELAR/BORRAR CITA (Solo Admin)
+app.delete('/api/admin/cancelar/:id', async (req, res) => {
+    try {
+        await Cita.findByIdAndDelete(req.params.id);
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "No se pudo eliminar" }); }
+});
+
+// Actualizar Negocio (Servicios y Horarios)
+app.put('/api/negocios/:slug', async (req, res) => {
+    try {
+        const { servicios, horario } = req.body;
+        await Negocio.findOneAndUpdate({ idSlug: req.params.slug }, { servicios, horario });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Error al actualizar" }); }
+});
+
+// --- ✅ GESTIÓN DE CITAS (GENERAL) ---
+
 app.put('/api/citas/atender/:id', async (req, res) => {
     await Cita.findByIdAndUpdate(req.params.id, { estado: 'atendido' });
     res.json({ success: true });
 });
 
-// Reprogramar Y Notificar (WhatsApp se hace en el front, aquí hacemos el Email)
 app.put('/api/citas/reprogramar/:id', async (req, res) => {
     const { hora } = req.body;
     const cita = await Cita.findByIdAndUpdate(req.params.id, { hora: hora }, { new: true });
     
-    // Notificar por Correo vía Brevo
+    // Notificar por Email
     try {
         let emailRepro = new Brevo.SendSmtpEmail();
-        emailRepro.subject = "Cita Reprogramada - Agendate Live";
-        emailRepro.htmlContent = `<h3>Hola ${cita.clienteNombre}</h3><p>Tu cita ha sido movida a las <b>${hora}</b> el día ${cita.fecha}.</p>`;
+        emailRepro.subject = "Cita Reprogramada";
+        emailRepro.htmlContent = `<p>Tu cita ha sido movida a las ${hora}.</p>`;
         emailRepro.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
         emailRepro.to = [{ "email": cita.clienteEmail }];
         await apiInstance.sendTransacEmail(emailRepro);
-    } catch (e) { console.log("Error enviando correo de reprogramación"); }
-
+    } catch (e) { console.log("Error email"); }
     res.json({ success: true });
 });
 
-// --- 👑 RUTAS PARA EL DUEÑO (ADMIN) ---
+// --- 📅 DISPONIBILIDAD Y RESERVAS ---
 
-// Ver TODAS las citas de un negocio (puede filtrar por empleado si se desea)
-app.get('/api/admin/citas-global', async (req, res) => {
-    const { fecha, empleado } = req.query;
-    let query = { fecha: fecha };
-    if (empleado && empleado !== 'todos') query.barbero = empleado;
-    
-    const citas = await Cita.find(query).sort({ hora: 1 });
-    res.json(citas);
-});
-
-// CANCELAR CITA (Solo el dueño usará esta ruta)
-app.delete('/api/admin/cancelar/:id', async (req, res) => {
-    await Cita.findByIdAndDelete(req.params.id);
-    res.json({ success: true });
-});
-
-// --- 🛠️ RUTAS ORIGINALES MANTENIDAS ---
-
-app.get('/api/negocios/:id', async (req, res) => {
-    const negocio = await Negocio.findOne({ idSlug: req.params.id });
-    negocio ? res.json(negocio) : res.status(404).send();
+app.get('/disponibilidad', async (req, res) => {
+    const { fecha, barbero } = req.query;
+    const ocupadas = await Cita.find({ fecha, barbero, estado: 'confirmada' });
+    res.json({ ocupadas: ocupadas.map(c => c.hora) });
 });
 
 app.post('/reservar', async (req, res) => {
-    try {
-        const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio } = req.body;
-        const nuevaCita = new Cita({ clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio });
-        await nuevaCita.save();
-        res.json({ success: true });
-    } catch (e) { res.status(500).send(); }
+    const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio } = req.body;
+    const nuevaCita = new Cita({ clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio });
+    await nuevaCita.save();
+    res.json({ success: true });
 });
 
-// Función para crear usuarios de prueba iniciales
+// --- 🛠️ INICIALIZACIÓN ---
+
 async function cargarDatosIniciales() {
     const conteoUser = await Usuario.countDocuments();
     if (conteoUser === 0) {
         await Usuario.insertMany([
             { correo: "dueno@test.com", password: "123", rol: "ADMIN", nombreEmpleado: "Dueño" },
-            { correo: "juan@test.com", password: "123", rol: "STAFF", nombreEmpleado: "Juan" },
-            { correo: "pedro@test.com", password: "123", rol: "STAFF", nombreEmpleado: "Pedro" }
+            { correo: "juan@test.com", password: "123", rol: "STAFF", nombreEmpleado: "Juan" }
         ]);
-        console.log("👥 Usuarios de prueba creados");
+        console.log("👥 Usuarios de prueba listos");
     }
 }
 
 const PORT = process.env.PORT || 10000; 
-app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Corriendo en puerto ${PORT}`));

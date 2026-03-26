@@ -6,24 +6,31 @@
     <title>Panel de Dueño | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --danger: #ff5252; --success: #2ecc71; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); margin: 0; color: var(--primary); }
         
-        header { background: var(--primary); color: white; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; }
+        header { background: var(--primary); color: white; padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .container { max-width: 900px; margin: 30px auto; padding: 0 20px; }
         
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #eee; }
         
-        h2 { border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; }
+        h2, h3 { border-bottom: 2px solid var(--accent); display: inline-block; padding-bottom: 5px; margin-top: 0; }
 
         .auth-box { text-align: center; padding: 50px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #ddd; box-sizing: border-box; font-family: inherit; }
         
-        .btn { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.3s; }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
         .btn-accent { background: var(--accent); color: var(--primary); }
+        .btn-danger { background: var(--danger); color: white; padding: 8px 15px; font-size: 12px; width: auto; }
 
-        .servicio-item { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
-        .btn-del { background: #ff5252; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .item-flex { display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid var(--accent); }
+        
+        /* Estilos para la tabla de citas */
+        .tabla-citas { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        .tabla-citas th { text-align: left; padding: 12px; border-bottom: 2px solid #eee; color: #888; }
+        .tabla-citas td { padding: 12px; border-bottom: 1px solid #eee; }
+        .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
 
         #panel-control { display: none; }
     </style>
@@ -31,92 +38,151 @@
 <body>
 
 <header>
-    <div style="font-weight: 800;">AGENDATE<span>LIVE</span> | DUEÑOS</div>
-    <div id="user-display" style="font-size: 12px;"></div>
+    <div style="font-weight: 800; font-size: 20px;">AGENDATE<span>LIVE</span></div>
+    <button onclick="cerrarSesion()" id="btn-salir" style="display:none; background:none; border:1px solid white; color:white; padding:5px 15px; border-radius:8px; cursor:pointer;">Salir</button>
 </header>
 
 <div class="container">
     <div id="auth-section" class="card auth-box">
-        <h3>Ingresa tu correo de dueño</h3>
-        <p style="font-size: 13px; color: #666;">Usa el correo que registraste en el Super Admin.</p>
-        <input type="email" id="owner-email" placeholder="tu@correo.com">
-        <button class="btn" onclick="cargarMisNegocios()">Entrar al Panel</button>
+        <h3>Panel Administrativo</h3>
+        <p style="font-size: 13px; color: #666;">Ingresa tus credenciales de Dueño</p>
+        <input type="email" id="owner-email" placeholder="Correo electrónico">
+        <input type="password" id="owner-pass" placeholder="Contraseña">
+        <button class="btn" onclick="loginDueño()">Entrar al Panel</button>
     </div>
 
     <div id="panel-control">
         <div class="card">
-            <h2>Negocio: <span id="nombre-negocio">...</span></h2>
-            <p id="slug-negocio" style="font-size: 12px; color: #888;"></p>
+            <h2>Bienvenido, <span id="nombre-admin">...</span></h2>
+            <p id="slug-negocio" style="font-size: 12px; color: #888; margin: 0;"></p>
         </div>
 
         <div class="card">
-            <h3>⚙️ Gestionar Servicios y Precios</h3>
-            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="new-service-name" placeholder="Ej: Corte + Barba">
-                <input type="number" id="new-service-price" placeholder="Precio">
-                <button class="btn-accent" onclick="agregarServicio()" style="border-radius: 10px; border:none; padding: 0 15px; cursor: pointer; font-weight: 700;">+</button>
+            <h3>📅 Control de Agenda Global</h3>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <input type="date" id="filtro-fecha-admin" onchange="cargarAgendaGlobal()" style="flex: 1;">
+                <select id="filtro-empleado-admin" onchange="cargarAgendaGlobal()" style="flex: 1;">
+                    <option value="todos">Todos los empleados</option>
+                    <option value="Juan">Juan</option>
+                    <option value="Pedro">Pedro</option>
+                </select>
             </div>
-            
+
+            <div style="overflow-x: auto;">
+                <table class="tabla-citas">
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Cliente</th>
+                            <th>Atiende</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-citas-global">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>⚙️ Servicios y Precios</h3>
+            <div style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="new-service-name" placeholder="Nombre del servicio">
+                <input type="number" id="new-service-price" placeholder="Precio">
+                <button class="btn-accent" onclick="agregarServicio()" style="border-radius: 10px; border:none; padding: 0 20px; cursor: pointer; font-weight: 700;">+</button>
+            </div>
             <div id="lista-servicios"></div>
         </div>
 
         <div class="card">
-            <h3>⏰ Horario de Atención</h3>
+            <h3>⏰ Horario General</h3>
             <div style="display: flex; gap: 20px;">
-                <div>
-                    <label style="font-size: 12px; font-weight: 700;">Apertura:</label>
-                    <input type="time" id="h-inicio" value="08:00">
+                <div style="flex:1">
+                    <label style="font-size: 11px; font-weight: 800; color:#888;">APERTURA</label>
+                    <input type="time" id="h-inicio">
                 </div>
-                <div>
-                    <label style="font-size: 12px; font-weight: 700;">Cierre:</label>
-                    <input type="time" id="h-fin" value="18:00">
+                <div style="flex:1">
+                    <label style="font-size: 11px; font-weight: 800; color:#888;">CIERRE</label>
+                    <input type="time" id="h-fin">
                 </div>
             </div>
         </div>
 
-        <button class="btn" style="background: #2ecc71; margin-bottom: 50px;" onclick="guardarCambios()">GUARDAR CAMBIOS</button>
+        <button class="btn" style="background: var(--success); margin-bottom: 50px; font-size: 16px;" onclick="guardarCambios()">GUARDAR CONFIGURACIÓN</button>
     </div>
 </div>
 
 <script>
-    // ESTO DETECTA SI ESTÁS EN LOCAL O EN RENDER AUTOMÁTICAMENTE
-    const api = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-                ? "http://localhost:10000" 
-                : "https://mis-barberias.onrender.com";
-
+    const api = "https://mis-barberias.onrender.com";
     let miNegocioActual = null;
     let serviciosLocales = [];
 
-    async function cargarMisNegocios() {
-        const email = document.getElementById('owner-email').value.trim();
-        if(!email) return alert("Por favor, ingresa un correo.");
+    async function loginDueño() {
+        const correo = document.getElementById('owner-email').value;
+        const password = document.getElementById('owner-pass').value;
 
-        try {
-            const res = await fetch(`${api}/api/propios/${email}`);
-            const negocios = await res.json();
+        const res = await fetch(`${api}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo, password })
+        });
 
-            if(negocios && negocios.length > 0) {
-                miNegocioActual = negocios[0];
-                serviciosLocales = miNegocioActual.servicios || [];
-                
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('panel-control').style.display = 'block';
-                document.getElementById('nombre-negocio').innerText = miNegocioActual.nombre;
-                document.getElementById('slug-negocio').innerText = "Link ID: " + miNegocioActual.idSlug;
-                
-                if(miNegocioActual.horario) {
-                    document.getElementById('h-inicio').value = miNegocioActual.horario.inicio;
-                    document.getElementById('h-fin').value = miNegocioActual.horario.fin;
-                }
-                
-                renderServicios();
-            } else {
-                alert("No hay ningún negocio registrado con el correo: " + email + "\n\nRecuerda crearlo primero en el Super Admin.");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Error de conexión con el servidor. Asegúrate de que 'node server.js' esté corriendo.");
+        const data = await res.json();
+
+        if(data.success && data.rol === 'ADMIN') {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('panel-control').style.display = 'block';
+            document.getElementById('btn-salir').style.display = 'block';
+            document.getElementById('nombre-admin').innerText = data.nombre;
+            document.getElementById('filtro-fecha-admin').valueAsDate = new Date();
+            
+            cargarInfoNegocio(data.correo);
+            cargarAgendaGlobal();
+        } else {
+            alert("Acceso denegado. Verifica tus credenciales de Administrador.");
         }
+    }
+
+    async function cargarInfoNegocio(email) {
+        const res = await fetch(`${api}/api/propios/${email}`);
+        const negocios = await res.json();
+        if(negocios.length > 0) {
+            miNegocioActual = negocios[0];
+            serviciosLocales = miNegocioActual.servicios || [];
+            document.getElementById('slug-negocio').innerText = "ID Negocio: " + miNegocioActual.idSlug;
+            document.getElementById('h-inicio').value = miNegocioActual.horario.inicio;
+            document.getElementById('h-fin').value = miNegocioActual.horario.fin;
+            renderServicios();
+        }
+    }
+
+    async function cargarAgendaGlobal() {
+        const fecha = document.getElementById('filtro-fecha-admin').value;
+        const barbero = document.getElementById('filtro-empleado-admin').value;
+        const tabla = document.getElementById('lista-citas-global');
+        
+        const res = await fetch(`${api}/api/admin/citas-global?fecha=${fecha}&barbero=${barbero}`);
+        const citas = await res.json();
+        
+        tabla.innerHTML = "";
+        citas.forEach(cita => {
+            tabla.innerHTML += `
+                <tr>
+                    <td><strong>${cita.hora}</strong></td>
+                    <td>${cita.clienteNombre}</td>
+                    <td><span style="color:#888">${cita.barbero}</span></td>
+                    <td><span class="status-badge" style="background:${cita.estado === 'atendido' ? '#e8f5e9' : '#fff3e0'}; color:${cita.estado === 'atendido' ? 'green' : 'orange'}">${cita.estado}</span></td>
+                    <td><button class="btn-danger" onclick="eliminarCita('${cita._id}')">Eliminar</button></td>
+                </tr>
+            `;
+        });
+    }
+
+    async function eliminarCita(id) {
+        if(!confirm("¿Estás seguro de eliminar esta cita permanentemente?")) return;
+        const res = await fetch(`${api}/api/admin/cancelar/${id}`, { method: 'DELETE' });
+        if(res.ok) cargarAgendaGlobal();
     }
 
     function renderServicios() {
@@ -124,30 +190,25 @@
         div.innerHTML = "";
         serviciosLocales.forEach((s, index) => {
             div.innerHTML += `
-                <div class="servicio-item">
-                    <div>
-                        <strong>${s.nombre}</strong><br>
-                        <span style="color: var(--accent)">$${Number(s.precio).toLocaleString()}</span>
-                    </div>
-                    <button class="btn-del" onclick="eliminarServicio(${index})">Eliminar</button>
+                <div class="item-flex">
+                    <div><strong>${s.nombre}</strong> - <span style="color:var(--accent)">$${s.precio}</span></div>
+                    <button onclick="eliminarServicio(${index})" style="background:none; border:none; color:red; cursor:pointer;">✖</button>
                 </div>
             `;
         });
     }
 
     function agregarServicio() {
-        const nom = document.getElementById('new-service-name').value;
-        const pre = document.getElementById('new-service-price').value;
-        if(!nom || !pre) return alert("Llena nombre y precio");
-
-        serviciosLocales.push({ nombre: nom, precio: parseInt(pre) });
-        document.getElementById('new-service-name').value = "";
-        document.getElementById('new-service-price').value = "";
-        renderServicios();
+        const n = document.getElementById('new-service-name').value;
+        const p = document.getElementById('new-service-price').value;
+        if(n && p) {
+            serviciosLocales.push({ nombre: n, precio: parseInt(p) });
+            renderServicios();
+        }
     }
 
-    function eliminarServicio(index) {
-        serviciosLocales.splice(index, 1);
+    function eliminarServicio(i) {
+        serviciosLocales.splice(i, 1);
         renderServicios();
     }
 
@@ -156,22 +217,16 @@
             inicio: document.getElementById('h-inicio').value,
             fin: document.getElementById('h-fin').value
         };
+        const res = await fetch(`${api}/api/negocios/${miNegocioActual.idSlug}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ servicios: serviciosLocales, horario: horario })
+        });
+        if(res.ok) alert("✅ Configuración actualizada con éxito.");
+    }
 
-        try {
-            const res = await fetch(`${api}/api/negocios/${miNegocioActual.idSlug}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    servicios: serviciosLocales,
-                    horario: horario
-                })
-            });
-
-            if(res.ok) alert("✅ Cambios guardados. Los clientes ya verán los nuevos precios.");
-            else alert("Error al guardar en el servidor.");
-        } catch (e) {
-            alert("Error de red al intentar guardar.");
-        }
+    function cerrarSesion() {
+        location.reload();
     }
 </script>
 </body>

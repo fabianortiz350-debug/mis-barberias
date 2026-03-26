@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Empleado | Agendate Live</title>
+    <title>Staff | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; --success: #2e7d32; --danger: #c62828; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; --success: #2e7d32; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
         
+        /* Verificación de Seguridad Visual */
+        #bloqueo-seguridad { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; justify-content: center; align-items: center; text-align: center; }
+
         nav { background: white; padding: 15px 5%; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
         .logo { font-weight: 800; font-size: 18px; }
         .logo span { color: var(--accent); }
@@ -19,8 +22,7 @@
             background: white; border-radius: 15px; padding: 15px; margin-top: 15px;
             display: flex; justify-content: space-around; border: 1px solid #eee; text-align: center;
         }
-        .stat-item { flex: 1; }
-        .stat-value { display: block; font-weight: 800; font-size: 18px; color: var(--primary); }
+        .stat-value { display: block; font-weight: 800; font-size: 18px; }
         .stat-label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; }
 
         .controles-agenda { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
@@ -34,50 +36,53 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;
             display: flex; flex-direction: column; gap: 10px; position: relative;
         }
-        .card-cita.expirada { opacity: 0.5; border-left: 5px solid var(--danger); }
         
         .hora-tag { background: var(--primary); color: white; padding: 5px 12px; border-radius: 10px; font-weight: 700; font-size: 14px; align-self: flex-start; }
         .cliente-name { font-weight: 800; font-size: 18px; margin: 0; }
         
         .acciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        
-        .btn-atendido { background: #e8f5e9; color: var(--success); border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; grid-column: span 2; }
-        .btn-reprogramar { background: #fff3e0; color: #ef6c00; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 12px; }
-        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .btn-atendido { background: #e8f5e9; color: var(--success); border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; grid-column: span 2; }
+        .btn-reprogramar { background: #fff3e0; color: #ef6c00; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; text-decoration: none; text-align: center; }
 
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 24px; width: 85%; max-width: 400px; text-align: center; }
-        .btn-confirmar { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-top: 15px; width: 100%; cursor: pointer; }
     </style>
 </head>
-<body onload="inicializarPanel()">
+<body onload="verificarYServir()">
+
+    <div id="bloqueo-seguridad">
+        <div>
+            <h2>Acceso Restringido</h2>
+            <p>Por favor inicia sesión para continuar.</p>
+            <button onclick="cerrarSesion()" style="padding:10px 20px; border-radius:10px; border:none; background:black; color:white;">Ir al Login</button>
+        </div>
+    </div>
 
     <nav>
-        <div class="logo">AGENDATE<span>LIVE</span> | Staff</div>
+        <div class="logo">AGENDATE<span>LIVE</span></div>
         <button onclick="cerrarSesion()" style="border:none; background:none; font-weight:700; color:#ff4444; cursor:pointer;">Salir</button>
     </nav>
 
     <div class="container">
         <div class="header-empleado">
-            <h1 id="txt-bienvenida">Gestión de Citas</h1>
-            <p id="txt-negocio">...</p>
+            <h1 id="txt-saludo">Hola, ...</h1>
+            <p id="txt-negocio">Barbería El Rey</p>
             
             <div class="stats-bar">
                 <div class="stat-item">
                     <span class="stat-value" id="count-total">0</span>
                     <span class="stat-label">Total</span>
                 </div>
-                <div class="stat-item" style="border-left: 1px solid #eee; border-right: 1px solid #eee;">
-                    <span class="stat-value" id="count-faltan" style="color: var(--accent);">Espera</span>
-                </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="count-listo" style="color: var(--success);">Listo</span>
+                    <span class="stat-value" id="count-listo" style="color: var(--success);">0</span>
+                    <span class="stat-label">Listos</span>
                 </div>
             </div>
 
             <div class="controles-agenda">
                 <input type="date" id="filtro-fecha" class="input-control" onchange="cargarAgenda()">
-                <input type="text" id="buscador-cliente" class="input-control" placeholder="🔍 Buscar cliente..." onkeyup="filtrarCitas()">
             </div>
         </div>
 
@@ -86,24 +91,27 @@
 
     <div id="modal-repro" class="modal">
         <div class="modal-content">
-            <h3>Reprogramar Cita</h3>
-            <p style="font-size: 13px; color: #666;">Se notificará al cliente por WhatsApp y Correo.</p>
-            <input type="time" id="input-nueva-hora" class="input-control" style="font-size: 20px; text-align: center; margin-top:10px;">
-            <button class="btn-confirmar" onclick="confirmarReprogramacion()">ACTUALIZAR Y NOTIFICAR</button>
-            <button onclick="cerrarModal()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Cancelar</button>
+            <h3>Nueva Hora</h3>
+            <input type="time" id="input-nueva-hora" class="input-control" style="font-size: 20px; text-align: center;">
+            <button onclick="confirmarReprogramacion()" style="width:100%; padding:15px; background:black; color:white; border:none; border-radius:12px; margin-top:10px; font-weight:700;">CONFIRMAR</button>
+            <button onclick="cerrarModal()" style="margin-top:10px; background:none; border:none; color:#888;">Cancelar</button>
         </div>
     </div>
 
     <script>
         const api = "https://mis-barberias.onrender.com";
-        let nombreNegocio = "";
+        let nombreEmpleado = "";
         let citaActiva = null;
 
-        function inicializarPanel() {
-            const params = new URLSearchParams(window.location.search);
-            nombreNegocio = params.get('negocio');
-            if (!nombreNegocio) return alert("Error: Negocio no identificado.");
-            document.getElementById('txt-negocio').innerText = nombreNegocio.replace(/-/g, ' ');
+        function verificarYServir() {
+            // SEGURIDAD: Si no hay nombre de usuario guardado, bloqueamos la pantalla
+            nombreEmpleado = localStorage.getItem('userName');
+            if (!nombreEmpleado) {
+                document.getElementById('bloqueo-seguridad').style.display = 'flex';
+                return;
+            }
+
+            document.getElementById('txt-saludo').innerText = `Hola, ${nombreEmpleado}`;
             document.getElementById('filtro-fecha').valueAsDate = new Date();
             cargarAgenda();
         }
@@ -111,50 +119,39 @@
         async function cargarAgenda() {
             const fecha = document.getElementById('filtro-fecha').value;
             const contenedor = document.getElementById('lista-agenda');
-            contenedor.innerHTML = "<p style='text-align:center;'>Actualizando agenda...</p>";
+            contenedor.innerHTML = "<p style='text-align:center;'>Cargando tus citas...</p>";
 
             try {
-                const res = await fetch(`${api}/api/citas/negocio/${nombreNegocio}?fecha=${fecha}`);
+                // LLAMADA A LA API: Ahora filtramos por empleado
+                const res = await fetch(`${api}/api/citas/empleado/${nombreEmpleado}?fecha=${fecha}`);
                 const citas = await res.json();
                 contenedor.innerHTML = "";
 
                 if (!citas || citas.length === 0) {
                     actualizarContadores(0, 0);
-                    contenedor.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">No hay citas para este día.</div>`;
+                    contenedor.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">No tienes citas para hoy.</div>`;
                     return;
                 }
 
-                citas.sort((a, b) => a.hora.localeCompare(b.hora));
                 let atendidos = 0;
-                const ahora = new Date();
-
-                citas.forEach(cita => {
+                citas.sort((a, b) => a.hora.localeCompare(b.hora)).forEach(cita => {
                     const esAtendido = (cita.estado === 'atendido');
                     if(esAtendido) atendidos++;
                     
-                    const [h, m] = cita.hora.split(':');
-                    const horaCita = new Date();
-                    horaCita.setHours(h, m, 0);
-                    const esTarde = (ahora - horaCita > 30 * 60000) && !esAtendido;
-
-                    const card = `
-                        <div class="card-cita ${esTarde ? 'expirada' : ''}" data-cliente="${cita.clienteNombre.toLowerCase()}">
+                    contenedor.innerHTML += `
+                        <div class="card-cita">
                             <div class="hora-tag">${cita.hora}</div>
                             <p class="cliente-name">${cita.clienteNombre}</p>
                             <span style="font-size:13px; color:#666;">✂️ ${cita.servicio}</span>
-                            
                             <div class="acciones-grid">
                                 ${!esAtendido ? `
-                                    <a href="https://wa.me/${cita.clienteTelefono.replace(/\D/g,'')}?text=Hola ${cita.clienteNombre}, te esperamos en breve para tu cita." target="_blank" class="btn-whatsapp">WhatsApp</a>
-                                    <button class="btn-reprogramar" onclick='abrirModalRepro(${JSON.stringify(cita)})'>⏰ Reprogramar</button>
-                                    <button class="btn-atendido" onclick="marcarAtendido('${cita._id}')">FINALIZAR SERVICIO</button>
-                                ` : `
-                                    <div style="grid-column: span 2; text-align:center; font-weight:700; color:var(--success); padding:10px;">SERVIDO ✅</div>
-                                `}
+                                    <a href="https://wa.me/${cita.clienteTelefono.replace(/\D/g,'')}?text=Hola, te espero en tu cita." target="_blank" class="btn-whatsapp">WhatsApp</a>
+                                    <button class="btn-reprogramar" onclick='abrirModalRepro(${JSON.stringify(cita)})'>⏰ Horario</button>
+                                    <button class="btn-atendido" onclick="marcarAtendido('${cita._id}')">✓ FINALIZAR</button>
+                                ` : `<div style="grid-column: span 2; color:var(--success); font-weight:700; text-align:center;">COMPLETADO ✅</div>`}
                             </div>
                         </div>
                     `;
-                    contenedor.innerHTML += card;
                 });
                 actualizarContadores(citas.length, atendidos);
             } catch (e) { contenedor.innerHTML = "Error de conexión."; }
@@ -166,40 +163,20 @@
             document.getElementById('modal-repro').style.display = 'flex';
         }
 
-        function cerrarModal() {
-            document.getElementById('modal-repro').style.display = 'none';
-        }
+        function cerrarModal() { document.getElementById('modal-repro').style.display = 'none'; }
 
         async function confirmarReprogramacion() {
             const nuevaHora = document.getElementById('input-nueva-hora').value;
-            if(!nuevaHora) return;
-
-            try {
-                const res = await fetch(`${api}/api/citas/reprogramar/${citaActiva._id}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ hora: nuevaHora })
-                });
-
-                if(res.ok) {
-                    // 1. Notificar por WhatsApp automáticamente al cerrar
-                    const msj = `Hola ${citaActiva.clienteNombre}, hemos reprogramado tu cita en ${nombreNegocio.replace(/-/g, ' ')} para las ${nuevaHora}. ¡Te esperamos!`;
-                    const linkWa = `https://wa.me/${citaActiva.clienteTelefono.replace(/\D/g,'')}?text=${encodeURIComponent(msj)}`;
-                    
-                    cerrarModal();
-                    cargarAgenda();
-                    
-                    // Abrir WhatsApp en pestaña nueva
-                    window.open(linkWa, '_blank');
-                    
-                    // Aquí el servidor también debería disparar el correo electrónico
-                    console.log("Notificación enviada a:", citaActiva.clienteEmail);
-                }
-            } catch (e) { alert("Error al actualizar."); }
+            await fetch(`${api}/api/citas/reprogramar/${citaActiva._id}`, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ hora: nuevaHora })
+            });
+            cerrarModal();
+            cargarAgenda();
         }
 
         async function marcarAtendido(id) {
-            if(!confirm("¿Cita finalizada?")) return;
             await fetch(`${api}/api/citas/atender/${id}`, { method: 'PUT' });
             cargarAgenda();
         }
@@ -207,17 +184,12 @@
         function actualizarContadores(t, a) {
             document.getElementById('count-total').innerText = t;
             document.getElementById('count-listo').innerText = a;
-            document.getElementById('count-faltan').innerText = t - a;
         }
 
-        function filtrarCitas() {
-            const b = document.getElementById('buscador-cliente').value.toLowerCase();
-            document.querySelectorAll('.card-cita').forEach(t => {
-                t.style.display = t.getAttribute('data-cliente').includes(b) ? "flex" : "none";
-            });
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = "index.html"; // Regresa al login
         }
-
-        function cerrarSesion() { window.location.href = "index.html"; }
     </script>
 </body>
 </html>

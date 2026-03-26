@@ -1,59 +1,15 @@
-async function verificarYServir() {
-            // SEGURIDAD: Verificamos tanto el nombre como el rol
-            nombreEmpleado = localStorage.getItem('userName');
-            const rol = localStorage.getItem('userRole');
-
-            if (!nombreEmpleado || rol !== 'STAFF') {
-                document.getElementById('bloqueo-seguridad').style.display = 'flex';
-                return;
-            }
-
-            document.getElementById('txt-saludo').innerText = `Hola, ${nombreEmpleado}`;
-            document.getElementById('filtro-fecha').valueAsDate = new Date();
-            cargarAgenda();
-        }
-
-        async function cargarAgenda() {
-            const fecha = document.getElementById('filtro-fecha').value;
-            const contenedor = document.getElementById('lista-agenda');
-            contenedor.innerHTML = "<p style='text-align:center;'>Cargando tus citas...</p>";
-
-            try {
-                const res = await fetch(`${api}/api/citas/empleado/${encodeURIComponent(nombreEmpleado)}?fecha=${fecha}`);
-                
-                if (!res.ok) throw new Error("Error en servidor");
-                
-                const citas = await res.json();
-                contenedor.innerHTML = "";
-
-                if (!Array.isArray(citas) || citas.length === 0) {
-                    actualizarContadores(0, 0);
-                    contenedor.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">No tienes citas para esta fecha.</div>`;
-                    return;
-                }
-
-                let atendidos = 0;
-                citas.sort((a, b) => a.hora.localeCompare(b.hora)).forEach(cita => {
-                    const esAtendido = (cita.estado === 'atendido');
-                    if(esAtendido) atendidos++;
-                    
-                    contenedor.innerHTML += `
-                        <div class="card-cita">
-                            <div class="hora-tag">${cita.hora}</div>
-                            <p class="cliente-name">${cita.clienteNombre}</p>
-                            <span style="font-size:13px; color:#666;">✂️ ${cita.servicio}</span>
-                            <div class="acciones-grid">
-                                ${!esAtendido ? `
-                                    <a href="https://wa.me/${cita.clienteTelefono.replace(/\D/g,'')}?text=Hola, te espero en tu cita." target="_blank" class="btn-whatsapp">WhatsApp</a>
-                                    <button class="btn-reprogramar" onclick='abrirModalRepro(${JSON.stringify(cita)})'>⏰ Horario</button>
-                                    <button class="btn-atendido" onclick="marcarAtendido('${cita._id}')">✓ FINALIZAR</button>
-                                ` : `<div style="grid-column: span 2; color:var(--success); font-weight:700; text-align:center;">COMPLETADO ✅</div>`}
-                            </div>
-                        </div>
-                    `;
-                });
-                actualizarContadores(citas.length, atendidos);
-            } catch (e) { 
-                contenedor.innerHTML = "<p style='color:red; text-align:center;'>Error al conectar con la agenda. Revisa tu conexión.</p>"; 
-            }
-        }
+<!DOCTYPE html>
+<html>
+<head><title>Agenda Barbero</title></head>
+<body>
+    <h1>✂️ Mi Agenda</h1>
+    <h3 id="fecha-hoy"></h3>
+    <div id="lista-citas">
+        </div>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        document.getElementById('fecha-hoy').innerText = new Date().toLocaleDateString();
+        // Fetch a /api/citas/empleado/NOMBRE_USUARIO
+    </script>
+</body>
+</html>

@@ -3,57 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Agendate Live</title>
+    <title>Acceso Administrativo | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8f9fa; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .login-card { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 350px; text-align: center; }
-        .logo { font-weight: 800; font-size: 22px; margin-bottom: 30px; }
-        .logo span { color: #d4af37; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 12px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #1a1a1a; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #ffffff; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: #f9f9f9; display: flex; align-items: center; justify-content: center; height: 100vh; }
+        
+        .login-card { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 350px; text-align: center; }
+        .logo { font-weight: 800; font-size: 24px; margin-bottom: 20px; color: var(--primary); }
+        .logo span { color: var(--accent); }
+        
+        h2 { font-weight: 800; font-size: 20px; margin-bottom: 10px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+
+        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        .btn-login { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-login:hover { background: var(--accent); }
+        
+        #paso-2 { display: none; }
     </style>
 </head>
 <body>
+
     <div class="login-card">
         <div class="logo">AGENDATE<span>LIVE</span></div>
-        <form id="form-login">
-            <input type="email" id="email" placeholder="Correo electrónico" required>
-            <input type="password" id="password" placeholder="Contraseña" required>
-            <button type="submit">INGRESAR</button>
-        </form>
-        <p id="error-msg" style="color:red; font-size:12px; margin-top:10px; display:none;">Credenciales incorrectas</p>
+        
+        <div id="paso-1">
+            <h2>Panel de Gestión</h2>
+            <p>Ingresa tu correo autorizado para gestionar tu negocio.</p>
+            <input type="email" id="email" placeholder="correo@negocio.com">
+            <button class="btn-login" onclick="enviarCodigo()">Recibir Código</button>
+        </div>
+
+        <div id="paso-2">
+            <h2>Verificar Identidad</h2>
+            <p>Introduce el código enviado a tu correo.</p>
+            <input type="text" id="codigo" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing: 5px;">
+            <button class="btn-login" style="background: var(--accent);" onclick="verificar()">Entrar al Panel</button>
+        </div>
     </div>
 
     <script>
-        document.getElementById('form-login').onsubmit = async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const pass = document.getElementById('password').value;
+        const API = "https://mis-barberias.onrender.com";
+        let userEmail = "";
 
-            // Llamada a tu API de Render para validar
-            const res = await fetch('https://mis-barberias.onrender.com/api/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email, pass })
-            });
+        async function enviarCodigo() {
+            userEmail = document.getElementById('email').value.trim();
+            if(!userEmail) return alert("Ingresa tu correo");
 
-            const data = await res.json();
-
-            if (res.ok) {
-                // Guardamos el token y el rol
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userName', data.nombre);
-                
-                if(data.role === 'ADMIN') {
-                    window.location.href = 'panel-dueno.html';
-                } else {
-                    window.location.href = `panel-empleado.html?empleado=${data.nombre}`;
+            try {
+                const res = await fetch(`${API}/api/auth/enviar-codigo`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ correo: userEmail })
+                });
+                if(res.ok) {
+                    document.getElementById('paso-1').style.display = 'none';
+                    document.getElementById('paso-2').style.display = 'block';
                 }
+            } catch (e) { alert("Error al conectar"); }
+        }
+
+        async function verificar() {
+            const code = document.getElementById('codigo').value;
+            try {
+                const res = await fetch(`${API}/api/auth/verificar`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ correo: userEmail, codigo: code })
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    localStorage.setItem('admin_email', userEmail);
+                    redirigirSegunRol(userEmail);
+                } else {
+                    alert("Código incorrecto");
+                }
+            } catch (e) { alert("Error"); }
+        }
+
+        function redirigirSegunRol(email) {
+            // LÓGICA TEMPORAL: Aquí defines quién entra a qué panel
+            if(email === 'fabianortiz350@gmail.com') {
+                window.location.href = 'super-admin.html';
+            } else if(email.includes('dueno')) {
+                window.location.href = 'panel-dueno.html';
             } else {
-                document.getElementById('error-msg').style.display = 'block';
+                window.location.href = 'panel-empleado.html';
             }
-        };
+        }
     </script>
 </body>
 </html>

@@ -6,7 +6,7 @@
     <title>Panel Empleado | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; --success: #2e7d32; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; --success: #2e7d32; --danger: #c62828; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
         
         nav { background: white; padding: 15px 5%; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
@@ -15,11 +15,6 @@
 
         .container { padding: 20px 5%; max-width: 600px; margin: auto; }
         
-        .header-empleado { margin-bottom: 25px; }
-        .header-empleado h1 { margin: 0; font-size: 24px; }
-        .header-empleado p { color: #666; margin: 5px 0; }
-
-        /* Contador de Progreso / Historial */
         .stats-bar { 
             background: white; border-radius: 15px; padding: 15px; margin-top: 15px;
             display: flex; justify-content: space-around; border: 1px solid #eee; text-align: center;
@@ -29,40 +24,30 @@
         .stat-label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; }
 
         .controles-agenda { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .label-filtro { font-size: 12px; font-weight: 700; color: #888; margin-bottom: -5px; margin-left: 5px; }
-        
         .input-control { 
             background: white; border: 1px solid #ddd; padding: 12px; 
             border-radius: 12px; font-family: inherit; font-size: 14px; width: 100%; box-sizing: border-box;
-            outline: none;
         }
-        .input-control:focus { border-color: var(--accent); }
 
         .card-cita { 
             background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;
             display: flex; flex-direction: column; gap: 10px; position: relative;
         }
+        .card-cita.expirada { opacity: 0.5; border-left: 5px solid var(--danger); }
+        
         .hora-tag { background: var(--primary); color: white; padding: 5px 12px; border-radius: 10px; font-weight: 700; font-size: 14px; align-self: flex-start; }
         .cliente-name { font-weight: 800; font-size: 18px; margin: 0; }
-        .servicio-name { color: var(--accent); font-weight: 600; font-size: 14px; }
         
-        .btn-atendido { 
-            background: #e8f5e9; color: var(--success); border: none; padding: 12px; 
-            border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;
-            margin-top: 10px; width: 100%;
-        }
-        .btn-atendido:hover { background: var(--success); color: white; }
+        .acciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        
+        .btn-atendido { background: #e8f5e9; color: var(--success); border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; width: 100%; grid-column: span 2; }
+        .btn-reprogramar { background: #fff3e0; color: #ef6c00; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 12px; }
+        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 
-        .btn-whatsapp {
-            background: #25D366; color: white; border: none; padding: 10px;
-            border-radius: 12px; font-weight: 700; text-decoration: none;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-size: 13px; margin-top: 5px;
-        }
-
-        .no-citas { text-align: center; padding: 50px 20px; color: #888; }
-        .badge-status { position: absolute; top: 20px; right: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 85%; max-width: 400px; text-align: center; }
+        .btn-confirmar { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 700; margin-top: 15px; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body onload="inicializarPanel()">
@@ -74,8 +59,8 @@
 
     <div class="container">
         <div class="header-empleado">
-            <h1 id="txt-bienvenida">Agenda del Staff</h1>
-            <p id="txt-negocio">Cargando agenda del negocio...</p>
+            <h1 id="txt-bienvenida">Gestión de Citas</h1>
+            <p id="txt-negocio">...</p>
             
             <div class="stats-bar">
                 <div class="stat-item">
@@ -83,135 +68,156 @@
                     <span class="stat-label">Total</span>
                 </div>
                 <div class="stat-item" style="border-left: 1px solid #eee; border-right: 1px solid #eee;">
-                    <span class="stat-value" id="count-faltan" style="color: var(--accent);">0</span>
-                    <span class="stat-label">Pendientes</span>
+                    <span class="stat-value" id="count-faltan" style="color: var(--accent);">Espera</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-value" id="count-listo" style="color: var(--success);">0</span>
-                    <span class="stat-label">Atendidos</span>
+                    <span class="stat-value" id="count-listo" style="color: var(--success);">Listo</span>
                 </div>
             </div>
 
             <div class="controles-agenda">
-                <span class="label-filtro">VER HISTORIAL O FUTURO:</span>
                 <input type="date" id="filtro-fecha" class="input-control" onchange="cargarAgenda()">
-                <input type="text" id="buscador-cliente" class="input-control" placeholder="🔍 Buscar cliente en esta fecha..." onkeyup="filtrarCitas()">
+                <input type="text" id="buscador-cliente" class="input-control" placeholder="🔍 Buscar cliente..." onkeyup="filtrarCitas()">
             </div>
         </div>
 
         <div id="lista-agenda"></div>
     </div>
 
+    <div id="modal-repro" class="modal">
+        <div class="modal-content">
+            <h3>Reprogramar Cita</h3>
+            <p style="font-size: 13px; color: #666;">Se notificará al cliente por WhatsApp y Correo.</p>
+            <input type="time" id="input-nueva-hora" class="input-control" style="font-size: 20px; text-align: center; margin-top:10px;">
+            <button class="btn-confirmar" onclick="confirmarReprogramacion()">ACTUALIZAR Y NOTIFICAR</button>
+            <button onclick="cerrarModal()" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Cancelar</button>
+        </div>
+    </div>
+
     <script>
         const api = "https://mis-barberias.onrender.com";
         let nombreNegocio = "";
+        let citaActiva = null;
 
         function inicializarPanel() {
             const params = new URLSearchParams(window.location.search);
             nombreNegocio = params.get('negocio');
-
-            if (!nombreNegocio) {
-                alert("Falta el identificador del negocio.");
-                return;
-            }
-
+            if (!nombreNegocio) return alert("Error: Negocio no identificado.");
             document.getElementById('txt-negocio').innerText = nombreNegocio.replace(/-/g, ' ');
             document.getElementById('filtro-fecha').valueAsDate = new Date();
-            
             cargarAgenda();
         }
 
         async function cargarAgenda() {
             const fecha = document.getElementById('filtro-fecha').value;
             const contenedor = document.getElementById('lista-agenda');
-            contenedor.innerHTML = "<p style='text-align:center; padding:20px; color:#999;'>Consultando registros...</p>";
+            contenedor.innerHTML = "<p style='text-align:center;'>Actualizando agenda...</p>";
 
             try {
                 const res = await fetch(`${api}/api/citas/negocio/${nombreNegocio}?fecha=${fecha}`);
                 const citas = await res.json();
-
                 contenedor.innerHTML = "";
 
                 if (!citas || citas.length === 0) {
                     actualizarContadores(0, 0);
-                    contenedor.innerHTML = `<div class="no-citas">☕ No hay registros para esta fecha.</div>`;
+                    contenedor.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">No hay citas para este día.</div>`;
                     return;
                 }
 
                 citas.sort((a, b) => a.hora.localeCompare(b.hora));
-
                 let atendidos = 0;
+                const ahora = new Date();
+
                 citas.forEach(cita => {
                     const esAtendido = (cita.estado === 'atendido');
                     if(esAtendido) atendidos++;
                     
-                    const telLimpio = cita.clienteTelefono.replace(/\D/g,'');
-                    const msjWhatsapp = `Hola ${cita.clienteNombre}, te saludamos de ${nombreNegocio.replace(/-/g, ' ')}. ¡Ya puedes pasar para tu servicio de ${cita.servicio}!`;
+                    const [h, m] = cita.hora.split(':');
+                    const horaCita = new Date();
+                    horaCita.setHours(h, m, 0);
+                    const esTarde = (ahora - horaCita > 30 * 60000) && !esAtendido;
 
                     const card = `
-                        <div class="card-cita" id="cita-${cita._id}" data-cliente="${cita.clienteNombre.toLowerCase()}">
+                        <div class="card-cita ${esTarde ? 'expirada' : ''}" data-cliente="${cita.clienteNombre.toLowerCase()}">
                             <div class="hora-tag">${cita.hora}</div>
-                            <div class="badge-status" style="color: ${esAtendido ? 'var(--success)' : 'var(--accent)'}">
-                                ${cita.estado || 'Pendiente'}
-                            </div>
                             <p class="cliente-name">${cita.clienteNombre}</p>
-                            <span class="servicio-name">${cita.servicio}</span>
+                            <span style="font-size:13px; color:#666;">✂️ ${cita.servicio}</span>
                             
-                            ${!esAtendido ? `
-                                <a href="https://wa.me/${telLimpio}?text=${encodeURIComponent(msjWhatsapp)}" 
-                                   target="_blank" class="btn-whatsapp">
-                                    📱 Avisar por WhatsApp
-                                </a>
-                                <button class="btn-atendido" onclick="marcarAtendido('${cita._id}')">MARCAR COMO ATENDIDO</button>
-                            ` : `
-                                <div style="margin-top:10px; font-size:13px; color:var(--success); font-weight:700; text-align:center;">
-                                    ✅ SERVICIO COMPLETADO
-                                </div>
-                            `}
+                            <div class="acciones-grid">
+                                ${!esAtendido ? `
+                                    <a href="https://wa.me/${cita.clienteTelefono.replace(/\D/g,'')}?text=Hola ${cita.clienteNombre}, te esperamos en breve para tu cita." target="_blank" class="btn-whatsapp">WhatsApp</a>
+                                    <button class="btn-reprogramar" onclick='abrirModalRepro(${JSON.stringify(cita)})'>⏰ Reprogramar</button>
+                                    <button class="btn-atendido" onclick="marcarAtendido('${cita._id}')">FINALIZAR SERVICIO</button>
+                                ` : `
+                                    <div style="grid-column: span 2; text-align:center; font-weight:700; color:var(--success); padding:10px;">SERVIDO ✅</div>
+                                `}
+                            </div>
                         </div>
                     `;
                     contenedor.innerHTML += card;
                 });
-
                 actualizarContadores(citas.length, atendidos);
-
-            } catch (e) {
-                contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>";
-            }
+            } catch (e) { contenedor.innerHTML = "Error de conexión."; }
         }
 
-        function actualizarContadores(total, atendidos) {
-            document.getElementById('count-total').innerText = total;
-            document.getElementById('count-listo').innerText = atendidos;
-            document.getElementById('count-faltan').innerText = total - atendidos;
+        function abrirModalRepro(cita) {
+            citaActiva = cita;
+            document.getElementById('input-nueva-hora').value = cita.hora;
+            document.getElementById('modal-repro').style.display = 'flex';
         }
 
-        function filtrarCitas() {
-            const busqueda = document.getElementById('buscador-cliente').value.toLowerCase();
-            const tarjetas = document.querySelectorAll('.card-cita');
+        function cerrarModal() {
+            document.getElementById('modal-repro').style.display = 'none';
+        }
 
-            tarjetas.forEach(tarjeta => {
-                const nombre = tarjeta.getAttribute('data-cliente');
-                tarjeta.style.display = nombre.includes(busqueda) ? "flex" : "none";
-            });
+        async function confirmarReprogramacion() {
+            const nuevaHora = document.getElementById('input-nueva-hora').value;
+            if(!nuevaHora) return;
+
+            try {
+                const res = await fetch(`${api}/api/citas/reprogramar/${citaActiva._id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ hora: nuevaHora })
+                });
+
+                if(res.ok) {
+                    // 1. Notificar por WhatsApp automáticamente al cerrar
+                    const msj = `Hola ${citaActiva.clienteNombre}, hemos reprogramado tu cita en ${nombreNegocio.replace(/-/g, ' ')} para las ${nuevaHora}. ¡Te esperamos!`;
+                    const linkWa = `https://wa.me/${citaActiva.clienteTelefono.replace(/\D/g,'')}?text=${encodeURIComponent(msj)}`;
+                    
+                    cerrarModal();
+                    cargarAgenda();
+                    
+                    // Abrir WhatsApp en pestaña nueva
+                    window.open(linkWa, '_blank');
+                    
+                    // Aquí el servidor también debería disparar el correo electrónico
+                    console.log("Notificación enviada a:", citaActiva.clienteEmail);
+                }
+            } catch (e) { alert("Error al actualizar."); }
         }
 
         async function marcarAtendido(id) {
-            if(!confirm("¿Confirmas que el servicio fue realizado?")) return;
-
-            try {
-                const res = await fetch(`${api}/api/citas/atender/${id}`, { method: 'PUT' });
-                if(res.ok) {
-                    cargarAgenda();
-                }
-            } catch (e) {
-                alert("Error al actualizar.");
-            }
+            if(!confirm("¿Cita finalizada?")) return;
+            await fetch(`${api}/api/citas/atender/${id}`, { method: 'PUT' });
+            cargarAgenda();
         }
 
-        function cerrarSesion() {
-            window.location.href = "index.html";
+        function actualizarContadores(t, a) {
+            document.getElementById('count-total').innerText = t;
+            document.getElementById('count-listo').innerText = a;
+            document.getElementById('count-faltan').innerText = t - a;
         }
+
+        function filtrarCitas() {
+            const b = document.getElementById('buscador-cliente').value.toLowerCase();
+            document.querySelectorAll('.card-cita').forEach(t => {
+                t.style.display = t.getAttribute('data-cliente').includes(b) ? "flex" : "none";
+            });
+        }
+
+        function cerrarSesion() { window.location.href = "index.html"; }
     </script>
 </body>
 </html>

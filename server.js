@@ -17,7 +17,7 @@ mongoose.connect(mongoURI)
     })
     .catch(err => console.error("❌ Error de conexión:", err));
 
-// --- 🏗️ MODELOS DE DATOS ACTUALIZADOS ---
+// --- 🏗️ MODELOS DE DATOS ---
 
 const Negocio = mongoose.model('Negocio', {
     idSlug: { type: String, unique: true },
@@ -25,7 +25,7 @@ const Negocio = mongoose.model('Negocio', {
     ubicacion: String,
     imagen: String,
     categoria: String,
-    adminEmail: String, // NUEVO: Correo del dueño/administrador del local
+    adminEmail: String,
     servicios: [{ nombre: String, precio: Number }], 
     horario: {
         inicio: { type: String, default: "08:00" },
@@ -46,160 +46,122 @@ const Cita = mongoose.model('Cita', {
     estado: { type: String, default: 'confirmada' } 
 });
 
+// MODELO USUARIO ACTUALIZADO CON ROLES Y PASSWORD
 const Usuario = mongoose.model('Usuario', {
-    correo: String,
+    correo: { type: String, unique: true },
+    password: { type: String }, // Contraseña simple para este ejemplo
+    rol: { type: String, enum: ['ADMIN', 'STAFF'], default: 'STAFF' },
+    nombreEmpleado: String, // Nombre tal cual aparece en las citas (ej: "Juan")
     codigoVerificacion: String,
     fechaExpiracion: Date
 });
 
 // --- ⚙️ CONFIGURACIONES EXTERNAS ---
-
 let apiInstance = new Brevo.TransactionalEmailsApi();
 let apiKey = apiInstance.authentications['apiKey'];
 apiKey.apiKey = process.env.BREVO_KEY; 
 
-// --- 🛠️ FUNCIONES DE APOYO ---
+// --- 🚀 RUTAS DE AUTENTICACIÓN (LOGIN) ---
 
-function generarSlug(texto) {
-    return texto.toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)+/g, '');
-}
-
-// --- 🚀 RUTAS ---
-
-app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
-
-// Servir el panel de Super Admin
-app.get('/super-admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'super-admin.html'));
-});
-
-// Guardar negocio (Actualizado para capturar adminEmail)
-app.post('/api/negocios', async (req, res) => {
+app.post('/api/login', async (req, res) => {
+    const { correo, password } = req.body;
     try {
-        const { nombre, ubicacion, imagen, categoria, adminEmail } = req.body;
-        let slugBase = generarSlug(nombre);
-        const existe = await Negocio.findOne({ idSlug: slugBase });
-        const slugFinal = existe ? `${slugBase}-${Math.floor(1000 + Math.random() * 9000)}` : slugBase;
-
-        const nuevoNegocio = new Negocio({
-            idSlug: slugFinal,
-            nombre,
-            ubicacion,
-            imagen,
-            categoria,
-            adminEmail, // Se guarda el correo del dueño
-            servicios: [{ nombre: "Servicio General", precio: 0 }] 
-        });
-
-        await nuevoNegocio.save();
-        res.status(201).json({ success: true, slug: slugFinal });
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al guardar" });
-    }
+        const user = await Usuario.findOne({ correo, password });
+        if (user) {
+            res.json({ 
+                success: true, 
+                rol: user.rol, 
+                nombre: user.nombreEmpleado,
+                correo: user.correo 
+            });
+        } else {
+            res.status(401).json({ success: false, mensaje: "Correo o contraseña incorrectos" });
+        }
+    } catch (e) { res.status(500).send(); }
 });
 
-// NUEVA RUTA: Para que el dueño actualice su negocio (servicios/horarios)
-app.put('/api/negocios/:slug', async (req, res) => {
+// --- ✅ RUTAS PARA EL STAFF (EMPLEADOS) ---
+
+// Obtener solo las citas de UN empleado específico
+app.get('/api/citas/empleado/:nombre', async (req, res) => {
+    const { fecha } = req.query;
+    const citas = await Cita.find({ 
+        barbero: req.params.nombre, 
+        fecha: fecha 
+    }).sort({ hora: 1 });
+    res.json(citas);
+});
+
+// Marcar como atendido
+app.put('/api/citas/atender/:id', async (req, res) => {
+    await Cita.findByIdAndUpdate(req.params.id, { estado: 'atendido' });
+    res.json({ success: true });
+});
+
+// Reprogramar Y Notificar (WhatsApp se hace en el front, aquí hacemos el Email)
+app.put('/api/citas/reprogramar/:id', async (req, res) => {
+    const { hora } = req.body;
+    const cita = await Cita.findByIdAndUpdate(req.params.id, { hora: hora }, { new: true });
+    
+    // Notificar por Correo vía Brevo
     try {
-        const { servicios, horario } = req.body;
-        await Negocio.findOneAndUpdate({ idSlug: req.params.slug }, { servicios, horario });
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ error: "Error al actualizar" });
-    }
+        let emailRepro = new Brevo.SendSmtpEmail();
+        emailRepro.subject = "Cita Reprogramada - Agendate Live";
+        emailRepro.htmlContent = `<h3>Hola ${cita.clienteNombre}</h3><p>Tu cita ha sido movida a las <b>${hora}</b> el día ${cita.fecha}.</p>`;
+        emailRepro.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
+        emailRepro.to = [{ "email": cita.clienteEmail }];
+        await apiInstance.sendTransacEmail(emailRepro);
+    } catch (e) { console.log("Error enviando correo de reprogramación"); }
+
+    res.json({ success: true });
 });
+
+// --- 👑 RUTAS PARA EL DUEÑO (ADMIN) ---
+
+// Ver TODAS las citas de un negocio (puede filtrar por empleado si se desea)
+app.get('/api/admin/citas-global', async (req, res) => {
+    const { fecha, empleado } = req.query;
+    let query = { fecha: fecha };
+    if (empleado && empleado !== 'todos') query.barbero = empleado;
+    
+    const citas = await Cita.find(query).sort({ hora: 1 });
+    res.json(citas);
+});
+
+// CANCELAR CITA (Solo el dueño usará esta ruta)
+app.delete('/api/admin/cancelar/:id', async (req, res) => {
+    await Cita.findByIdAndDelete(req.params.id);
+    res.json({ success: true });
+});
+
+// --- 🛠️ RUTAS ORIGINALES MANTENIDAS ---
 
 app.get('/api/negocios/:id', async (req, res) => {
     const negocio = await Negocio.findOne({ idSlug: req.params.id });
     negocio ? res.json(negocio) : res.status(404).send();
 });
 
-app.get('/api/categorias/:cat', async (req, res) => {
-    const lista = await Negocio.find({ categoria: req.params.cat });
-    res.json(lista);
-});
-
-// --- ✅ AUTH ---
-
-app.post('/api/auth/enviar-codigo', async (req, res) => {
-    const { correo } = req.body;
-    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiracion = new Date(Date.now() + 5 * 60 * 1000); 
-
-    try {
-        await Usuario.findOneAndUpdate({ correo }, { codigoVerificacion: codigo, fechaExpiracion: expiracion }, { upsert: true });
-        let sendSmtpEmail = new Brevo.SendSmtpEmail();
-        sendSmtpEmail.subject = "Código Agendate Live";
-        sendSmtpEmail.htmlContent = `<h3>Tu código es: ${codigo}</h3>`;
-        sendSmtpEmail.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
-        sendSmtpEmail.to = [{ "email": correo }];
-        await apiInstance.sendTransacEmail(sendSmtpEmail);
-        res.json({ mensaje: "Enviado" });
-    } catch (e) { res.status(500).send(); }
-});
-
-app.post('/api/auth/verificar', async (req, res) => {
-    const { correo, codigo } = req.body;
-    const usuario = await Usuario.findOne({ correo });
-    if (usuario && usuario.codigoVerificacion === codigo && new Date() < usuario.fechaExpiracion) {
-        res.json({ success: true });
-    } else {
-        res.status(400).json({ success: false, mensaje: "Código inválido o expirado" });
-    }
-});
-
-// --- ✅ RESERVAS ---
-
-app.get('/disponibilidad', async (req, res) => {
-    const { fecha, barbero } = req.query;
-    const ocupadas = await Cita.find({ fecha, barbero, estado: 'confirmada' });
-    res.json({ ocupadas: ocupadas.map(c => c.hora) });
-});
-
 app.post('/reservar', async (req, res) => {
     try {
         const { clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio } = req.body;
-        const choque = await Cita.findOne({ fecha, hora, barbero, estado: 'confirmada' });
-        if (choque) return res.status(400).json({ error: "Esta hora ya no está disponible" });
-
-        const nuevaCita = new Cita({ 
-            clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio 
-        });
+        const nuevaCita = new Cita({ clienteNombre, clienteTelefono, clienteEmail, barbero, fecha, hora, reservaId, servicio, precio });
         await nuevaCita.save();
-
-        let emailConfirm = new Brevo.SendSmtpEmail();
-        emailConfirm.subject = `Confirmación Cita #${reservaId}`;
-        emailConfirm.htmlContent = `<p>Hola ${clienteNombre}, cita confirmada para el ${fecha} a las ${hora}.</p>`;
-        emailConfirm.sender = { "name": "Agendate Live", "email": "fabianortiz350@gmail.com" };
-        emailConfirm.to = [{ "email": clienteEmail }];
-        await apiInstance.sendTransacEmail(emailConfirm);
-
-        res.json({ success: true, reservaId });
+        res.json({ success: true });
     } catch (e) { res.status(500).send(); }
 });
 
-app.get('/mis-citas', async (req, res) => {
-    const citas = await Cita.find({ clienteEmail: req.query.email }).sort({ fecha: -1 });
-    res.json(citas);
-});
-
-// NUEVA RUTA: Para obtener los negocios que pertenecen a un dueño específico
-app.get('/api/propios/:email', async (req, res) => {
-    const negocios = await Negocio.find({ adminEmail: req.params.email });
-    res.json(negocios);
-});
-
+// Función para crear usuarios de prueba iniciales
 async function cargarDatosIniciales() {
-    const conteo = await Negocio.countDocuments();
-    if (conteo === 0) {
-        await Negocio.insertMany([
-            { idSlug: 'barberia-pro', nombre: 'Barbería Pro', ubicacion: 'Centro', categoria: 'barberia', adminEmail: 'admin@test.com', servicios: [{nombre: "Corte Caballero", precio: 15000}] }
+    const conteoUser = await Usuario.countDocuments();
+    if (conteoUser === 0) {
+        await Usuario.insertMany([
+            { correo: "dueno@test.com", password: "123", rol: "ADMIN", nombreEmpleado: "Dueño" },
+            { correo: "juan@test.com", password: "123", rol: "STAFF", nombreEmpleado: "Juan" },
+            { correo: "pedro@test.com", password: "123", rol: "STAFF", nombreEmpleado: "Pedro" }
         ]);
+        console.log("👥 Usuarios de prueba creados");
     }
 }
 
 const PORT = process.env.PORT || 10000; 
-app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));

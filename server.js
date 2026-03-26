@@ -1,12 +1,21 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bcrypt = require('bcryptjs'); // ✅ Asegurado para coincidir con tu package.json
+const bcrypt = require('bcryptjs'); 
 const Brevo = require('@getbrevo/brevo');
+const path = require('path'); // ✅ Nueva librería para manejar rutas de archivos
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// ✅ NUEVO: Esto permite que Render muestre tus archivos HTML, CSS e Imágenes
+app.use(express.static(__dirname)); 
+
+// ✅ NUEVO: Ruta principal para que al entrar al link se vea tu index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 // --- 🔌 CONEXIÓN MONGO ---
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
@@ -49,20 +58,16 @@ const Cita = mongoose.model('Cita', {
 
 // --- ⚙️ CONFIG BREVO ---
 const apiInstance = new Brevo.TransactionalEmailsApi();
-// ✅ Configuración de API Key (Asegúrate de tener la variable de entorno BREVO_KEY en Render)
 apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
 
 // --- 🔐 SISTEMA AUTH 2 PASOS ---
 
-// PASO 1: Login con Password
 app.post('/api/auth/login', async (req, res) => {
     const { correo, password } = req.body;
-    
     try {
         const user = await Usuario.findOne({ correo });
         if (!user) return res.status(404).json({ mensaje: "Usuario no encontrado" });
 
-        // Verificar contraseña
         const passValida = await bcrypt.compare(password, user.password);
         if (!passValida) return res.status(401).json({ mensaje: "Contraseña incorrecta" });
 
@@ -71,7 +76,6 @@ app.post('/api/auth/login', async (req, res) => {
         user.fechaExpiracion = new Date(Date.now() + 10 * 60000); 
         await user.save();
 
-        // Enviar Email
         let sendEmail = new Brevo.SendSmtpEmail();
         sendEmail.subject = `Tu código de seguridad: ${codigo}`;
         sendEmail.htmlContent = `
@@ -89,11 +93,10 @@ app.post('/api/auth/login', async (req, res) => {
 
     } catch (e) { 
         console.error(e);
-        res.status(500).json({ error: "Error al procesar el login o enviar el correo" }); 
+        res.status(500).json({ error: "Error al procesar el login" }); 
     }
 });
 
-// PASO 2: Verificar Código
 app.post('/api/auth/verificar', async (req, res) => {
     const { correo, codigo } = req.body;
     const user = await Usuario.findOne({ 
@@ -113,7 +116,7 @@ app.post('/api/auth/verificar', async (req, res) => {
             negocioId: user.negocioId 
         });
     } else {
-        res.status(401).json({ success: false, mensaje: "Código inválido o expirado" });
+        res.status(401).json({ success: false, mensaje: "Código inválido" });
     }
 });
 
@@ -168,9 +171,9 @@ app.post('/api/auth/registrar-interno', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const nuevoUser = new Usuario({ correo, password: hashedPassword, rol, nombre });
         await nuevoUser.save();
-        res.json({ success: true, mensaje: "Usuario administrativo creado" });
-    } catch (e) { res.status(500).json({ error: "El usuario ya existe o faltan datos" }); }
+        res.json({ success: true, mensaje: "Usuario creado" });
+    } catch (e) { res.status(500).json({ error: "El usuario ya existe" }); }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT}`));

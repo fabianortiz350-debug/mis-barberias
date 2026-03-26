@@ -1,112 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff | Agendate Live</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f8f9fa; --success: #2e7d32; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); color: var(--primary); }
-        
-        /* Verificación de Seguridad Visual */
-        #bloqueo-seguridad { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; justify-content: center; align-items: center; text-align: center; }
-
-        nav { background: white; padding: 15px 5%; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .logo { font-weight: 800; font-size: 18px; }
-        .logo span { color: var(--accent); }
-
-        .container { padding: 20px 5%; max-width: 600px; margin: auto; }
-        
-        .stats-bar { 
-            background: white; border-radius: 15px; padding: 15px; margin-top: 15px;
-            display: flex; justify-content: space-around; border: 1px solid #eee; text-align: center;
-        }
-        .stat-value { display: block; font-weight: 800; font-size: 18px; }
-        .stat-label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; }
-
-        .controles-agenda { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .input-control { 
-            background: white; border: 1px solid #ddd; padding: 12px; 
-            border-radius: 12px; font-family: inherit; font-size: 14px; width: 100%; box-sizing: border-box;
-        }
-
-        .card-cita { 
-            background: white; border-radius: 20px; padding: 20px; margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eee;
-            display: flex; flex-direction: column; gap: 10px; position: relative;
-        }
-        
-        .hora-tag { background: var(--primary); color: white; padding: 5px 12px; border-radius: 10px; font-weight: 700; font-size: 14px; align-self: flex-start; }
-        .cliente-name { font-weight: 800; font-size: 18px; margin: 0; }
-        
-        .acciones-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .btn-atendido { background: #e8f5e9; color: var(--success); border: none; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; grid-column: span 2; }
-        .btn-reprogramar { background: #fff3e0; color: #ef6c00; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-        .btn-whatsapp { background: #25D366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; text-decoration: none; text-align: center; }
-
-        /* Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 85%; max-width: 400px; text-align: center; }
-    </style>
-</head>
-<body onload="verificarYServir()">
-
-    <div id="bloqueo-seguridad">
-        <div>
-            <h2>Acceso Restringido</h2>
-            <p>Por favor inicia sesión para continuar.</p>
-            <button onclick="cerrarSesion()" style="padding:10px 20px; border-radius:10px; border:none; background:black; color:white;">Ir al Login</button>
-        </div>
-    </div>
-
-    <nav>
-        <div class="logo">AGENDATE<span>LIVE</span></div>
-        <button onclick="cerrarSesion()" style="border:none; background:none; font-weight:700; color:#ff4444; cursor:pointer;">Salir</button>
-    </nav>
-
-    <div class="container">
-        <div class="header-empleado">
-            <h1 id="txt-saludo">Hola, ...</h1>
-            <p id="txt-negocio">Barbería El Rey</p>
-            
-            <div class="stats-bar">
-                <div class="stat-item">
-                    <span class="stat-value" id="count-total">0</span>
-                    <span class="stat-label">Total</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="count-listo" style="color: var(--success);">0</span>
-                    <span class="stat-label">Listos</span>
-                </div>
-            </div>
-
-            <div class="controles-agenda">
-                <input type="date" id="filtro-fecha" class="input-control" onchange="cargarAgenda()">
-            </div>
-        </div>
-
-        <div id="lista-agenda"></div>
-    </div>
-
-    <div id="modal-repro" class="modal">
-        <div class="modal-content">
-            <h3>Nueva Hora</h3>
-            <input type="time" id="input-nueva-hora" class="input-control" style="font-size: 20px; text-align: center;">
-            <button onclick="confirmarReprogramacion()" style="width:100%; padding:15px; background:black; color:white; border:none; border-radius:12px; margin-top:10px; font-weight:700;">CONFIRMAR</button>
-            <button onclick="cerrarModal()" style="margin-top:10px; background:none; border:none; color:#888;">Cancelar</button>
-        </div>
-    </div>
-
-    <script>
-        const api = "https://mis-barberias.onrender.com";
-        let nombreEmpleado = "";
-        let citaActiva = null;
-
-        function verificarYServir() {
-            // SEGURIDAD: Si no hay nombre de usuario guardado, bloqueamos la pantalla
+async function verificarYServir() {
+            // SEGURIDAD: Verificamos tanto el nombre como el rol
             nombreEmpleado = localStorage.getItem('userName');
-            if (!nombreEmpleado) {
+            const rol = localStorage.getItem('userRole');
+
+            if (!nombreEmpleado || rol !== 'STAFF') {
                 document.getElementById('bloqueo-seguridad').style.display = 'flex';
                 return;
             }
@@ -122,14 +19,16 @@
             contenedor.innerHTML = "<p style='text-align:center;'>Cargando tus citas...</p>";
 
             try {
-                // LLAMADA A LA API: Ahora filtramos por empleado
-                const res = await fetch(`${api}/api/citas/empleado/${nombreEmpleado}?fecha=${fecha}`);
+                const res = await fetch(`${api}/api/citas/empleado/${encodeURIComponent(nombreEmpleado)}?fecha=${fecha}`);
+                
+                if (!res.ok) throw new Error("Error en servidor");
+                
                 const citas = await res.json();
                 contenedor.innerHTML = "";
 
-                if (!citas || citas.length === 0) {
+                if (!Array.isArray(citas) || citas.length === 0) {
                     actualizarContadores(0, 0);
-                    contenedor.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">No tienes citas para hoy.</div>`;
+                    contenedor.innerHTML = `<div style="text-align:center; padding:40px; color:#888;">No tienes citas para esta fecha.</div>`;
                     return;
                 }
 
@@ -154,42 +53,7 @@
                     `;
                 });
                 actualizarContadores(citas.length, atendidos);
-            } catch (e) { contenedor.innerHTML = "Error de conexión."; }
+            } catch (e) { 
+                contenedor.innerHTML = "<p style='color:red; text-align:center;'>Error al conectar con la agenda. Revisa tu conexión.</p>"; 
+            }
         }
-
-        function abrirModalRepro(cita) {
-            citaActiva = cita;
-            document.getElementById('input-nueva-hora').value = cita.hora;
-            document.getElementById('modal-repro').style.display = 'flex';
-        }
-
-        function cerrarModal() { document.getElementById('modal-repro').style.display = 'none'; }
-
-        async function confirmarReprogramacion() {
-            const nuevaHora = document.getElementById('input-nueva-hora').value;
-            await fetch(`${api}/api/citas/reprogramar/${citaActiva._id}`, {
-                method: 'PUT',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ hora: nuevaHora })
-            });
-            cerrarModal();
-            cargarAgenda();
-        }
-
-        async function marcarAtendido(id) {
-            await fetch(`${api}/api/citas/atender/${id}`, { method: 'PUT' });
-            cargarAgenda();
-        }
-
-        function actualizarContadores(t, a) {
-            document.getElementById('count-total').innerText = t;
-            document.getElementById('count-listo').innerText = a;
-        }
-
-        function cerrarSesion() {
-            localStorage.clear();
-            window.location.href = "index.html"; // Regresa al login
-        }
-    </script>
-</body>
-</html>

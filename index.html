@@ -145,7 +145,6 @@
         #seccion-admin { display: none; padding: 40px 5%; max-width: 600px; margin: auto; animation: fadeIn 0.4s ease; }
         .admin-card { background: white; padding: 30px; border-radius: 30px; border: 2px solid var(--accent); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
         
-        /* NUEVO: Botón Copiar QR y Empleado */
         .btn-qr-copy { background: #25d366; color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
         .btn-staff-copy { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 12px; font-weight: 700; cursor: pointer; margin-top: 5px; width: 100%; }
     </style>
@@ -247,6 +246,7 @@
                 
                 <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">2. Elige el servicio:</label>
                 <select id="reserva-servicio" class="input-vip">
+                    <option value="Servicio General" data-precio="0">Servicio General</option>
                 </select>
 
                 <label style="font-size: 14px; font-weight: 600; margin-top: 15px; display: block;">3. Selecciona el día:</label>
@@ -337,21 +337,22 @@
             const contenedor = document.getElementById('lista-negocios');
             contenedor.innerHTML = "<p>Buscando...</p>";
             try {
-                const res = await fetch(`${api}/api/categorias/${cat}`);
+                const res = await fetch(`${api}/api/negocios`);
                 const negocios = await res.json();
+                const filtrados = negocios.filter(n => n.categoria === cat);
                 contenedor.innerHTML = "";
-                if(!negocios || negocios.length === 0) {
+                if(filtrados.length === 0) {
                     contenedor.innerHTML = "<p>No hay negocios aquí.</p>";
                     return;
                 }
-                negocios.forEach(n => {
+                filtrados.forEach(n => {
                     contenedor.innerHTML += `
                         <div class="biz-card">
-                            <img src="${n.imagen}" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'">
+                            <img src="${n.img || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400'}">
                             <div class="biz-info">
                                 <h3 style="margin:0">${n.nombre}</h3>
                                 <p style="font-size:12px; color:#666">${n.ubicacion}</p>
-                                <button class="btn-book" onclick="irA('negocio', '${n.idSlug}')">Ver Perfil</button>
+                                <button class="btn-book" onclick="irA('negocio', '${n._id}')">Ver Perfil</button>
                             </div>
                         </div>
                     `;
@@ -366,74 +367,40 @@
             const img = document.getElementById('adm-img').value;
             if(!nombre || !loc) return alert("Completa al menos nombre y ubicación");
             
-            const datos = { nombre, categoria: cat, ubicacion: loc, imagen: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400" };
+            const datos = { nombre, categoria: cat, ubicacion: loc, img: img || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400" };
             
             try {
-                const res = await fetch(`${api}/api/negocios`, {
+                const res = await fetch(`${api}/api/admin/crear-negocio`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
                 const resData = await res.json();
                 if(res.ok) {
-                    document.getElementById('success-url-panel').style.display = 'block';
-                    
-                    // URL para clientes (QR)
-                    const fullUrlCliente = `${window.location.origin}/#negocio/${resData.idSlug}`;
-                    document.getElementById('btn-copy-new-url').onclick = () => {
-                        navigator.clipboard.writeText(fullUrlCliente);
-                        alert("¡Enlace copiado para tu QR de clientes!");
-                    };
-
-                    // URL para empleados
-                    const urlBase = window.location.origin + window.location.pathname.replace('index.html', '');
-                    const fullUrlStaff = `${urlBase}panel-empleado.html?negocio=${resData.idSlug}`;
-                    document.getElementById('btn-copy-staff-url').onclick = () => {
-                        navigator.clipboard.writeText(fullUrlStaff);
-                        alert("¡Enlace copiado! Envíalo a tus empleados.");
-                    };
+                    alert("¡Negocio creado con éxito!");
+                    irA('inicio');
                 } else { alert("Error al guardar."); }
             } catch (e) { alert("Error de conexión."); }
         }
 
-        async function cargarPerfilNegocio(idSlug) {
+        async function cargarPerfilNegocio(id) {
             try {
-                const res = await fetch(`${api}/api/negocios/${idSlug}`);
-                const n = await res.json();
+                const res = await fetch(`${api}/api/negocios`);
+                const negocios = await res.json();
+                const n = negocios.find(item => item._id === id);
                 negocioActual = n;
 
                 document.getElementById('p-nombre').innerText = n.nombre;
                 document.getElementById('p-ubicacion').innerText = n.ubicacion;
-                document.getElementById('p-imagen').src = n.imagen;
+                document.getElementById('p-imagen').src = n.img;
                 document.getElementById('section-title').innerText = "Detalle del Negocio";
-
-                const selectServ = document.getElementById('reserva-servicio');
-                selectServ.innerHTML = "";
-                if(n.servicios && n.servicios.length > 0) {
-                    n.servicios.forEach(s => {
-                        selectServ.innerHTML += `<option value="${s.nombre}" data-precio="${s.precio}">${s.nombre} - $${Number(s.precio).toLocaleString()}</option>`;
-                    });
-                } else {
-                    selectServ.innerHTML = `<option value="Servicio General" data-precio="0">Servicio General</option>`;
-                }
-                
-                document.getElementById('contenedor-horas').innerHTML = '<p style="grid-column: span 3; font-size: 12px; color: #888; text-align: center; padding: 10px;">Selecciona una fecha...</p>';
-                document.getElementById('fecha-reserva').value = "";
-
             } catch (e) { alert("Error al cargar perfil"); }
         }
 
         function verificarSesionAlCargar() {
             const emailGuardado = localStorage.getItem('agendate_user_email');
             if(emailGuardado) loguearUsuarioGlobal(emailGuardado);
-            const hash = window.location.hash;
-            
-            if(hash.startsWith('#negocio/')) {
-                const slug = hash.split('/')[1];
-                irA('negocio', slug);
-            } else if(window.location.pathname.includes('/admin-control-777')) {
-                irA('admin');
-            } else { irA('inicio'); }
+            irA('inicio');
         }
 
         function loguearUsuarioGlobal(email) {
@@ -459,16 +426,16 @@
             if(!email.includes("@")) return alert("Ingresa un correo válido");
             usuarioEmail = email;
             try {
-                const res = await fetch(`${api}/api/auth/enviar-codigo`, {
+                const res = await fetch(`${api}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ correo: email })
+                    body: JSON.stringify({ correo: email, password: "temp_password_or_logic" }) // Ajusta según tu lógica de login
                 });
                 if (res.ok) {
                     document.getElementById('auth-formularios').style.display = 'none';
                     document.getElementById('auth-paso-2').style.display = 'block';
                 }
-            } catch (e) { alert("Error"); }
+            } catch (e) { alert("Error al enviar código"); }
         }
 
         async function confirmarCodigo() {
@@ -482,85 +449,10 @@
                 const data = await res.json();
                 if (data.success) { loguearUsuarioGlobal(usuarioEmail); cerrarAuth(); }
                 else { alert(data.mensaje); }
-            } catch (e) { alert("Error"); }
+            } catch (e) { alert("Error de verificación"); }
         }
 
-        function cerrarSesion() { localStorage.clear(); location.href = "/"; }
-
-        async function mostrarMisCitas() {
-            const contenedor = document.getElementById('contenedor-citas');
-            contenedor.innerHTML = "<p>Cargando...</p>";
-            try {
-                const res = await fetch(`${api}/mis-citas?email=${usuarioEmail}`);
-                const citas = await res.json();
-                contenedor.innerHTML = "";
-                if(!citas || citas.length === 0) { contenedor.innerHTML = "<p>No tienes citas aún.</p>"; return; }
-                citas.forEach(cita => {
-                    contenedor.innerHTML += `<div class="cita-card"><div><strong>#${cita.reservaId}</strong><br>${cita.barbero}<br><small>${cita.servicio} | ${cita.fecha} - ${cita.hora}</small></div></div>`;
-                });
-            } catch (e) { contenedor.innerHTML = "Error."; }
-        }
-
-        async function cargarHorasDisponibles() {
-            const fecha = document.getElementById('fecha-reserva').value;
-            if(!fecha) return;
-            const barbero = document.getElementById('p-nombre').innerText;
-            const contenedor = document.getElementById('contenedor-horas');
-            contenedor.innerHTML = "Buscando...";
-            
-            try {
-                const res = await fetch(`${api}/disponibilidad?fecha=${fecha}&barbero=${barbero}`);
-                const data = await res.json();
-                contenedor.innerHTML = "";
-
-                let hInicio = 8, hFin = 18; // Horario base
-
-                for(let i = hInicio; i < hFin; i++) {
-                    const h = (i < 10 ? '0'+i : i) + ":00";
-                    const btn = document.createElement('button');
-                    btn.innerText = h; btn.className = 'hora-btn';
-                    if(data.ocupadas && data.ocupadas.includes(h)) btn.disabled = true;
-                    btn.onclick = () => {
-                        document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('seleccionada'));
-                        btn.classList.add('seleccionada'); horaSeleccionada = h;
-                    };
-                    contenedor.appendChild(btn);
-                }
-            } catch (e) { contenedor.innerHTML = "Error al cargar horas."; }
-        }
-
-        async function enviarReserva() {
-            if(!usuarioLogueado) return abrirAuth();
-            const nombre = document.getElementById('reserva-nombre').value;
-            const tel = document.getElementById('reserva-telefono').value;
-            const fecha = document.getElementById('fecha-reserva').value;
-            const selectServ = document.getElementById('reserva-servicio');
-            const servicio = selectServ.value;
-            const precio = selectServ.options[selectServ.selectedIndex].getAttribute('data-precio');
-
-            if(!nombre || !tel || !fecha || !horaSeleccionada) return alert("Completa todos los datos");
-
-            const datos = {
-                clienteNombre: nombre,
-                clienteTelefono: tel,
-                clienteEmail: usuarioEmail,
-                barbero: document.getElementById('p-nombre').innerText,
-                fecha: fecha,
-                hora: horaSeleccionada,
-                servicio: servicio,
-                precio: Number(precio),
-                reservaId: 'AL' + Math.floor(1000 + Math.random() * 9000)
-            };
-            try {
-                const res = await fetch(`${api}/reservar`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
-                });
-                if(res.ok) { alert("¡Cita agendada exitosamente!"); irA('inicio'); }
-                else { alert("Error al agendar."); }
-            } catch (e) { alert("Error de servidor."); }
-        }
+        function cerrarSesion() { localStorage.clear(); location.reload(); }
 
         function scrollCat(val) { document.getElementById('categorias').scrollBy(val, 0); }
     </script>

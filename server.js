@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bcrypt = require('bcryptjs'); // ✅ CAMBIADO: Usamos bcryptjs para evitar errores en Render
+const bcrypt = require('bcryptjs'); // ✅ Asegurado para coincidir con tu package.json
 const Brevo = require('@getbrevo/brevo');
 const app = express();
 
@@ -10,7 +10,9 @@ app.use(express.json());
 
 // --- 🔌 CONEXIÓN MONGO ---
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
-mongoose.connect(mongoURI).then(() => console.log("✅ DB Conectada")).catch(e => console.log(e));
+mongoose.connect(mongoURI)
+    .then(() => console.log("✅ DB Conectada"))
+    .catch(e => console.log("❌ Error DB:", e));
 
 // --- 🏗️ MODELOS ---
 const Usuario = mongoose.model('Usuario', {
@@ -47,7 +49,7 @@ const Cita = mongoose.model('Cita', {
 
 // --- ⚙️ CONFIG BREVO ---
 const apiInstance = new Brevo.TransactionalEmailsApi();
-// ✅ CORRECCIÓN: Configuración de API Key para versiones nuevas
+// ✅ Configuración de API Key (Asegúrate de tener la variable de entorno BREVO_KEY en Render)
 apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
 
 // --- 🔐 SISTEMA AUTH 2 PASOS ---
@@ -125,8 +127,10 @@ app.post('/api/admin/crear-negocio', async (req, res) => {
 });
 
 app.get('/api/negocios', async (req, res) => {
-    const negocios = await Negocio.find();
-    res.json(negocios);
+    try {
+        const negocios = await Negocio.find();
+        res.json(negocios);
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 // --- 📅 RUTAS DE CITAS ---
@@ -136,20 +140,26 @@ app.get('/api/citas/ver', async (req, res) => {
     if (rol === 'STAFF') query = { barbero: email }; 
     if (rol === 'ADMIN') query = { adminEmail: email }; 
     
-    const citas = await Cita.find(query).sort({ fecha: 1, hora: 1 });
-    res.json(citas);
+    try {
+        const citas = await Cita.find(query).sort({ fecha: 1, hora: 1 });
+        res.json(citas);
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/citas/completar', async (req, res) => {
     const { id } = req.body;
-    await Cita.findByIdAndUpdate(id, { estado: 'realizada' });
-    res.json({ success: true });
+    try {
+        await Cita.findByIdAndUpdate(id, { estado: 'realizada' });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/citas/cancelar', async (req, res) => {
     const { id } = req.body;
-    await Cita.findByIdAndUpdate(id, { estado: 'cancelada' });
-    res.json({ success: true });
+    try {
+        await Cita.findByIdAndUpdate(id, { estado: 'cancelada' });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.post('/api/auth/registrar-interno', async (req, res) => {

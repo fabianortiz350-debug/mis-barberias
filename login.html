@@ -8,20 +8,15 @@
     <style>
         :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #ffffff; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: #f9f9f9; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        
         .login-card { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 380px; text-align: center; }
         .logo { font-weight: 800; font-size: 24px; margin-bottom: 20px; color: var(--primary); }
         .logo span { color: var(--accent); }
-        
         h2 { font-weight: 800; font-size: 20px; margin-bottom: 10px; }
         p { color: #666; font-size: 14px; margin-bottom: 25px; }
-
         input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; font-family: inherit; transition: 0.3s; }
         input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
-        
         .btn-login { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 16px; }
         .btn-login:hover { background: var(--accent); transform: translateY(-2px); }
-        
         #paso-2 { display: none; }
         .loader { display: none; color: var(--accent); margin-top: 10px; font-size: 12px; font-weight: 600; }
     </style>
@@ -44,7 +39,7 @@
             <h2>Verificar Identidad</h2>
             <p>Introduce el código de 6 dígitos que enviamos a tu correo.</p>
             <input type="text" id="codigo" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing: 5px; font-weight: 800; font-size: 24px;" onkeypress="if(event.key==='Enter') verificarCodigo()">
-            <button class="btn-login" style="background: var(--accent);" onclick="verificarCodigo()">Acceder al Panel</button>
+            <button class="btn-login" id="btn-verificar" style="background: var(--accent);" onclick="verificarCodigo()">Acceder al Panel</button>
             <p style="margin-top: 20px; font-size: 12px; cursor: pointer; color: #888;" onclick="location.reload()">¿Error en los datos? Volver</p>
         </div>
     </div>
@@ -54,11 +49,10 @@
         let userEmail = "";
 
         async function iniciarLogin() {
-            userEmail = document.getElementById('email').value.trim();
+            userEmail = document.getElementById('email').value.trim().toLowerCase();
             const pass = document.getElementById('password').value;
 
             if(!userEmail || !pass) return alert("Completa todos los campos");
-            if(!userEmail.includes("@")) return alert("Ingresa un correo válido");
 
             const btn = document.getElementById('btn-envio');
             const loader = document.getElementById('load-1');
@@ -84,7 +78,7 @@
                     loader.style.display = 'none';
                 }
             } catch (e) { 
-                alert("Error de conexión con el servidor. Revisa tu internet."); 
+                alert("Error de conexión con el servidor."); 
                 btn.disabled = false;
                 loader.style.display = 'none';
             }
@@ -92,7 +86,10 @@
 
         async function verificarCodigo() {
             const code = document.getElementById('codigo').value.trim();
-            if(code.length < 6) return alert("Ingresa el código completo de 6 dígitos");
+            const btnVerificar = document.getElementById('btn-verificar');
+            
+            if(code.length < 6) return alert("Ingresa los 6 dígitos");
+            btnVerificar.disabled = true;
 
             try {
                 const res = await fetch(`${API}/api/auth/verificar`, {
@@ -104,22 +101,24 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // Guardamos la sesión de forma segura en el navegador
+                    // --- GUARDADO DE DATOS ---
                     localStorage.setItem('admin_email', data.correo);
                     localStorage.setItem('admin_rol', data.rol);
                     localStorage.setItem('negocio_id', data.negocioId || "");
 
+                    console.log("Login exitoso. Rol:", data.rol); // Para depuración
                     redirigirDinamico(data.rol);
                 } else {
-                    alert(data.mensaje || "Código incorrecto o expirado");
+                    alert(data.mensaje || "Código incorrecto");
+                    btnVerificar.disabled = false;
                 }
             } catch (e) { 
-                alert("Error al verificar el código."); 
+                alert("Error al verificar."); 
+                btnVerificar.disabled = false;
             }
         }
 
         function redirigirDinamico(rol) {
-            // El servidor nos dice qué rol tiene el usuario y lo enviamos a su panel
             const rutas = {
                 'SUPER': 'super-admin.html',
                 'ADMIN': 'panel-dueno.html',
@@ -129,9 +128,10 @@
             const destino = rutas[rol];
 
             if(destino) {
+                console.log("Redirigiendo a:", destino);
                 window.location.href = destino;
             } else {
-                alert("No tienes permisos asignados. Contacta al soporte.");
+                alert("Rol no reconocido: " + rol);
                 location.reload();
             }
         }

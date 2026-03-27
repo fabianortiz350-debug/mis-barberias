@@ -58,7 +58,6 @@ const Cita = mongoose.model('Cita', {
 
 // --- ⚙️ CONFIG BREVO ---
 const apiInstance = new Brevo.TransactionalEmailsApi();
-// Se usa la variable de entorno BREVO_KEY que ya creaste en Render
 apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
 
 // --- 🔐 SISTEMA AUTH 2 PASOS ---
@@ -125,14 +124,39 @@ app.post('/api/auth/verificar', async (req, res) => {
     }
 });
 
-// --- 🏪 RUTAS NEGOCIOS ---
+// --- 🏪 RUTAS NEGOCIOS (CON AUTO-CREACIÓN DE USUARIO) ---
 
 app.post('/api/admin/crear-negocio', async (req, res) => {
+    const { nombre, ubicacion, adminEmail } = req.body;
     try {
-        const nuevoNegocio = new Negocio(req.body);
+        // 1. Guardar el negocio
+        const nuevoNegocio = new Negocio({ nombre, ubicacion, adminEmail });
         await nuevoNegocio.save();
-        res.json({ success: true, negocio: nuevoNegocio });
-    } catch (e) { res.status(500).json({ error: e.message }); }
+
+        // 2. Crear usuario ADMIN automáticamente para este negocio
+        const existeUsuario = await Usuario.findOne({ correo: adminEmail });
+        if (!existeUsuario) {
+            const passwordTemporal = "Barber2026*";
+            const hashedPassword = await bcrypt.hash(passwordTemporal, 10);
+            
+            const nuevoAdmin = new Usuario({
+                correo: adminEmail,
+                password: hashedPassword,
+                rol: 'ADMIN',
+                nombre: `Dueño ${nombre}`,
+                negocioId: nuevoNegocio._id // Vinculación
+            });
+            await nuevoAdmin.save();
+        }
+
+        res.json({ 
+            success: true, 
+            mensaje: "Negocio y Administrador creados con éxito",
+            passwordTemporal: "Barber2026*"
+        });
+    } catch (e) { 
+        res.status(500).json({ error: "Error al crear: " + e.message }); 
+    }
 });
 
 app.get('/api/negocios', async (req, res) => {

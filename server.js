@@ -41,7 +41,7 @@ const Negocio = mongoose.model('Negocio', {
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
-    barbero: String,
+    barbero: String, // Aquí guardaremos el nombre o correo del barbero
     fecha: String,
     hora: String,
     estado: { type: String, enum: ['pendiente', 'confirmada', 'realizada', 'cancelada'], default: 'confirmada' },
@@ -88,14 +88,14 @@ app.post('/api/auth/verificar', async (req, res) => {
         if (user) {
             user.codigoVerificacion = null;
             await user.save();
-            res.json({ success: true, rol: user.rol, correo: user.correo, negocioId: user.negocioId });
+            res.json({ success: true, rol: user.rol, correo: user.correo, negocioId: user.negocioId, nombre: user.nombre });
         } else {
             res.status(401).json({ success: false, mensaje: "Código inválido" });
         }
     } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// --- 🏪 RUTAS NEGOCIOS & ADMIN ---
+// --- 🏪 RUTAS NEGOCIOS & STAFF ---
 
 app.post('/api/admin/crear-negocio', async (req, res) => {
     const { nombre, ubicacion } = req.body;
@@ -121,7 +121,6 @@ app.post('/api/admin/crear-negocio', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// NUEVA RUTA: Registrar Staff
 app.post('/api/admin/registrar-staff', async (req, res) => {
     const { nombre, correo, password, negocioId } = req.body;
     try {
@@ -138,7 +137,6 @@ app.post('/api/admin/registrar-staff', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Error al registrar barbero" }); }
 });
 
-// NUEVA RUTA: Obtener staff por negocio
 app.get('/api/admin/staff/:negocioId', async (req, res) => {
     try {
         const staff = await Usuario.find({ negocioId: req.params.negocioId, rol: 'STAFF' });
@@ -146,7 +144,15 @@ app.get('/api/admin/staff/:negocioId', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Error al obtener equipo" }); }
 });
 
-// Obtener citas por Negocio
+// NUEVA RUTA PARA EMPLEADOS: Obtener citas por nombre de barbero
+app.get('/api/citas/barbero/:nombre', async (req, res) => {
+    try {
+        const citas = await Cita.find({ barbero: req.params.nombre });
+        res.json(citas);
+    } catch (e) { res.status(500).json({ error: "Error al obtener citas" }); }
+});
+
+// Obtener citas por Negocio (Admin)
 app.get('/api/citas/negocio/:id', async (req, res) => {
     try {
         const citas = await Cita.find({ negocioId: req.params.id });

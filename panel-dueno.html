@@ -11,7 +11,8 @@
         .sidebar { width: 250px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; }
         .logo { font-weight: 800; font-size: 22px; margin-bottom: 40px; }
         .logo span { color: var(--accent); }
-        .menu-item { padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .menu-item { padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; color: #aaa; }
+        .menu-item:hover { color: white; }
         .menu-item.active { background: rgba(212, 175, 55, 0.2); color: var(--accent); }
         .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 330px); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
@@ -32,8 +33,9 @@
 
     <div class="sidebar">
         <div class="logo">AGENDATE<span>LIVE</span></div>
-        <div class="menu-item active">📊 Estadísticas</div>
-        <div class="menu-item" onclick="location.href='login.html'" style="margin-top: 50px; color: #ff4d4d;">🚪 Salir</div>
+        <div class="menu-item active" onclick="location.href='panel-dueno.html'">📊 Estadísticas</div>
+        <div class="menu-item" onclick="location.href='gestion-staff.html'">💈 Mi Equipo (Staff)</div>
+        <div class="menu-item" onclick="cerrarSesion()" style="margin-top: 50px; color: var(--danger);">🚪 Salir</div>
     </div>
 
     <div class="main-content">
@@ -60,52 +62,35 @@
                         <th>ACCIONES</th>
                     </tr>
                 </thead>
-                <tbody id="lista-citas-admin">
-                    </tbody>
+                <tbody id="lista-citas-admin"></tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // 1. Configuración Inicial
         const API = "https://mis-barberias.onrender.com";
         
-        // 2. Ejecutar al cargar la página
         window.onload = function() {
-            console.log("Iniciando Panel...");
-            
             const adminEmail = localStorage.getItem('admin_email');
             const negocioId = localStorage.getItem('negocio_id');
             const rol = localStorage.getItem('admin_rol');
 
-            // Verificación de seguridad
             if (!adminEmail || rol !== 'ADMIN') {
-                alert("Sesión no válida. Redirigiendo al login...");
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Mostrar el email
-            const displayEmail = document.getElementById('user-info');
-            if(displayEmail) displayEmail.innerText = adminEmail;
-
-            // Cargar Citas
-            if(negocioId) {
-                cargarCitas(negocioId);
-            } else {
-                console.error("No se encontró ID de negocio");
-            }
+            document.getElementById('user-info').innerText = adminEmail;
+            if(negocioId) cargarCitas(negocioId);
         };
 
         async function cargarCitas(id) {
             try {
                 const res = await fetch(`${API}/api/citas/negocio/${id}`);
                 const citas = await res.json();
-                
                 const tbody = document.getElementById('lista-citas-admin');
-                if(!tbody) return;
-                
                 tbody.innerHTML = "";
+                
                 let hoyCount = 0;
                 const hoyFecha = new Date().toISOString().split('T')[0];
 
@@ -125,10 +110,12 @@
                 document.getElementById('stat-hoy').innerText = hoyCount;
                 document.getElementById('stat-mes').innerText = citas.length;
                 document.getElementById('stat-ingresos').innerText = "$" + (citas.length * 25000).toLocaleString();
+            } catch (error) { console.error(error); }
+        }
 
-            } catch (error) {
-                console.error("Error cargando citas:", error);
-            }
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = 'login.html';
         }
     </script>
 </body>

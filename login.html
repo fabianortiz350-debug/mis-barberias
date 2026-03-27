@@ -34,18 +34,18 @@
         <div id="paso-1">
             <h2>Panel de Gestión</h2>
             <p>Ingresa tus credenciales para recibir tu código de acceso.</p>
-            <input type="email" id="email" placeholder="Correo electrónico" required>
-            <input type="password" id="password" placeholder="Contraseña" required>
+            <input type="email" id="email" placeholder="Correo electrónico" required onkeypress="if(event.key==='Enter') iniciarLogin()">
+            <input type="password" id="password" placeholder="Contraseña" required onkeypress="if(event.key==='Enter') iniciarLogin()">
             <button class="btn-login" id="btn-envio" onclick="iniciarLogin()">Continuar</button>
             <div id="load-1" class="loader">Validando datos y enviando código...</div>
         </div>
 
         <div id="paso-2">
             <h2>Verificar Identidad</h2>
-            <p>Introduce el código de 6 dígitos que enviamos a tu bandeja de entrada.</p>
-            <input type="text" id="codigo" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing: 5px; font-weight: 800; font-size: 24px;">
+            <p>Introduce el código de 6 dígitos que enviamos a tu correo.</p>
+            <input type="text" id="codigo" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing: 5px; font-weight: 800; font-size: 24px;" onkeypress="if(event.key==='Enter') verificarCodigo()">
             <button class="btn-login" style="background: var(--accent);" onclick="verificarCodigo()">Acceder al Panel</button>
-            <p style="margin-top: 20px; font-size: 12px; cursor: pointer;" onclick="location.reload()">¿Error en los datos? Volver</p>
+            <p style="margin-top: 20px; font-size: 12px; cursor: pointer; color: #888;" onclick="location.reload()">¿Error en los datos? Volver</p>
         </div>
     </div>
 
@@ -53,15 +53,18 @@
         const API = "https://mis-barberias.onrender.com";
         let userEmail = "";
 
-        // Función para el primer paso (Login tradicional)
         async function iniciarLogin() {
             userEmail = document.getElementById('email').value.trim();
             const pass = document.getElementById('password').value;
 
             if(!userEmail || !pass) return alert("Completa todos los campos");
+            if(!userEmail.includes("@")) return alert("Ingresa un correo válido");
 
-            document.getElementById('btn-envio').disabled = true;
-            document.getElementById('load-1').style.display = 'block';
+            const btn = document.getElementById('btn-envio');
+            const loader = document.getElementById('load-1');
+
+            btn.disabled = true;
+            loader.style.display = 'block';
 
             try {
                 const res = await fetch(`${API}/api/auth/login`, {
@@ -77,19 +80,19 @@
                     document.getElementById('paso-2').style.display = 'block';
                 } else {
                     alert(data.mensaje || "Credenciales incorrectas");
-                    document.getElementById('btn-envio').disabled = false;
-                    document.getElementById('load-1').style.display = 'none';
+                    btn.disabled = false;
+                    loader.style.display = 'none';
                 }
             } catch (e) { 
-                alert("Error de conexión con el servidor"); 
-                document.getElementById('btn-envio').disabled = false;
+                alert("Error de conexión con el servidor. Revisa tu internet."); 
+                btn.disabled = false;
+                loader.style.display = 'none';
             }
         }
 
-        // Función para el segundo paso (OTP)
         async function verificarCodigo() {
-            const code = document.getElementById('codigo').value;
-            if(!code) return alert("Ingresa el código");
+            const code = document.getElementById('codigo').value.trim();
+            if(code.length < 6) return alert("Ingresa el código completo de 6 dígitos");
 
             try {
                 const res = await fetch(`${API}/api/auth/verificar`, {
@@ -101,33 +104,35 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // Guardamos la sesión
+                    // Guardamos la sesión de forma segura en el navegador
                     localStorage.setItem('admin_email', data.correo);
                     localStorage.setItem('admin_rol', data.rol);
-                    localStorage.setItem('negocio_id', data.negocioId);
+                    localStorage.setItem('negocio_id', data.negocioId || "");
 
                     redirigirDinamico(data.rol);
                 } else {
-                    alert(data.mensaje || "Código incorrecto");
+                    alert(data.mensaje || "Código incorrecto o expirado");
                 }
-            } catch (e) { alert("Error al verificar"); }
+            } catch (e) { 
+                alert("Error al verificar el código."); 
+            }
         }
 
-        // Redirección inteligente basada en el rol del backend
         function redirigirDinamico(rol) {
-            switch(rol) {
-                case 'SUPER':
-                    window.location.href = 'super-admin.html';
-                    break;
-                case 'ADMIN':
-                    window.location.href = 'panel-dueno.html';
-                    break;
-                case 'STAFF':
-                    window.location.href = 'panel-empleado.html';
-                    break;
-                default:
-                    alert("No tienes permisos asignados. Contacta al soporte.");
-                    location.reload();
+            // El servidor nos dice qué rol tiene el usuario y lo enviamos a su panel
+            const rutas = {
+                'SUPER': 'super-admin.html',
+                'ADMIN': 'panel-dueno.html',
+                'STAFF': 'panel-empleado.html'
+            };
+
+            const destino = rutas[rol];
+
+            if(destino) {
+                window.location.href = destino;
+            } else {
+                alert("No tienes permisos asignados. Contacta al soporte.");
+                location.reload();
             }
         }
     </script>

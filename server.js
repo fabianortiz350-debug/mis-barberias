@@ -57,10 +57,11 @@ const Cita = mongoose.model('Cita', {
 });
 
 // --- ⚙️ CONFIG BREVO ---
-const defaultClient = Brevo.ApiClient.instance;
-let apiKey = defaultClient.authentications['api-key'];
-// ⚠️ RECUERDA: En Render, añade una Variable de Entorno llamada BREVO_KEY
-apiKey.apiKey = process.env.BREVO_KEY || 'TU_API_KEY_DE_BREVO_AQUI'; 
+// Borra las líneas que daban error y usa estas:
+const apiInstance = new Brevo.TransactionalEmailsApi();
+
+// Así se pone la API KEY de forma segura
+apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
 
 const apiInstance = new Brevo.TransactionalEmailsApi();
 

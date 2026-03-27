@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Servir archivos estáticos (HTML, CSS, JS del navegador)
+// ✅ Servir archivos estáticos
 app.use(express.static(path.join(__dirname))); 
 
 // ✅ Ruta principal
@@ -63,7 +63,10 @@ apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BR
 // --- 🔐 SISTEMA AUTH 2 PASOS ---
 
 app.post('/api/auth/login', async (req, res) => {
-    const { correo, password } = req.body;
+    // 1. Limpiamos el correo de espacios y lo pasamos a minúsculas
+    const correo = req.body.correo.trim().toLowerCase();
+    const { password } = req.body;
+
     try {
         const user = await Usuario.findOne({ correo });
         if (!user) return res.status(404).json({ mensaje: "Este correo no está registrado" });
@@ -81,15 +84,14 @@ app.post('/api/auth/login', async (req, res) => {
         sendEmail.htmlContent = `
             <div style="font-family: sans-serif; text-align: center; padding: 20px;">
                 <h2>Verificación Agendate Live</h2>
-                <p>Usa este código para ingresar al panel:</p>
-                <h1 style="color: #d4af37; letter-spacing: 5px;">${codigo}</h1>
+                <p>Tu código es: <b style="font-size: 24px; color: #d4af37;">${codigo}</b></p>
                 <p>Expira en 10 minutos.</p>
             </div>`;
         sendEmail.sender = { name: "Agendate Live", email: "fabianortiz350@gmail.com" };
         sendEmail.to = [{ email: correo }];
         
         await apiInstance.sendTransacEmail(sendEmail);
-        res.json({ success: true, mensaje: "Código enviado al correo" });
+        res.json({ success: true, mensaje: "Código enviado" });
 
     } catch (e) { 
         console.error("Error en Login:", e);
@@ -98,7 +100,8 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.post('/api/auth/verificar', async (req, res) => {
-    const { correo, codigo } = req.body;
+    const correo = req.body.correo.trim().toLowerCase();
+    const { codigo } = req.body;
     try {
         const user = await Usuario.findOne({ 
             correo, 
@@ -127,27 +130,31 @@ app.post('/api/auth/verificar', async (req, res) => {
 // --- 🏪 RUTAS NEGOCIOS (CON AUTO-CREACIÓN DE USUARIO) ---
 
 app.post('/api/admin/crear-negocio', async (req, res) => {
-    const { nombre, ubicacion, adminEmail } = req.body;
+    const { nombre, ubicacion } = req.body;
+    // Limpieza de datos
+    const adminEmail = req.body.adminEmail.trim().toLowerCase();
+
     try {
-        // 1. Guardar el negocio
+        // 1. Verificar si el usuario ya existe para no duplicar
+        const existeUsuario = await Usuario.findOne({ correo: adminEmail });
+        if (existeUsuario) return res.status(400).json({ error: "Este correo ya está registrado como administrador." });
+
+        // 2. Guardar el negocio
         const nuevoNegocio = new Negocio({ nombre, ubicacion, adminEmail });
         await nuevoNegocio.save();
 
-        // 2. Crear usuario ADMIN automáticamente para este negocio
-        const existeUsuario = await Usuario.findOne({ correo: adminEmail });
-        if (!existeUsuario) {
-            const passwordTemporal = "Barber2026*";
-            const hashedPassword = await bcrypt.hash(passwordTemporal, 10);
-            
-            const nuevoAdmin = new Usuario({
-                correo: adminEmail,
-                password: hashedPassword,
-                rol: 'ADMIN',
-                nombre: `Dueño ${nombre}`,
-                negocioId: nuevoNegocio._id // Vinculación
-            });
-            await nuevoAdmin.save();
-        }
+        // 3. Crear usuario ADMIN
+        const passwordTemporal = "Barber2026*";
+        const hashedPassword = await bcrypt.hash(passwordTemporal, 10);
+        
+        const nuevoAdmin = new Usuario({
+            correo: adminEmail,
+            password: hashedPassword,
+            rol: 'ADMIN',
+            nombre: `Dueño ${nombre}`,
+            negocioId: nuevoNegocio._id.toString()
+        });
+        await nuevoAdmin.save();
 
         res.json({ 
             success: true, 
@@ -168,7 +175,8 @@ app.get('/api/negocios', async (req, res) => {
 
 // --- 🚀 REGISTRO INTERNO ---
 app.post('/api/auth/registrar-interno', async (req, res) => {
-    const { correo, password, rol, nombre } = req.body;
+    const correo = req.body.correo.trim().toLowerCase();
+    const { password, rol, nombre } = req.body;
     try {
         const existe = await Usuario.findOne({ correo });
         if (existe) return res.status(400).json({ error: "El usuario ya existe" });

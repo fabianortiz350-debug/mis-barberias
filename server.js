@@ -8,11 +8,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// ✅ Servir archivos estáticos
 app.use(express.static(path.join(__dirname))); 
 
-// ✅ Ruta principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -20,8 +17,8 @@ app.get('/', (req, res) => {
 // --- 🔌 CONEXIÓN MONGO ---
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
 mongoose.connect(mongoURI)
-    .then(() => console.log("✅ DB Conectada con éxito"))
-    .catch(e => console.log("❌ Error fatal en DB:", e));
+    .then(() => console.log("✅ DB Conectada"))
+    .catch(e => console.log("❌ Error DB:", e));
 
 // --- 🏗️ MODELOS ---
 const Usuario = mongoose.model('Usuario', {
@@ -36,10 +33,7 @@ const Usuario = mongoose.model('Usuario', {
 
 const Negocio = mongoose.model('Negocio', {
     nombre: String,
-    categoria: String,
-    img: String,
     ubicacion: String,
-    intervalo: { type: Number, default: 60 },
     adminEmail: String,
     creadoEn: { type: Date, default: Date.now }
 });
@@ -47,12 +41,10 @@ const Negocio = mongoose.model('Negocio', {
 const Cita = mongoose.model('Cita', {
     clienteNombre: String,
     clienteTelefono: String,
-    clienteEmail: String,
     barbero: String,
     fecha: String,
     hora: String,
     estado: { type: String, enum: ['pendiente', 'confirmada', 'realizada', 'cancelada'], default: 'confirmada' },
-    reservaId: String,
     negocioId: String
 });
 
@@ -60,19 +52,17 @@ const Cita = mongoose.model('Cita', {
 const apiInstance = new Brevo.TransactionalEmailsApi();
 apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
 
-// --- 🔐 SISTEMA AUTH 2 PASOS ---
+// --- 🔐 SISTEMA AUTH ---
 
 app.post('/api/auth/login', async (req, res) => {
-    // 1. Limpiamos el correo de espacios y lo pasamos a minúsculas
     const correo = req.body.correo.trim().toLowerCase();
     const { password } = req.body;
-
     try {
         const user = await Usuario.findOne({ correo });
-        if (!user) return res.status(404).json({ mensaje: "Este correo no está registrado" });
+        if (!user) return res.status(404).json({ mensaje: "Correo no registrado" });
 
         const passValida = await bcrypt.compare(password, user.password);
-        if (!passValida) return res.status(401).json({ mensaje: "La contraseña es incorrecta" });
+        if (!passValida) return res.status(401).json({ mensaje: "Contraseña incorrecta" });
 
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         user.codigoVerificacion = codigo;
@@ -80,73 +70,44 @@ app.post('/api/auth/login', async (req, res) => {
         await user.save();
 
         let sendEmail = new Brevo.SendSmtpEmail();
-        sendEmail.subject = `Tu código de acceso: ${codigo}`;
-        sendEmail.htmlContent = `
-            <div style="font-family: sans-serif; text-align: center; padding: 20px;">
-                <h2>Verificación Agendate Live</h2>
-                <p>Tu código es: <b style="font-size: 24px; color: #d4af37;">${codigo}</b></p>
-                <p>Expira en 10 minutos.</p>
-            </div>`;
+        sendEmail.subject = `Tu código: ${codigo}`;
+        sendEmail.htmlContent = `<h2>Código de acceso: ${codigo}</h2>`;
         sendEmail.sender = { name: "Agendate Live", email: "fabianortiz350@gmail.com" };
         sendEmail.to = [{ email: correo }];
         
         await apiInstance.sendTransacEmail(sendEmail);
         res.json({ success: true, mensaje: "Código enviado" });
-
-    } catch (e) { 
-        console.error("Error en Login:", e);
-        res.status(500).json({ error: "Error al procesar el login" }); 
-    }
+    } catch (e) { res.status(500).json({ error: "Error en login" }); }
 });
 
 app.post('/api/auth/verificar', async (req, res) => {
     const correo = req.body.correo.trim().toLowerCase();
     const { codigo } = req.body;
     try {
-        const user = await Usuario.findOne({ 
-            correo, 
-            codigoVerificacion: codigo, 
-            fechaExpiracion: { $gt: new Date() } 
-        });
-
+        const user = await Usuario.findOne({ correo, codigoVerificacion: codigo, fechaExpiracion: { $gt: new Date() } });
         if (user) {
             user.codigoVerificacion = null;
             await user.save();
-            res.json({ 
-                success: true, 
-                rol: user.rol, 
-                nombre: user.nombre, 
-                correo: user.correo,
-                negocioId: user.negocioId 
-            });
+            res.json({ success: true, rol: user.rol, correo: user.correo, negocioId: user.negocioId });
         } else {
-            res.status(401).json({ success: false, mensaje: "Código inválido o expirado" });
+            res.status(401).json({ success: false, mensaje: "Código inválido" });
         }
-    } catch (e) {
-        res.status(500).json({ error: "Error al verificar" });
-    }
+    } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// --- 🏪 RUTAS NEGOCIOS (CON AUTO-CREACIÓN DE USUARIO) ---
+// --- 🏪 RUTAS NEGOCIOS ---
 
 app.post('/api/admin/crear-negocio', async (req, res) => {
     const { nombre, ubicacion } = req.body;
-    // Limpieza de datos
     const adminEmail = req.body.adminEmail.trim().toLowerCase();
-
     try {
-        // 1. Verificar si el usuario ya existe para no duplicar
-        const existeUsuario = await Usuario.findOne({ correo: adminEmail });
-        if (existeUsuario) return res.status(400).json({ error: "Este correo ya está registrado como administrador." });
+        const existe = await Usuario.findOne({ correo: adminEmail });
+        if (existe) return res.status(400).json({ error: "El correo ya existe" });
 
-        // 2. Guardar el negocio
         const nuevoNegocio = new Negocio({ nombre, ubicacion, adminEmail });
         await nuevoNegocio.save();
 
-        // 3. Crear usuario ADMIN
-        const passwordTemporal = "Barber2026*";
-        const hashedPassword = await bcrypt.hash(passwordTemporal, 10);
-        
+        const hashedPassword = await bcrypt.hash("Barber2026*", 10);
         const nuevoAdmin = new Usuario({
             correo: adminEmail,
             password: hashedPassword,
@@ -156,39 +117,17 @@ app.post('/api/admin/crear-negocio', async (req, res) => {
         });
         await nuevoAdmin.save();
 
-        res.json({ 
-            success: true, 
-            mensaje: "Negocio y Administrador creados con éxito",
-            passwordTemporal: "Barber2026*"
-        });
-    } catch (e) { 
-        res.status(500).json({ error: "Error al crear: " + e.message }); 
-    }
-});
-
-app.get('/api/negocios', async (req, res) => {
-    try {
-        const negocios = await Negocio.find();
-        res.json(negocios);
+        res.json({ success: true, passwordTemporal: "Barber2026*" });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- 🚀 REGISTRO INTERNO ---
-app.post('/api/auth/registrar-interno', async (req, res) => {
-    const correo = req.body.correo.trim().toLowerCase();
-    const { password, rol, nombre } = req.body;
+// NUEVA RUTA: Obtener citas por Negocio (Para el panel del dueño)
+app.get('/api/citas/negocio/:id', async (req, res) => {
     try {
-        const existe = await Usuario.findOne({ correo });
-        if (existe) return res.status(400).json({ error: "El usuario ya existe" });
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const nuevoUser = new Usuario({ correo, password: hashedPassword, rol: rol || 'ADMIN', nombre });
-        await nuevoUser.save();
-        res.json({ success: true, mensaje: "Usuario creado correctamente" });
-    } catch (e) { 
-        res.status(500).json({ error: "Error en el registro" }); 
-    }
+        const citas = await Cita.find({ negocioId: req.params.id });
+        res.json(citas);
+    } catch (e) { res.status(500).json({ error: "Error al obtener citas" }); }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));

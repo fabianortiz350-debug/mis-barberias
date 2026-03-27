@@ -23,7 +23,7 @@ mongoose.connect(mongoURI)
     .then(() => console.log("✅ DB Conectada con éxito"))
     .catch(e => console.log("❌ Error fatal en DB:", e));
 
-// --- 🏗️ MODELOS (Sin cambios, están perfectos) ---
+// --- 🏗️ MODELOS ---
 const Usuario = mongoose.model('Usuario', {
     correo: { type: String, unique: true, required: true },
     password: { type: String, required: true },
@@ -57,13 +57,9 @@ const Cita = mongoose.model('Cita', {
 });
 
 // --- ⚙️ CONFIG BREVO ---
-// Borra las líneas que daban error y usa estas:
 const apiInstance = new Brevo.TransactionalEmailsApi();
-
-// Así se pone la API KEY de forma segura
+// Se usa la variable de entorno BREVO_KEY que ya creaste en Render
 apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
-
-const apiInstance = new Brevo.TransactionalEmailsApi();
 
 // --- 🔐 SISTEMA AUTH 2 PASOS ---
 
@@ -76,13 +72,11 @@ app.post('/api/auth/login', async (req, res) => {
         const passValida = await bcrypt.compare(password, user.password);
         if (!passValida) return res.status(401).json({ mensaje: "La contraseña es incorrecta" });
 
-        // Generar código de 6 dígitos
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         user.codigoVerificacion = codigo;
-        user.fechaExpiracion = new Date(Date.now() + 10 * 60000); // 10 min
+        user.fechaExpiracion = new Date(Date.now() + 10 * 60000); 
         await user.save();
 
-        // Configurar el email
         let sendEmail = new Brevo.SendSmtpEmail();
         sendEmail.subject = `Tu código de acceso: ${codigo}`;
         sendEmail.htmlContent = `
@@ -100,7 +94,7 @@ app.post('/api/auth/login', async (req, res) => {
 
     } catch (e) { 
         console.error("Error en Login:", e);
-        res.status(500).json({ error: "No se pudo enviar el correo. Revisa tu configuración de Brevo." }); 
+        res.status(500).json({ error: "Error al procesar el login" }); 
     }
 });
 
@@ -114,7 +108,7 @@ app.post('/api/auth/verificar', async (req, res) => {
         });
 
         if (user) {
-            user.codigoVerificacion = null; // Limpiar código tras éxito
+            user.codigoVerificacion = null;
             await user.save();
             res.json({ 
                 success: true, 
@@ -131,7 +125,24 @@ app.post('/api/auth/verificar', async (req, res) => {
     }
 });
 
-// --- 🚀 REGISTRO INTERNO (Para crear tu primer SUPER ADMIN) ---
+// --- 🏪 RUTAS NEGOCIOS ---
+
+app.post('/api/admin/crear-negocio', async (req, res) => {
+    try {
+        const nuevoNegocio = new Negocio(req.body);
+        await nuevoNegocio.save();
+        res.json({ success: true, negocio: nuevoNegocio });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/negocios', async (req, res) => {
+    try {
+        const negocios = await Negocio.find();
+        res.json(negocios);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- 🚀 REGISTRO INTERNO ---
 app.post('/api/auth/registrar-interno', async (req, res) => {
     const { correo, password, rol, nombre } = req.body;
     try {
@@ -143,11 +154,9 @@ app.post('/api/auth/registrar-interno', async (req, res) => {
         await nuevoUser.save();
         res.json({ success: true, mensaje: "Usuario creado correctamente" });
     } catch (e) { 
-        res.status(500).json({ error: "Error en el registro: " + e.message }); 
+        res.status(500).json({ error: "Error en el registro" }); 
     }
 });
 
-// (Aquí irían el resto de tus rutas de citas y negocios que ya tienes)
-
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Servidor activo en puerto ${PORT}`));

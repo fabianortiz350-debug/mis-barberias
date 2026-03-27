@@ -95,7 +95,7 @@ app.post('/api/auth/verificar', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// --- 🏪 RUTAS NEGOCIOS ---
+// --- 🏪 RUTAS NEGOCIOS & ADMIN ---
 
 app.post('/api/admin/crear-negocio', async (req, res) => {
     const { nombre, ubicacion } = req.body;
@@ -121,7 +121,32 @@ app.post('/api/admin/crear-negocio', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// NUEVA RUTA: Obtener citas por Negocio (Para el panel del dueño)
+// NUEVA RUTA: Registrar Staff
+app.post('/api/admin/registrar-staff', async (req, res) => {
+    const { nombre, correo, password, negocioId } = req.body;
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const nuevoStaff = new Usuario({
+            nombre,
+            correo: correo.trim().toLowerCase(),
+            password: hashedPassword,
+            rol: 'STAFF',
+            negocioId
+        });
+        await nuevoStaff.save();
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: "Error al registrar barbero" }); }
+});
+
+// NUEVA RUTA: Obtener staff por negocio
+app.get('/api/admin/staff/:negocioId', async (req, res) => {
+    try {
+        const staff = await Usuario.find({ negocioId: req.params.negocioId, rol: 'STAFF' });
+        res.json(staff);
+    } catch (e) { res.status(500).json({ error: "Error al obtener equipo" }); }
+});
+
+// Obtener citas por Negocio
 app.get('/api/citas/negocio/:id', async (req, res) => {
     try {
         const citas = await Cita.find({ negocioId: req.params.id });

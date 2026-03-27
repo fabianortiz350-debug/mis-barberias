@@ -101,12 +101,14 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // --- GUARDADO DE DATOS ---
+                    // --- GUARDADO DE DATOS (CORREGIDO PARA STAFF) ---
                     localStorage.setItem('admin_email', data.correo);
                     localStorage.setItem('admin_rol', data.rol);
                     localStorage.setItem('negocio_id', data.negocioId || "");
+                    // Importante: Guardamos el nombre para que el barbero vea sus citas
+                    localStorage.setItem('usuario_nombre', data.nombre || ""); 
 
-                    console.log("Login exitoso. Rol:", data.rol); // Para depuración
+                    console.log("Login exitoso. Rol:", data.rol);
                     redirigirDinamico(data.rol);
                 } else {
                     alert(data.mensaje || "Código incorrecto");

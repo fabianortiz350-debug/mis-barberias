@@ -1,50 +1,81 @@
 <script>
     const API = "https://mis-barberias.onrender.com";
     
-    // Leemos exactamente lo que tu login guarda en localStorage
+    // 1. Recuperar datos de sesión
     const adminEmail = localStorage.getItem('admin_email');
-    const negocioId = localStorage.getItem('negocio_id'); // Coincide con login.html
+    const negocioId = localStorage.getItem('negocio_id');
     const rol = localStorage.getItem('admin_rol');
 
-    // Seguridad
-    if(!adminEmail || rol !== 'ADMIN') window.location.href = 'login.html';
-    
-    document.getElementById('user-info').innerText = adminEmail;
+    // 2. Seguridad inmediata: Si no hay sesión o no es ADMIN, redirigir
+    if (!adminEmail || rol !== 'ADMIN') {
+        window.location.href = 'login.html';
+    }
+
+    // 3. Ejecutar cuando el HTML esté totalmente cargado
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log("Panel cargado para el negocio:", negocioId);
+        
+        // Mostrar el email del admin con protección de error
+        const userInfoElem = document.getElementById('user-info');
+        if (userInfoElem) {
+            userInfoElem.innerText = adminEmail;
+        }
+
+        // Cargar las citas inicialmente
+        cargarCitasGlobales();
+    });
 
     async function cargarCitasGlobales() {
-        if(!negocioId) return console.error("No hay ID de negocio");
+        if (!negocioId) {
+            console.error("No se encontró el ID del negocio en el almacenamiento local.");
+            return;
+        }
         
         try {
-            // Usamos la nueva ruta que creamos en server.js
             const res = await fetch(`${API}/api/citas/negocio/${negocioId}`); 
+            if (!res.ok) throw new Error("Error en la respuesta del servidor");
+            
             const citas = await res.json();
             
             const tbody = document.getElementById('lista-citas-admin');
+            if (!tbody) return; // Seguridad por si el elemento no existe
+
             tbody.innerHTML = "";
             
             let hoyCount = 0;
             const hoyFecha = new Date().toISOString().split('T')[0];
 
             citas.forEach(cita => {
-                if(cita.fecha === hoyFecha) hoyCount++;
+                if (cita.fecha === hoyFecha) hoyCount++;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${cita.clienteNombre}</td>
+                    <td>${cita.clienteNombre || 'Cliente'}</td>
                     <td>${cita.barbero || 'Sin asignar'}</td>
                     <td>${cita.fecha}<br><small>${cita.hora}</small></td>
-                    <td><span class="badge badge-${cita.estado}">${cita.estado}</span></td>
+                    <td><span class="badge badge-${cita.estado || 'confirmada'}">${cita.estado || 'confirmada'}</span></td>
                     <td>
-                        <button class="btn-action btn-edit" onclick="alert('Próximamente...')">✏️</button>
+                        <button class="btn-action btn-edit" onclick="alert('ID de cita: ${cita._id}')">✏️</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('stat-hoy').innerText = hoyCount;
-            document.getElementById('stat-mes').innerText = citas.length;
-            document.getElementById('stat-ingresos').innerText = "$" + (citas.filter(c => c.estado === 'confirmada').length * 25000).toLocaleString();
+            // Actualizar estadísticas con protección
+            actualizarEstadistica('stat-hoy', hoyCount);
+            actualizarEstadistica('stat-mes', citas.length);
+            
+            const ingresos = citas.filter(c => c.estado === 'confirmada').length * 25000;
+            actualizarEstadistica('stat-ingresos', "$" + ingresos.toLocaleString());
 
-        } catch (e) { console.error("Error cargando citas", e); }
+        } catch (e) { 
+            console.error("Error cargando citas:", e); 
+        }
+    }
+
+    // Función auxiliar para evitar errores de 'innerText'
+    function actualizarEstadistica(id, valor) {
+        const elem = document.getElementById(id);
+        if (elem) elem.innerText = valor;
     }
 </script>

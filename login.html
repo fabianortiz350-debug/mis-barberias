@@ -29,7 +29,6 @@
             width: 100%; 
             max-width: 400px; 
             text-align: center; 
-            transition: transform 0.3s ease;
         }
         .logo { 
             font-weight: 800; 
@@ -39,13 +38,10 @@
             letter-spacing: -1px;
         }
         .logo span { color: var(--accent); }
-        
         h2 { font-weight: 800; font-size: 22px; margin-bottom: 8px; color: #333; }
         p { color: #777; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
-        
         .input-group { margin-bottom: 15px; text-align: left; }
         label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #555; text-transform: uppercase; }
-        
         input { 
             width: 100%; 
             padding: 14px; 
@@ -57,12 +53,7 @@
             font-family: inherit; 
             transition: all 0.3s; 
         }
-        input:focus { 
-            border-color: var(--accent); 
-            background-color: #fff;
-            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); 
-        }
-        
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); }
         .btn-login { 
             width: 100%; 
             background: var(--primary); 
@@ -76,28 +67,11 @@
             font-size: 16px; 
             margin-top: 10px;
         }
-        .btn-login:hover { 
-            background: #000; 
-            transform: translateY(-2px); 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .btn-login:disabled { background: #ccc; cursor: not-allowed; transform: none; }
-
+        .btn-login:hover { background: #000; transform: translateY(-2px); }
+        .btn-login:disabled { background: #ccc; cursor: not-allowed; }
         #paso-2 { display: none; }
-        .loader { 
-            display: none; 
-            color: var(--accent); 
-            margin-top: 15px; 
-            font-size: 13px; 
-            font-weight: 600; 
-        }
-        .resend-link { 
-            margin-top: 25px; 
-            font-size: 13px; 
-            cursor: pointer; 
-            color: #888; 
-            text-decoration: underline;
-        }
+        .loader { display: none; color: var(--accent); margin-top: 15px; font-size: 13px; font-weight: 600; }
+        .resend-link { margin-top: 25px; font-size: 13px; cursor: pointer; color: #888; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -107,16 +81,16 @@
         
         <div id="paso-1">
             <h2>Bienvenido</h2>
-            <p>Gestiona tu negocio de forma profesional. Ingresa para recibir tu código.</p>
+            <p>Ingresa tus credenciales para recibir tu código de acceso.</p>
             
             <div class="input-group">
                 <label>Email</label>
-                <input type="email" id="email" placeholder="ejemplo@correo.com" required onkeypress="if(event.key==='Enter') iniciarLogin()">
+                <input type="email" id="email" placeholder="ejemplo@correo.com" required>
             </div>
             
             <div class="input-group">
                 <label>Contraseña</label>
-                <input type="password" id="password" placeholder="••••••••" required onkeypress="if(event.key==='Enter') iniciarLogin()">
+                <input type="password" id="password" placeholder="••••••••" required>
             </div>
 
             <button class="btn-login" id="btn-envio" onclick="iniciarLogin()">Obtener Código</button>
@@ -125,34 +99,25 @@
 
         <div id="paso-2">
             <h2>Verifica tu cuenta</h2>
-            <p>Hemos enviado un código de seguridad a tu correo electrónico.</p>
+            <p>Introduce el código enviado a tu correo.</p>
             
             <input type="text" id="codigo" placeholder="000000" maxlength="6" 
-                   style="text-align:center; letter-spacing: 8px; font-weight: 800; font-size: 28px;" 
-                   onkeypress="if(event.key==='Enter') verificarCodigo()">
+                   style="text-align:center; letter-spacing: 8px; font-weight: 800; font-size: 28px;">
             
             <button class="btn-login" id="btn-verificar" style="background: var(--accent);" onclick="verificarCodigo()">Confirmar Acceso</button>
-            
             <div class="resend-link" onclick="location.reload()">¿No recibiste nada? Reintentar</div>
         </div>
     </div>
 
     <script>
-        // Cambia esta URL a tu dominio de Render cuando despliegues
-        const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
-                    ? "http://localhost:10000" 
-                    : "https://mis-barberias.onrender.com";
-
-        let userEmail = "";
-
-        // Limpiar sesión al cargar
-        localStorage.clear();
+        const API = "https://mis-barberias.onrender.com";
+        let userEmailTemp = "";
 
         async function iniciarLogin() {
-            userEmail = document.getElementById('email').value.trim().toLowerCase();
-            const pass = document.getElementById('password').value;
+            const emailInput = document.getElementById('email').value.trim().toLowerCase();
+            const passInput = document.getElementById('password').value;
 
-            if(!userEmail || !pass) return alert("Por favor, completa todos los campos.");
+            if(!emailInput || !passInput) return alert("Completa todos los campos.");
 
             const btn = document.getElementById('btn-envio');
             const loader = document.getElementById('load-1');
@@ -164,21 +129,21 @@
                 const res = await fetch(`${API}/api/auth/login`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ correo: userEmail, password: pass })
+                    body: JSON.stringify({ correo: emailInput, password: passInput })
                 });
 
                 const data = await res.json();
 
                 if(res.ok) {
+                    userEmailTemp = emailInput; // Guardamos el email temporalmente
                     document.getElementById('paso-1').style.display = 'none';
                     document.getElementById('paso-2').style.display = 'block';
                 } else {
                     alert(data.mensaje || "Credenciales incorrectas");
-                    btn.disabled = false;
-                    loader.style.display = 'none';
                 }
             } catch (e) { 
-                alert("Error de conexión. Verifica que el servidor esté activo."); 
+                alert("Error de conexión con el servidor."); 
+            } finally {
                 btn.disabled = false;
                 loader.style.display = 'none';
             }
@@ -197,26 +162,27 @@
                 const res = await fetch(`${API}/api/auth/verificar`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ correo: userEmail, codigo: code })
+                    body: JSON.stringify({ correo: userEmailTemp, codigo: code })
                 });
 
                 const data = await res.json();
                 
                 if(data.success) {
-                    // Guardado profesional de datos de sesión
+                    // ESTANDARIZACIÓN TOTAL DE LOCALSTORAGE
                     localStorage.setItem('user_email', data.correo);
                     localStorage.setItem('user_rol', data.rol);
                     localStorage.setItem('negocio_id', data.negocioId || "");
                     localStorage.setItem('user_nombre', data.nombre || ""); 
 
+                    // Redirigir según el rol que devuelve el servidor
                     redirigirDinamico(data.rol);
                 } else {
-                    alert(data.mensaje || "Código inválido o expirado.");
+                    alert(data.mensaje || "Código incorrecto.");
                     btnVerificar.disabled = false;
                     btnVerificar.innerText = "Confirmar Acceso";
                 }
             } catch (e) { 
-                alert("Error en el proceso de verificación."); 
+                alert("Error en la verificación.");
                 btnVerificar.disabled = false;
             }
         }
@@ -229,12 +195,10 @@
             };
 
             const destino = rutas[rol];
-
             if(destino) {
                 window.location.href = destino;
             } else {
-                alert("Error de permisos: Rol no asignado.");
-                location.reload();
+                alert("Rol desconocido: " + rol);
             }
         }
     </script>

@@ -6,7 +6,7 @@
     <title>Super Admin | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --blue: #3498db; --danger: #e74c3c; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --blue: #3498db; --danger: #e74c3c; --green: #27ae60; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; }
         
         .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 30px 20px; position: fixed; box-sizing: border-box; }
@@ -28,9 +28,13 @@
 
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
         
-        .btn-add { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 10px; transition: 0.3s; }
-        .btn-add:hover { opacity: 0.9; transform: translateY(-2px); }
+        /* Botones Diferenciados */
+        .btn-base { border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 10px; transition: 0.3s; padding: 14px 25px; color: white; }
+        .btn-base:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .btn-gold { background: var(--accent); color: var(--primary); }
         .btn-blue { background: var(--blue); }
+        .btn-dark { background: var(--primary); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
@@ -49,33 +53,33 @@
 
     <div class="sidebar">
         <h2>AGENDATE<span>LIVE</span></h2>
-        <div class="nav-item active">🏢 Panel Maestro</div>
-        <div class="nav-item" onclick="cerrarSesion()" style="margin-top: 40px; color: #ff4d4d;">🚪 Cerrar Sesión</div>
+        <div class="nav-item active">🏢 Panel Principal</div>
+        <div class="nav-item" onclick="cerrarSesion()" style="margin-top: 40px; color: #ff4d4d;">🚪 Salir del Sistema</div>
     </div>
 
     <div class="main-content">
         <div class="header">
             <div>
                 <h1 style="margin:0; font-weight: 800;">Control Central de Operaciones</h1>
-                <p id="admin-info" style="color: #888; margin-top: 5px;">Sincronizando con la red...</p>
+                <p id="admin-info" style="color: #888; margin-top: 5px;">Sincronizando datos...</p>
             </div>
         </div>
 
         <div class="grid">
             <div class="stat-card">
                 <h3 id="count-negocios">0</h3>
-                <p>Negocios Registrados</p>
+                <p>Negocios Inscritos</p>
             </div>
             <div class="stat-card">
                 <h3 id="count-usuarios">0</h3>
-                <p>Usuarios en el Sistema</p>
+                <p>Usuarios Registrados</p>
             </div>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
             <div class="card">
-                <h3 style="margin-top:0; font-weight: 800;">Registrar Negocio</h3>
-                <input type="text" id="neg-nombre" placeholder="Nombre comercial">
+                <h3 style="margin-top:0; font-weight: 800;">Registrar Nuevo Negocio</h3>
+                <input type="text" id="neg-nombre" placeholder="Nombre del negocio">
                 <select id="neg-categoria">
                     <option value="Barberia">Barbería</option>
                     <option value="Spa">Spa & Estética</option>
@@ -86,35 +90,35 @@
                     <option value="Automotriz">Automotriz</option>
                     <option value="Otros">Otros</option>
                 </select>
-                <input type="text" id="neg-ubicacion" placeholder="Ubicación / Ciudad">
-                <input type="email" id="neg-admin-mail" placeholder="Email del Dueño Responsable">
-                <button class="btn-add" onclick="crearNegocio()">+ Dar de Alta Negocio</button>
+                <input type="text" id="neg-ubicacion" placeholder="Ciudad / Sede">
+                <input type="email" id="neg-admin-mail" placeholder="Correo del Dueño">
+                <button class="btn-base btn-dark" onclick="crearNegocio()">+ Vincular Negocio</button>
             </div>
 
             <div class="card" style="border-left: 5px solid var(--blue);">
-                <h3 style="margin-top:0; font-weight: 800;">Registrar Acceso</h3>
-                <input type="text" id="user-nombre" placeholder="Nombre completo">
-                <input type="email" id="user-email" placeholder="Correo electrónico de acceso">
+                <h3 style="margin-top:0; font-weight: 800;">Crear Acceso de Usuario</h3>
+                <input type="text" id="user-nombre" placeholder="Nombre del usuario">
+                <input type="email" id="user-email" placeholder="Correo de ingreso">
                 <select id="user-rol">
-                    <option value="ADMIN">Dueño (ADMIN)</option>
-                    <option value="STAFF">Empleado (STAFF)</option>
+                    <option value="ADMIN">Dueño del Local (ADMIN)</option>
+                    <option value="STAFF">Colaborador (STAFF)</option>
                 </select>
                 <select id="user-negocio-select">
-                    <option value="">Vincular a Negocio...</option>
+                    <option value="">Asignar a un Negocio...</option>
                 </select>
-                <button class="btn-add btn-blue" onclick="crearUsuario()">+ Crear Credenciales</button>
+                <button class="btn-base btn-blue" onclick="crearUsuario()">+ Generar Credenciales</button>
             </div>
         </div>
 
         <div class="card">
-            <h3 style="margin-top:0; font-weight: 800;">Directorio de Negocios</h3>
+            <h3 style="margin-top:0; font-weight: 800;">Listado de Negocios</h3>
             <table>
                 <thead>
                     <tr>
-                        <th>Nombre</th>
-                        <th>Categoría</th>
-                        <th>Ubicación</th>
-                        <th>Admin Principal</th>
+                        <th>Nombre Comercial</th>
+                        <th>Tipo de Servicio</th>
+                        <th>Ciudad / Sede</th>
+                        <th>Dueño Encargado</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
@@ -123,14 +127,14 @@
         </div>
 
         <div class="card" style="border-top: 5px solid var(--accent);">
-            <h3 style="margin-top:0; font-weight: 800;">Gestión de Usuarios Globales</h3>
+            <h3 style="margin-top:0; font-weight: 800;">Administración de Usuarios</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Rol</th>
-                        <th>Negocio Asignado</th>
+                        <th>Correo</th>
+                        <th>Cargo / Rol</th>
+                        <th>Negocio Vinculado</th>
                         <th>Acción</th>
                     </tr>
                 </thead>
@@ -149,7 +153,7 @@
                 window.location.href = 'login.html';
                 return;
             }
-            document.getElementById('admin-info').innerText = `Sesión: ${email}`;
+            document.getElementById('admin-info').innerText = `Conectado como: ${email}`;
             cargarTodo();
         };
 
@@ -166,7 +170,7 @@
                 const selectNeg = document.getElementById('user-negocio-select');
                 
                 tabla.innerHTML = "";
-                selectNeg.innerHTML = '<option value="">Vincular a Negocio...</option>';
+                selectNeg.innerHTML = '<option value="">Asignar a un Negocio...</option>';
                 document.getElementById('count-negocios').innerText = negocios.length;
 
                 negocios.forEach(n => {
@@ -176,16 +180,16 @@
                             <td><span class="badge" style="background:#f0f0f0;">${n.categoria}</span></td>
                             <td>${n.ubicacion}</td>
                             <td>${n.adminEmail}</td>
-                            <td><button class="btn-delete" onclick="eliminarNegocio('${n._id}')">ELIMINAR</button></td>
+                            <td><button class="btn-delete" onclick="eliminarNegocio('${n._id}')">BORRAR</button></td>
                         </tr>`;
                     selectNeg.innerHTML += `<option value="${n.nombre}">${n.nombre}</option>`;
                 });
-            } catch (e) { console.error("Error negocios"); }
+            } catch (e) { console.error("Error al cargar negocios"); }
         }
 
         async function cargarUsuarios() {
             try {
-                const res = await fetch(`${API}/api/admin/usuarios`); // Asegúrate de tener esta ruta en el backend
+                const res = await fetch(`${API}/api/admin/usuarios`);
                 const usuarios = await res.json();
                 const tabla = document.getElementById('lista-usuarios');
                 
@@ -194,19 +198,21 @@
 
                 usuarios.forEach(u => {
                     const badgeClass = u.rol === 'ADMIN' ? 'badge-admin' : (u.rol === 'SUPER' ? 'badge-super' : 'badge-staff');
+                    const rolTexto = u.rol === 'ADMIN' ? 'DUEÑO' : (u.rol === 'SUPER' ? 'SOPORTE' : 'COLABORADOR');
+                    
                     tabla.innerHTML += `
                         <tr>
                             <td><b>${u.nombre}</b></td>
                             <td>${u.correo || u.email}</td>
-                            <td><span class="badge ${badgeClass}">${u.rol}</span></td>
+                            <td><span class="badge ${badgeClass}">${rolTexto}</span></td>
                             <td>${u.negocio || 'SISTEMA'}</td>
                             <td>
-                                ${u.rol !== 'SUPER' ? `<button class="btn-delete" onclick="eliminarUsuario('${u._id}')">ELIMINAR</button>` : '-'}
+                                ${u.rol !== 'SUPER' ? `<button class="btn-delete" onclick="eliminarUsuario('${u._id}')">BORRAR</button>` : '-'}
                             </td>
                         </tr>`;
                 });
             } catch (e) { 
-                document.getElementById('lista-usuarios').innerHTML = "<tr><td colspan='5' style='text-align:center;'>No se pudo cargar la lista de usuarios.</td></tr>";
+                document.getElementById('lista-usuarios').innerHTML = "<tr><td colspan='5' style='text-align:center;'>No se encontraron usuarios activos.</td></tr>";
             }
         }
 
@@ -215,14 +221,14 @@
             const ubicacion = document.getElementById('neg-ubicacion').value;
             const adminEmail = document.getElementById('neg-admin-mail').value;
             const categoria = document.getElementById('neg-categoria').value;
-            if(!nombre || !adminEmail) return alert("Faltan datos");
+            if(!nombre || !adminEmail) return alert("Por favor complete los datos obligatorios.");
 
             const res = await fetch(`${API}/api/admin/crear-negocio`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ nombre, ubicacion, adminEmail, categoria })
             });
-            if(res.ok) { alert("Negocio creado"); cargarTodo(); }
+            if(res.ok) { alert("¡Excelente! Negocio vinculado."); cargarTodo(); }
         }
 
         async function crearUsuario() {
@@ -230,25 +236,25 @@
             const email = document.getElementById('user-email').value;
             const rol = document.getElementById('user-rol').value;
             const negocio = document.getElementById('user-negocio-select').value;
-            if(!nombre || !email || !negocio) return alert("Faltan datos de usuario");
+            if(!nombre || !email || !negocio) return alert("Faltan datos para crear el acceso.");
 
             const res = await fetch(`${API}/api/admin/crear-usuario-manual`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ nombre, email, rol, negocio })
             });
-            if(res.ok) { alert("Usuario creado"); cargarTodo(); }
+            if(res.ok) { alert("¡Listo! Usuario creado con éxito."); cargarTodo(); }
         }
 
         async function eliminarUsuario(id) {
-            if(confirm("¿Eliminar acceso a este usuario?")) {
+            if(confirm("¿Seguro que desea quitarle el acceso a este usuario?")) {
                 await fetch(`${API}/api/admin/usuario/${id}`, { method: 'DELETE' });
                 cargarTodo();
             }
         }
 
         async function eliminarNegocio(id) {
-            if(confirm("¿Eliminar negocio?")) {
+            if(confirm("¿Desea eliminar este negocio de la red?")) {
                 await fetch(`${API}/api/admin/negocio/${id}`, { method: 'DELETE' });
                 cargarTodo();
             }

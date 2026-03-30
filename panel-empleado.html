@@ -9,33 +9,36 @@
         :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --success: #2e7d32; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; color: #333; }
         
-        /* Sidebar responsivo básico */
         .sidebar { width: 260px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; box-sizing: border-box; }
         .logo { font-weight: 800; font-size: 22px; margin-bottom: 40px; text-align: center; }
         .logo span { color: var(--accent); }
         
-        .menu-item { padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; color: var(--primary); background: var(--accent); display: flex; align-items: center; gap: 10px; }
+        .menu-item { padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: 700; color: var(--primary); background: var(--accent); display: flex; align-items: center; gap: 10px; cursor: pointer; }
         
         .main-content { margin-left: 260px; padding: 30px; width: calc(100% - 260px); box-sizing: border-box; }
         
-        .header { margin-bottom: 30px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+        .header { margin-bottom: 30px; background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border: 1px solid #eee; }
+        .header h1 { margin: 0; font-size: 26px; font-weight: 800; }
         
-        /* Lista de Citas estilo Cards */
         .agenda-container { display: grid; gap: 15px; }
-        .cita-card { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); }
-        .cita-info h4 { margin: 0; font-size: 18px; }
-        .cita-info p { margin: 5px 0 0; color: #666; font-size: 14px; font-weight: 600; }
+        .cita-card { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border-left: 6px solid var(--accent); transition: 0.3s; }
+        .cita-card:hover { transform: translateX(5px); }
         
-        .btn-done { background: #e8f5e9; color: var(--success); border: none; padding: 10px 15px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.3s; }
-        .btn-done:hover { background: var(--success); color: white; }
+        .cita-info h4 { margin: 0; font-size: 18px; font-weight: 800; }
+        .cita-info p { margin: 5px 0 0; color: #555; font-size: 15px; font-weight: 600; }
+        .cita-info small { display: block; margin-top: 5px; color: #999; font-weight: 600; }
         
-        .badge-estado { font-size: 11px; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; background: #eee; margin-bottom: 5px; display: inline-block; }
+        .btn-done { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; padding: 12px 20px; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; font-family: inherit; }
+        .btn-done:hover { background: var(--success); color: white; transform: scale(1.05); }
+        
+        .badge-estado { font-size: 11px; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; background: #f0f0f0; color: #666; font-weight: 800; margin-bottom: 8px; display: inline-block; letter-spacing: 0.5px; }
 
         @media (max-width: 768px) {
-            .sidebar { width: 70px; padding: 20px 10px; }
-            .sidebar .logo, .sidebar span, .menu-item span { display: none; }
-            .main-content { margin-left: 70px; padding: 15px; width: calc(100% - 70px); }
+            .sidebar { width: 80px; padding: 20px 10px; }
+            .sidebar .logo span, .menu-item span { display: none; }
+            .main-content { margin-left: 80px; padding: 15px; width: calc(100% - 80px); }
+            .cita-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+            .btn-done { width: 100%; }
         }
     </style>
 </head>
@@ -44,86 +47,102 @@
     <div class="sidebar">
         <div class="logo">A<span>L</span></div>
         <div class="menu-item">📅 <span>Mis Citas</span></div>
-        <div onclick="cerrarSesion()" style="margin-top:50px; cursor:pointer; color:#ff4d4d; font-weight: 800; padding: 15px;">🚪 <span>Salir</span></div>
+        <div onclick="cerrarSesion()" style="margin-top:50px; cursor:pointer; color:#ff4d4d; font-weight: 800; padding: 15px; display: flex; align-items: center; gap: 10px;">
+            🚪 <span>Salir</span>
+        </div>
     </div>
 
     <div class="main-content">
         <div class="header">
             <h1 id="saludo">Cargando...</h1>
-            <p id="user-email" style="color: #888; font-size: 13px; margin: 5px 0 0;"></p>
+            <p id="user-display" style="color: #888; font-size: 14px; margin: 8px 0 0; font-weight: 600;"></p>
         </div>
 
-        <h3 style="font-weight: 800; margin-bottom: 20px;">Próximas Citas</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="font-weight: 800; margin: 0;">Agenda del Día</h3>
+            <button onclick="cargarMisCitas()" style="background: none; border: none; color: var(--accent); font-weight: 700; cursor: pointer;">🔄 Actualizar</button>
+        </div>
+
         <div id="lista-citas-empleado" class="agenda-container">
-            </div>
+            <p style="text-align: center; color: #999; padding: 40px;">Buscando tus citas...</p>
+        </div>
     </div>
 
     <script>
         const API = "https://mis-barberias.onrender.com";
         
-        // RECUPERAR DATOS DE SESIÓN
+        // Recuperación de sesión estandarizada
         const email = localStorage.getItem('user_email');
         const nombreStaff = localStorage.getItem('user_nombre');
         const rol = localStorage.getItem('user_rol');
 
         window.onload = function() {
-            // SEGURIDAD: Si no es STAFF, expulsar al login
+            // Protección de ruta para empleados
             if (!email || rol !== 'STAFF') {
+                console.warn("Acceso denegado: No es personal del staff.");
+                localStorage.clear();
                 window.location.href = 'login.html';
                 return;
             }
             
-            document.getElementById('saludo').innerText = `¡Hola, ${nombreStaff}!`;
-            document.getElementById('user-email').innerText = email;
+            document.getElementById('saludo').innerText = `¡Hola, ${nombreStaff || 'Barbero'}!`;
+            document.getElementById('user-display').innerText = `Conectado como: ${email}`;
             
             cargarMisCitas();
         };
 
         async function cargarMisCitas() {
             const contenedor = document.getElementById('lista-citas-empleado');
+            if (!nombreStaff) return;
+
             try {
-                // El endpoint usa el nombre del barbero para filtrar sus citas
+                // Filtramos por el nombre del barbero guardado en la sesión
                 const res = await fetch(`${API}/api/citas/barbero/${encodeURIComponent(nombreStaff)}`);
-                if (!res.ok) throw new Error("Error en la carga");
+                if (!res.ok) throw new Error("Error en la respuesta del servidor");
                 
                 const citas = await res.json();
                 contenedor.innerHTML = "";
 
                 if (!citas || citas.length === 0) {
                     contenedor.innerHTML = `
-                        <div style="text-align:center; padding: 40px; color: #999;">
-                            <p>No tienes citas asignadas por ahora.</p>
+                        <div style="text-align:center; padding: 60px 20px; background: white; border-radius: 20px; color: #999;">
+                            <p style="font-size: 18px; font-weight: 600;">No tienes citas asignadas</p>
+                            <p style="font-size: 14px;">Cuando un cliente agende contigo, aparecerá aquí.</p>
                         </div>`;
                     return;
                 }
 
+                // Ordenar por hora (opcional)
                 citas.forEach(cita => {
+                    const estaRealizada = cita.estado === 'realizada';
                     const card = document.createElement('div');
                     card.className = 'cita-card';
                     card.innerHTML = `
                         <div class="cita-info">
-                            <span class="badge-estado">${cita.estado || 'Pendiente'}</span>
+                            <span class="badge-estado" style="${estaRealizada ? 'background:#e8f5e9; color:#2e7d32;' : ''}">
+                                ${cita.estado || 'Pendiente'}
+                            </span>
                             <h4>${cita.clienteNombre}</h4>
                             <p>⏰ ${cita.hora}</p>
-                            <small style="color:#aaa;">Servicio: ${cita.servicio || 'General'}</small>
+                            <small>Servicio: ${cita.servicio || 'No especificado'}</small>
                         </div>
                         <div class="cita-actions">
-                            ${cita.estado !== 'realizada' ? 
-                                `<button class="btn-done" onclick="marcarRealizada('${cita._id}')">Listo ✅</button>` : 
-                                `<span style="color:var(--success); font-weight:800;">Realizada</span>`
+                            ${!estaRealizada ? 
+                                `<button class="btn-done" onclick="marcarRealizada('${cita._id}')">Finalizar Servicio ✅</button>` : 
+                                `<span style="color:var(--success); font-weight:800; font-size: 14px;">✔ Completada</span>`
                             }
                         </div>
                     `;
                     contenedor.appendChild(card);
                 });
             } catch (e) {
-                console.error(e);
-                contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al conectar con la agenda.</p>";
+                console.error("Error cargando citas:", e);
+                contenedor.innerHTML = "<p style='text-align:center; color:red; font-weight:700;'>Error al conectar con la agenda. Intenta de nuevo.</p>";
             }
         }
 
         async function marcarRealizada(id) {
-            if(confirm("¿Confirmas que el servicio fue realizado?")) {
+            if(confirm("¿Confirmas que has terminado este servicio?")) {
                 try {
                     const res = await fetch(`${API}/api/citas/estado/${id}`, {
                         method: 'PATCH',
@@ -132,13 +151,12 @@
                     });
                     
                     if(res.ok) {
-                        alert("¡Buen trabajo! Cita completada.");
-                        cargarMisCitas(); // Recargar lista
+                        cargarMisCitas(); 
                     } else {
-                        alert("No se pudo actualizar el estado.");
+                        alert("No se pudo actualizar el estado de la cita.");
                     }
                 } catch (error) {
-                    alert("Error de conexión.");
+                    alert("Error de conexión con el servidor.");
                 }
             }
         }

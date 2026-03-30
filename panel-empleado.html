@@ -6,91 +6,122 @@
     <title>Panel Barbero | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; }
-        .sidebar { width: 250px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; }
-        .logo { font-weight: 800; font-size: 22px; margin-bottom: 40px; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --success: #2e7d32; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; color: #333; }
+        
+        /* Sidebar responsivo básico */
+        .sidebar { width: 260px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; box-sizing: border-box; }
+        .logo { font-weight: 800; font-size: 22px; margin-bottom: 40px; text-align: center; }
         .logo span { color: var(--accent); }
-        .menu-item { padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; color: var(--accent); background: rgba(212, 175, 55, 0.1); }
-        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 330px); }
-        .header { margin-bottom: 30px; }
-        .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; color: #888; border-bottom: 1px solid #eee; }
-        td { padding: 15px; border-bottom: 1px solid #f9f9f9; font-weight: 600; }
-        .badge { padding: 5px 10px; border-radius: 6px; font-size: 12px; background: #e3f2fd; color: #1976d2; }
+        
+        .menu-item { padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; color: var(--primary); background: var(--accent); display: flex; align-items: center; gap: 10px; }
+        
+        .main-content { margin-left: 260px; padding: 30px; width: 100%; box-sizing: border-box; }
+        
+        .header { margin-bottom: 30px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+        
+        /* Lista de Citas estilo Cards para Móvil */
+        .agenda-container { display: grid; gap: 15px; }
+        .cita-card { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); }
+        .cita-info h4 { margin: 0; font-size: 18px; }
+        .cita-info p { margin: 5px 0 0; color: #666; font-size: 14px; font-weight: 600; }
+        
+        .btn-done { background: #e8f5e9; color: var(--success); border: none; padding: 10px 15px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+        .btn-done:hover { background: var(--success); color: white; }
+        
+        .badge-estado { font-size: 11px; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; background: #eee; }
+
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; padding: 20px 10px; }
+            .sidebar .logo, .sidebar span, .menu-item span { display: none; }
+            .main-content { margin-left: 70px; padding: 15px; }
+        }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <div class="logo">AGENDATE<span>LIVE</span></div>
-        <div class="menu-item">📅 Mis Citas</div>
-        <div onclick="cerrarSesion()" style="margin-top:50px; cursor:pointer; color:#ff4d4d;">🚪 Salir</div>
+        <div class="logo">A<span>L</span></div>
+        <div class="menu-item">📅 <span>Mis Citas</span></div>
+        <div onclick="cerrarSesion()" style="margin-top:50px; cursor:pointer; color:#ff4d4d; font-weight: 800; padding: 15px;">🚪 <span>Salir</span></div>
     </div>
 
     <div class="main-content">
         <div class="header">
-            <h1 id="saludo">Hola, Barbero</h1>
-            <p id="user-email" style="color: #666;"></p>
+            <h1 id="saludo">Cargando...</h1>
+            <p id="user-email" style="color: #888; font-size: 13px; margin: 5px 0 0;"></p>
         </div>
 
-        <div class="card">
-            <h3>Agenda de Hoy</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>CLIENTE</th>
-                        <th>HORA</th>
-                        <th>ESTADO</th>
-                    </tr>
-                </thead>
-                <tbody id="lista-citas-empleado">
-                    <tr><td colspan="3" style="text-align:center;">Cargando tus citas...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <h3 style="font-weight: 800; margin-bottom: 20px;">Próximas Citas</h3>
+        <div id="lista-citas-empleado" class="agenda-container">
+            </div>
     </div>
 
     <script>
         const API = "https://mis-barberias.onrender.com";
-        const email = localStorage.getItem('admin_email');
-        const rol = localStorage.getItem('admin_rol');
+        
+        // Sincronización con localStorage (Nombres exactos del Login)
+        const email = localStorage.getItem('user_email');
+        const nombreStaff = localStorage.getItem('user_nombre');
+        const rol = localStorage.getItem('user_rol');
 
         window.onload = function() {
             if (!email || rol !== 'STAFF') {
                 window.location.href = 'login.html';
                 return;
             }
+            document.getElementById('saludo').innerText = `¡Hola, ${nombreStaff}!`;
             document.getElementById('user-email').innerText = email;
             cargarMisCitas();
         };
 
         async function cargarMisCitas() {
+            const contenedor = document.getElementById('lista-citas-empleado');
             try {
-                // Buscamos las citas donde el nombre del barbero coincida con el email o nombre del staff
-                const res = await fetch(`${API}/api/citas/barbero/${email}`);
+                // Buscamos por nombreStaff que es como el ADMIN lo registró
+                const res = await fetch(`${API}/api/citas/barbero/${nombreStaff}`);
                 const citas = await res.json();
                 
-                const tbody = document.getElementById('lista-citas-empleado');
-                tbody.innerHTML = "";
+                contenedor.innerHTML = "";
 
                 if (citas.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='3' style='text-align:center;'>No tienes citas programadas.</td></tr>";
+                    contenedor.innerHTML = `
+                        <div style="text-align:center; padding: 40px; color: #999;">
+                            <p>No tienes citas asignadas para hoy.</p>
+                        </div>`;
                     return;
                 }
 
                 citas.forEach(cita => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${cita.clienteNombre}</td>
-                            <td>${cita.hora}</td>
-                            <td><span class="badge">${cita.estado}</span></td>
-                        </tr>
+                    const card = document.createElement('div');
+                    card.className = 'cita-card';
+                    card.innerHTML = `
+                        <div class="cita-info">
+                            <span class="badge-estado">${cita.estado || 'Pendiente'}</span>
+                            <h4>${cita.clienteNombre}</h4>
+                            <p>⏰ ${cita.hora}</p>
+                        </div>
+                        <div class="cita-actions">
+                            ${cita.estado !== 'realizada' ? 
+                                `<button class="btn-done" onclick="marcarRealizada('${cita._id}')">Listo ✅</button>` : 
+                                `<span style="color:var(--success); font-weight:800;">Realizada</span>`
+                            }
+                        </div>
                     `;
+                    contenedor.appendChild(card);
                 });
             } catch (e) {
-                console.error("Error:", e);
+                contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>";
+            }
+        }
+
+        async function marcarRealizada(id) {
+            // Aquí iría el fetch PATCH para actualizar el estado en la DB
+            // Por ahora simulamos la acción visual:
+            if(confirm("¿Confirmas que el servicio fue realizado?")) {
+                alert("Servicio marcado como completado. ¡Buen trabajo!");
+                cargarMisCitas();
             }
         }
 

@@ -4,105 +4,140 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs'); 
 const Brevo = require('@getbrevo/brevo');
 const path = require('path'); 
+require('dotenv').config(); // Importante para la seguridad de tus llaves
+
 const app = express();
 
+// --- 🛠️ MIDDLEWARES ---
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname))); 
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 // --- 🔌 CONEXIÓN MONGO ---
+// Nota: En producción, usa process.env.MONGO_URI
 const mongoURI = "mongodb+srv://fabianortiz350_db_user:WDhJIsmj0UDbpoV7@barberapp.9qsaddh.mongodb.net/barberia?retryWrites=true&w=majority&appName=BarberAPP";
-mongoose.connect(mongoURI)
-    .then(() => console.log("✅ DB Conectada"))
-    .catch(e => console.log("❌ Error DB:", e));
 
-// --- 🏗️ MODELOS ---
-const Usuario = mongoose.model('Usuario', {
-    correo: { type: String, unique: true, required: true },
+mongoose.connect(mongoURI)
+    .then(() => console.log("✅ DB Conectada exitosamente"))
+    .catch(e => console.error("❌ Error crítico en DB:", e));
+
+// --- 🏗️ MODELOS (Esquemas Formales) ---
+const usuarioSchema = new mongoose.Schema({
+    correo: { type: String, unique: true, required: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     rol: { type: String, enum: ['SUPER', 'ADMIN', 'STAFF', 'CLIENTE'], default: 'CLIENTE' },
     nombre: String,
-    negocioId: String, 
+    negocioId: { type: mongoose.Schema.Types.ObjectId, ref: 'Negocio' }, 
     codigoVerificacion: String,
     fechaExpiracion: Date
 });
+const Usuario = mongoose.model('Usuario', usuarioSchema);
 
-const Negocio = mongoose.model('Negocio', {
-    nombre: String,
+const negocioSchema = new mongoose.Schema({
+    nombre: { type: String, required: true },
     ubicacion: String,
-    adminEmail: String,
+    adminEmail: { type: String, lowercase: true },
     creadoEn: { type: Date, default: Date.now }
 });
+const Negocio = mongoose.model('Negocio', negocioSchema);
 
-const Cita = mongoose.model('Cita', {
+const citaSchema = new mongoose.Schema({
     clienteNombre: String,
     clienteTelefono: String,
-    barbero: String, // Aquí guardaremos el nombre o correo del barbero
+    barbero: String, 
     fecha: String,
     hora: String,
     estado: { type: String, enum: ['pendiente', 'confirmada', 'realizada', 'cancelada'], default: 'confirmada' },
     negocioId: String
 });
+const Cita = mongoose.model('Cita', citaSchema);
 
 // --- ⚙️ CONFIG BREVO ---
 const apiInstance = new Brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_KEY || 'TU_API_KEY_AQUI');
+// Prioriza la variable de entorno para seguridad profesional
+const BREVO_KEY = process.env.BREVO_KEY || 'TU_API_KEY_AQUI'; 
+apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, BREVO_KEY);
 
 // --- 🔐 SISTEMA AUTH ---
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.post('/api/auth/login', async (req, res) => {
-    const correo = req.body.correo.trim().toLowerCase();
-    const { password } = req.body;
     try {
+        const correo = req.body.correo.trim().toLowerCase();
+        const { password } = req.body;
+
         const user = await Usuario.findOne({ correo });
-        if (!user) return res.status(404).json({ mensaje: "Correo no registrado" });
+        if (!user) return res.status(404).json({ mensaje: "Usuario no encontrado" });
 
         const passValida = await bcrypt.compare(password, user.password);
-        if (!passValida) return res.status(401).json({ mensaje: "Contraseña incorrecta" });
+        if (!passValida) return res.status(401).json({ mensaje: "Credenciales inválidas" });
 
+        // Generar código de 6 dígitos
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         user.codigoVerificacion = codigo;
         user.fechaExpiracion = new Date(Date.now() + 10 * 60000); 
         await user.save();
 
+        // Enviar Email
         let sendEmail = new Brevo.SendSmtpEmail();
-        sendEmail.subject = `Tu código: ${codigo}`;
-        sendEmail.htmlContent = `<h2>Código de acceso: ${codigo}</h2>`;
+        sendEmail.subject = `Tu código de acceso: ${codigo}`;
+        sendEmail.htmlContent = `
+            <div style="font-family: sans-serif; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
+                <h2 style="color: #333;">Verificación de Acceso</h2>
+                <p>Tu código de seguridad es:</p>
+                <h1 style="color: #007bff; letter-spacing: 5px;">${codigo}</h1>
+                <p>Este código expira en 10 minutos.</p>
+            </div>`;
         sendEmail.sender = { name: "Agendate Live", email: "fabianortiz350@gmail.com" };
         sendEmail.to = [{ email: correo }];
         
         await apiInstance.sendTransacEmail(sendEmail);
-        res.json({ success: true, mensaje: "Código enviado" });
-    } catch (e) { res.status(500).json({ error: "Error en login" }); }
+        res.json({ success: true, mensaje: "Código de verificación enviado" });
+    } catch (e) { 
+        console.error("Error Login:", e);
+        res.status(500).json({ error: "Error interno en el servidor" }); 
+    }
 });
 
 app.post('/api/auth/verificar', async (req, res) => {
-    const correo = req.body.correo.trim().toLowerCase();
-    const { codigo } = req.body;
     try {
-        const user = await Usuario.findOne({ correo, codigoVerificacion: codigo, fechaExpiracion: { $gt: new Date() } });
+        const correo = req.body.correo.trim().toLowerCase();
+        const { codigo } = req.body;
+
+        const user = await Usuario.findOne({ 
+            correo, 
+            codigoVerificacion: codigo, 
+            fechaExpiracion: { $gt: new Date() } 
+        });
+
         if (user) {
-            user.codigoVerificacion = null;
+            user.codigoVerificacion = null; // Limpiar código tras éxito
             await user.save();
-            res.json({ success: true, rol: user.rol, correo: user.correo, negocioId: user.negocioId, nombre: user.nombre });
+            res.json({ 
+                success: true, 
+                rol: user.rol, 
+                correo: user.correo, 
+                negocioId: user.negocioId, 
+                nombre: user.nombre 
+            });
         } else {
-            res.status(401).json({ success: false, mensaje: "Código inválido" });
+            res.status(401).json({ success: false, mensaje: "Código inválido o expirado" });
         }
-    } catch (e) { res.status(500).json({ error: "Error" }); }
+    } catch (e) { res.status(500).json({ error: "Error en verificación" }); }
 });
 
 // --- 🏪 RUTAS NEGOCIOS & STAFF ---
 
 app.post('/api/admin/crear-negocio', async (req, res) => {
-    const { nombre, ubicacion } = req.body;
-    const adminEmail = req.body.adminEmail.trim().toLowerCase();
     try {
+        const { nombre, ubicacion } = req.body;
+        const adminEmail = req.body.adminEmail.trim().toLowerCase();
+
         const existe = await Usuario.findOne({ correo: adminEmail });
-        if (existe) return res.status(400).json({ error: "El correo ya existe" });
+        if (existe) return res.status(400).json({ error: "El correo ya está registrado" });
 
         const nuevoNegocio = new Negocio({ nombre, ubicacion, adminEmail });
         await nuevoNegocio.save();
@@ -113,7 +148,7 @@ app.post('/api/admin/crear-negocio', async (req, res) => {
             password: hashedPassword,
             rol: 'ADMIN',
             nombre: `Dueño ${nombre}`,
-            negocioId: nuevoNegocio._id.toString()
+            negocioId: nuevoNegocio._id
         });
         await nuevoAdmin.save();
 
@@ -122,9 +157,10 @@ app.post('/api/admin/crear-negocio', async (req, res) => {
 });
 
 app.post('/api/admin/registrar-staff', async (req, res) => {
-    const { nombre, correo, password, negocioId } = req.body;
     try {
+        const { nombre, correo, password, negocioId } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
+        
         const nuevoStaff = new Usuario({
             nombre,
             correo: correo.trim().toLowerCase(),
@@ -134,17 +170,18 @@ app.post('/api/admin/registrar-staff', async (req, res) => {
         });
         await nuevoStaff.save();
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ error: "Error al registrar barbero" }); }
+    } catch (e) { res.status(500).json({ error: "Error al registrar personal" }); }
 });
 
 app.get('/api/admin/staff/:negocioId', async (req, res) => {
     try {
-        const staff = await Usuario.find({ negocioId: req.params.negocioId, rol: 'STAFF' });
+        const staff = await Usuario.find({ negocioId: req.params.negocioId, rol: 'STAFF' }).select('-password');
         res.json(staff);
     } catch (e) { res.status(500).json({ error: "Error al obtener equipo" }); }
 });
 
-// NUEVA RUTA PARA EMPLEADOS: Obtener citas por nombre de barbero
+// --- 📅 RUTAS CITAS ---
+
 app.get('/api/citas/barbero/:nombre', async (req, res) => {
     try {
         const citas = await Cita.find({ barbero: req.params.nombre });
@@ -152,13 +189,15 @@ app.get('/api/citas/barbero/:nombre', async (req, res) => {
     } catch (e) { res.status(500).json({ error: "Error al obtener citas" }); }
 });
 
-// Obtener citas por Negocio (Admin)
 app.get('/api/citas/negocio/:id', async (req, res) => {
     try {
         const citas = await Cita.find({ negocioId: req.params.id });
         res.json(citas);
-    } catch (e) { res.status(500).json({ error: "Error al obtener citas" }); }
+    } catch (e) { res.status(500).json({ error: "Error al obtener citas del negocio" }); }
 });
 
+// --- 🚀 ARRANQUE ---
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`🚀 Puerto ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`🚀 Servidor corriendo profesionalmente en puerto ${PORT}`);
+});

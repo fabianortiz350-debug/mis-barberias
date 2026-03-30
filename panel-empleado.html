@@ -16,12 +16,12 @@
         
         .menu-item { padding: 15px; border-radius: 12px; margin-bottom: 10px; font-weight: 600; color: var(--primary); background: var(--accent); display: flex; align-items: center; gap: 10px; }
         
-        .main-content { margin-left: 260px; padding: 30px; width: 100%; box-sizing: border-box; }
+        .main-content { margin-left: 260px; padding: 30px; width: calc(100% - 260px); box-sizing: border-box; }
         
         .header { margin-bottom: 30px; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
         .header h1 { margin: 0; font-size: 24px; font-weight: 800; }
         
-        /* Lista de Citas estilo Cards para Móvil */
+        /* Lista de Citas estilo Cards */
         .agenda-container { display: grid; gap: 15px; }
         .cita-card { background: white; padding: 20px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); display: flex; justify-content: space-between; align-items: center; border-left: 5px solid var(--accent); }
         .cita-info h4 { margin: 0; font-size: 18px; }
@@ -30,12 +30,12 @@
         .btn-done { background: #e8f5e9; color: var(--success); border: none; padding: 10px 15px; border-radius: 10px; font-weight: 800; cursor: pointer; transition: 0.3s; }
         .btn-done:hover { background: var(--success); color: white; }
         
-        .badge-estado { font-size: 11px; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; background: #eee; }
+        .badge-estado { font-size: 11px; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; background: #eee; margin-bottom: 5px; display: inline-block; }
 
         @media (max-width: 768px) {
             .sidebar { width: 70px; padding: 20px 10px; }
             .sidebar .logo, .sidebar span, .menu-item span { display: none; }
-            .main-content { margin-left: 70px; padding: 15px; }
+            .main-content { margin-left: 70px; padding: 15px; width: calc(100% - 70px); }
         }
     </style>
 </head>
@@ -61,34 +61,38 @@
     <script>
         const API = "https://mis-barberias.onrender.com";
         
-        // Sincronización con localStorage (Nombres exactos del Login)
+        // RECUPERAR DATOS DE SESIÓN
         const email = localStorage.getItem('user_email');
         const nombreStaff = localStorage.getItem('user_nombre');
         const rol = localStorage.getItem('user_rol');
 
         window.onload = function() {
+            // SEGURIDAD: Si no es STAFF, expulsar al login
             if (!email || rol !== 'STAFF') {
                 window.location.href = 'login.html';
                 return;
             }
+            
             document.getElementById('saludo').innerText = `¡Hola, ${nombreStaff}!`;
             document.getElementById('user-email').innerText = email;
+            
             cargarMisCitas();
         };
 
         async function cargarMisCitas() {
             const contenedor = document.getElementById('lista-citas-empleado');
             try {
-                // Buscamos por nombreStaff que es como el ADMIN lo registró
-                const res = await fetch(`${API}/api/citas/barbero/${nombreStaff}`);
-                const citas = await res.json();
+                // El endpoint usa el nombre del barbero para filtrar sus citas
+                const res = await fetch(`${API}/api/citas/barbero/${encodeURIComponent(nombreStaff)}`);
+                if (!res.ok) throw new Error("Error en la carga");
                 
+                const citas = await res.json();
                 contenedor.innerHTML = "";
 
-                if (citas.length === 0) {
+                if (!citas || citas.length === 0) {
                     contenedor.innerHTML = `
                         <div style="text-align:center; padding: 40px; color: #999;">
-                            <p>No tienes citas asignadas para hoy.</p>
+                            <p>No tienes citas asignadas por ahora.</p>
                         </div>`;
                     return;
                 }
@@ -101,6 +105,7 @@
                             <span class="badge-estado">${cita.estado || 'Pendiente'}</span>
                             <h4>${cita.clienteNombre}</h4>
                             <p>⏰ ${cita.hora}</p>
+                            <small style="color:#aaa;">Servicio: ${cita.servicio || 'General'}</small>
                         </div>
                         <div class="cita-actions">
                             ${cita.estado !== 'realizada' ? 
@@ -112,16 +117,29 @@
                     contenedor.appendChild(card);
                 });
             } catch (e) {
-                contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>";
+                console.error(e);
+                contenedor.innerHTML = "<p style='text-align:center; color:red;'>Error al conectar con la agenda.</p>";
             }
         }
 
         async function marcarRealizada(id) {
-            // Aquí iría el fetch PATCH para actualizar el estado en la DB
-            // Por ahora simulamos la acción visual:
             if(confirm("¿Confirmas que el servicio fue realizado?")) {
-                alert("Servicio marcado como completado. ¡Buen trabajo!");
-                cargarMisCitas();
+                try {
+                    const res = await fetch(`${API}/api/citas/estado/${id}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'realizada' })
+                    });
+                    
+                    if(res.ok) {
+                        alert("¡Buen trabajo! Cita completada.");
+                        cargarMisCitas(); // Recargar lista
+                    } else {
+                        alert("No se pudo actualizar el estado.");
+                    }
+                } catch (error) {
+                    alert("Error de conexión.");
+                }
             }
         }
 

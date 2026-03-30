@@ -30,14 +30,9 @@
 
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
         
-        /* Botones Diferenciados */
         .btn-add { color: white; padding: 14px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; width: 100%; margin-top: 10px; }
-        
-        /* Botón para Negocios (Oscuro) */
         .btn-negocio { background: var(--primary); }
         .btn-negocio:hover { background: #333; transform: translateY(-2px); }
-
-        /* Botón para Usuarios (Azul) */
         .btn-usuario { background: var(--blue); box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); }
         .btn-usuario:hover { background: #2980b9; transform: translateY(-2px); }
 
@@ -157,7 +152,7 @@
                         </tr>
                     </thead>
                     <tbody id="lista-usuarios-global">
-                        <tr><td colspan="5" style="text-align:center;">Cargando lista de usuarios...</td></tr>
+                        <tr><td colspan="5" style="text-align:center;">Cargando usuarios...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -186,7 +181,6 @@
         function mostrarSeccion(seccion) {
             document.getElementById('seccion-negocios').style.display = seccion === 'negocios' ? 'block' : 'none';
             document.getElementById('seccion-usuarios').style.display = seccion === 'usuarios' ? 'block' : 'none';
-            
             document.getElementById('nav-negocios').classList.toggle('active', seccion === 'negocios');
             document.getElementById('nav-usuarios').classList.toggle('active', seccion === 'usuarios');
         }
@@ -220,34 +214,50 @@
                     option.textContent = n.nombre;
                     selectNegocio.appendChild(option);
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Error cargando negocios:", e); }
         }
 
         async function crearNegocio() {
             const nombre = document.getElementById('neg-nombre').value.trim();
             const ubicacion = document.getElementById('neg-ubicacion').value.trim();
             const categoria = document.getElementById('neg-categoria').value;
+            const superAdminEmail = localStorage.getItem('user_email'); // Importante para el backend
             const btn = document.getElementById('btn-crear');
 
-            if(!nombre) return alert("El nombre es obligatorio.");
+            if(!nombre) return alert("Por favor, ingresa el nombre del negocio.");
+            
             btn.disabled = true;
-            btn.innerText = "Vinculando...";
+            btn.innerText = "Procesando...";
 
             try {
                 const res = await fetch(`${API}/api/admin/crear-negocio`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nombre, ubicacion, categoria, adminEmail: "pendiente@vinculo.com" })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        nombre, 
+                        ubicacion, 
+                        categoria, 
+                        adminEmail: superAdminEmail 
+                    })
                 });
+
+                const data = await res.json();
+
                 if(res.ok) { 
-                    alert("¡Éxito! El negocio ha sido vinculado."); 
+                    alert("¡Éxito! El negocio '" + nombre + "' ha sido registrado."); 
                     document.getElementById('neg-nombre').value = "";
                     document.getElementById('neg-ubicacion').value = "";
                     cargarNegocios();
+                } else {
+                    alert("Error: " + (data.mensaje || "No se pudo registrar el negocio."));
                 }
-            } catch (e) { alert("Error de conexión."); }
-            btn.disabled = false;
-            btn.innerText = "+ Vincular Negocio al Sistema";
+            } catch (e) { 
+                console.error(e);
+                alert("Error de conexión con el servidor."); 
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "+ Vincular Negocio al Sistema";
+            }
         }
 
         async function cargarUsuariosGlobales() {
@@ -270,7 +280,7 @@
                             </td>
                         </tr>`;
                 });
-            } catch (e) { tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Error al sincronizar usuarios.</td></tr>"; }
+            } catch (e) { tabla.innerHTML = "<tr><td colspan='5'>Error al sincronizar.</td></tr>"; }
         }
 
         async function crearUsuario() {
@@ -282,7 +292,7 @@
             const negocio = document.getElementById('user-negocio').value;
 
             if(!nombre || !correo) return alert("Nombre y correo son necesarios.");
-            if(!negocio) return alert("Debe asignar este usuario a una sede.");
+            if(!negocio) return alert("Debes asignar una sede.");
 
             const metodo = id ? 'PUT' : 'POST';
             const ruta = id ? `${API}/api/admin/usuarios/${id}` : `${API}/api/admin/crear-usuario`;
@@ -290,11 +300,11 @@
             try {
                 const res = await fetch(ruta, {
                     method: metodo,
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nombre, correo, password, rol, negocio })
                 });
                 if(res.ok) { 
-                    alert(id ? "Datos actualizados." : "Credenciales creadas con éxito."); 
+                    alert(id ? "Usuario actualizado." : "Usuario creado correctamente."); 
                     resetFormularioUsuario();
                     cargarUsuariosGlobales(); 
                 }
@@ -302,11 +312,11 @@
         }
 
         async function eliminarUsuario(id, nombre) {
-            if(!confirm(`¿Seguro que desea quitarle el acceso a ${nombre}?`)) return;
+            if(!confirm(`¿Deseas eliminar el acceso de ${nombre}?`)) return;
             try {
                 const res = await fetch(`${API}/api/admin/usuarios/${id}`, { method: 'DELETE' });
                 if(res.ok) { cargarUsuariosGlobales(); }
-            } catch (e) { alert("Error al intentar borrar."); }
+            } catch (e) { alert("Error al borrar."); }
         }
 
         function prepararEdicion(id, nombre, correo, rol, negocio) {
@@ -315,10 +325,8 @@
             document.getElementById('user-email').value = correo;
             document.getElementById('user-rol').value = rol;
             document.getElementById('user-negocio').value = negocio;
-            
-            document.getElementById('btn-user-main').innerText = "Actualizar Información del Usuario";
+            document.getElementById('btn-user-main').innerText = "Actualizar Usuario";
             document.getElementById('btn-cancelar-edit').style.display = "block";
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetFormularioUsuario() {

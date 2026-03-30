@@ -28,7 +28,7 @@
         .stat-card h3 { margin: 0; font-size: 32px; font-weight: 800; }
         .stat-card p { color: #666; margin: 5px 0 0; font-size: 14px; font-weight: 600; }
 
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
         .btn-add { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; width: 100%; margin-top: 10px; }
         .btn-add:hover { background: var(--accent); color: var(--primary); }
 
@@ -36,6 +36,7 @@
         th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         td { padding: 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
         .badge-admin { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
+        .badge-category { background: #f4f4f4; color: #555; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -43,61 +44,75 @@
     <div class="sidebar">
         <h2>AGENDATE<span>LIVE</span></h2>
         <div class="nav-item active">🏢 Negocios</div>
-        <div class="nav-item" onclick="alert('Próximamente: Gestión de Usuarios Globales')">👥 Usuarios</div>
+        <div class="nav-item" onclick="alert('Paso a paso: En el siguiente nivel activaremos la gestión de usuarios.')">👥 Usuarios</div>
         <div class="nav-item" onclick="cerrarSesion()" style="margin-top: 40px; color: #ff4d4d;">🚪 Cerrar Sesión</div>
     </div>
 
     <div class="main-content">
         <div class="header">
             <div>
-                <h1 style="margin:0; font-weight: 800;">Panel de Control Total</h1>
-                <p id="admin-info" style="color: #888; margin-top: 5px;">Verificando credenciales...</p>
+                <h1 style="margin:0; font-weight: 800;">Panel Maestro Colombia</h1>
+                <p id="admin-info" style="color: #888; margin-top: 5px;">Cargando administrador...</p>
             </div>
         </div>
 
         <div class="grid">
             <div class="stat-card">
                 <h3 id="count-negocios">0</h3>
-                <p>Barberías Activas</p>
+                <p>Negocios Registrados</p>
             </div>
             <div class="stat-card">
-                <h3 style="color: #2e7d32;">Online</h3>
-                <p>Estado del Sistema</p>
+                <h3 style="color: #2e7d32;">Activo</h3>
+                <p>Estado del Servidor</p>
             </div>
         </div>
 
         <div class="card">
-            <h3 style="margin-top:0; font-weight: 800;">Registrar Nueva Barbería</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: end;">
+            <h3 style="margin-top:0; font-weight: 800;">Registrar Nuevo Negocio</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div>
                     <label style="font-size: 12px; font-weight: 700;">Nombre del Negocio</label>
-                    <input type="text" id="neg-nombre" placeholder="Ej: Barbería Deluxe">
+                    <input type="text" id="neg-nombre" placeholder="Ej: Spa Sentidos">
                 </div>
                 <div>
-                    <label style="font-size: 12px; font-weight: 700;">Ciudad / Ubicación</label>
-                    <input type="text" id="neg-ubicacion" placeholder="Ej: Madrid">
+                    <label style="font-size: 12px; font-weight: 700;">Categoría del Sector</label>
+                    <select id="neg-categoria">
+                        <option value="Barberia">Barbería</option>
+                        <option value="Spa">Spa & Estética</option>
+                        <option value="Odontologia">Odontología</option>
+                        <option value="Veterinaria">Veterinaria</option>
+                        <option value="Gastronomia">Gastronomía</option>
+                        <option value="Turismo">Turismo</option>
+                        <option value="Automotriz">Automotriz</option>
+                        <option value="Otros">Otros</option>
+                    </select>
                 </div>
                 <div>
-                    <label style="font-size: 12px; font-weight: 700;">Email del Dueño (Admin)</label>
+                    <label style="font-size: 12px; font-weight: 700;">Ubicación (Ciudad en Colombia)</label>
+                    <input type="text" id="neg-ubicacion" placeholder="Ej: Medellín">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700;">Email del Dueño Responsable</label>
                     <input type="email" id="neg-admin" placeholder="dueño@correo.com">
                 </div>
             </div>
-            <button class="btn-add" id="btn-crear" onclick="crearNegocio()">+ Dar de Alta Negocio</button>
+            <button class="btn-add" id="btn-crear" onclick="crearNegocio()">+ Registrar e Instalar Negocio</button>
         </div>
 
         <div class="card">
-            <h3 style="margin-top:0; font-weight: 800;">Directorio de Negocios</h3>
+            <h3 style="margin-top:0; font-weight: 800;">Directorio General de Negocios</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Nombre</th>
+                        <th>Categoría</th>
                         <th>Ubicación</th>
-                        <th>Administrador Responsable</th>
-                        <th>Fecha de Alta</th>
+                        <th>Administrador</th>
+                        <th>Fecha</th>
                     </tr>
                 </thead>
                 <tbody id="lista-negocios">
-                    <tr><td colspan="4" style="text-align:center; color:#999; padding:20px;">Cargando base de datos...</td></tr>
+                    <tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Sincronizando con el servidor...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -107,27 +122,23 @@
         const API = "https://mis-barberias.onrender.com";
 
         window.onload = () => {
-            // Sincronización con las llaves correctas del Login
             const email = localStorage.getItem('user_email');
             const rol = localStorage.getItem('user_rol');
             const nombre = localStorage.getItem('user_nombre');
 
-            // Seguridad: Solo el rol SUPER puede estar aquí
+            // Seguridad estricta
             if (!email || rol !== 'SUPER') {
-                console.warn("Acceso no autorizado");
-                localStorage.clear();
                 window.location.href = 'login.html';
                 return;
             }
 
-            document.getElementById('admin-info').innerText = `Sesión iniciada como: ${nombre || email} (SUPER ADMIN)`;
+            document.getElementById('admin-info').innerText = `Gestor: ${nombre || email} | Territorio: Colombia`;
             cargarNegocios();
         };
 
         async function cargarNegocios() {
             try {
                 const res = await fetch(`${API}/api/negocios`);
-                if(!res.ok) throw new Error("Error API");
                 const negocios = await res.json();
                 
                 const tabla = document.getElementById('lista-negocios');
@@ -136,7 +147,7 @@
                 contador.innerText = negocios.length;
 
                 if(negocios.length === 0) {
-                    tabla.innerHTML = "<tr><td colspan='4' style='text-align:center;'>No hay negocios registrados.</td></tr>";
+                    tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay negocios en la red.</td></tr>";
                     return;
                 }
 
@@ -145,15 +156,15 @@
                     tabla.innerHTML += `
                         <tr>
                             <td><b style="color: var(--primary);">${n.nombre}</b></td>
-                            <td>${n.ubicacion || 'No especificada'}</td>
+                            <td><span class="badge-category">${n.categoria || 'Barberia'}</span></td>
+                            <td>${n.ubicacion || 'Colombia'}</td>
                             <td><span class="badge-admin">${n.adminEmail}</span></td>
                             <td>${fecha}</td>
                         </tr>
                     `;
                 });
             } catch (e) { 
-                console.error("Error:", e);
-                document.getElementById('lista-negocios').innerHTML = "<tr><td colspan='4' style='text-align:center; color:red;'>Error al conectar con la base de datos.</td></tr>";
+                document.getElementById('lista-negocios').innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Error de conexión.</td></tr>";
             }
         }
 
@@ -161,32 +172,32 @@
             const nombre = document.getElementById('neg-nombre').value.trim();
             const ubicacion = document.getElementById('neg-ubicacion').value.trim();
             const adminEmail = document.getElementById('neg-admin').value.trim();
+            const categoria = document.getElementById('neg-categoria').value;
             const btn = document.getElementById('btn-crear');
 
-            if(!nombre || !adminEmail) return alert("El nombre y el email del dueño son obligatorios.");
+            if(!nombre || !adminEmail) return alert("Por favor completa los datos básicos.");
 
             btn.disabled = true;
-            btn.innerText = "Procesando alta...";
+            btn.innerText = "Registrando...";
 
             try {
                 const res = await fetch(`${API}/api/admin/crear-negocio`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nombre, ubicacion, adminEmail })
+                    body: JSON.stringify({ nombre, ubicacion, adminEmail, categoria })
                 });
 
-                const data = await res.json();
-
                 if(res.ok) {
-                    alert("Negocio registrado exitosamente.");
+                    alert("Negocio " + nombre + " ha sido creado correctamente.");
                     location.reload();
                 } else {
-                    alert("Error: " + (data.mensaje || "No se pudo crear el negocio"));
+                    const error = await res.json();
+                    alert("Error: " + error.mensaje);
                     btn.disabled = false;
                     btn.innerText = "+ Dar de Alta Negocio";
                 }
             } catch (e) { 
-                alert("Error de conexión al intentar crear el negocio.");
+                alert("Error de red.");
                 btn.disabled = false;
                 btn.innerText = "+ Dar de Alta Negocio";
             }

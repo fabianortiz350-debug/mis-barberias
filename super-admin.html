@@ -6,7 +6,7 @@
     <title>Super Admin | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --blue: #3498db; --danger: #e74c3c; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; }
         
         /* Sidebar lateral */
@@ -29,8 +29,17 @@
         .stat-card p { color: #666; margin: 5px 0 0; font-size: 14px; font-weight: 600; }
 
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
-        .btn-add { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; width: 100%; margin-top: 10px; }
-        .btn-add:hover { background: var(--accent); color: var(--primary); }
+        
+        /* Botones Diferenciados */
+        .btn-add { color: white; padding: 14px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; width: 100%; margin-top: 10px; }
+        
+        /* Botón para Negocios (Oscuro) */
+        .btn-negocio { background: var(--primary); }
+        .btn-negocio:hover { background: #333; transform: translateY(-2px); }
+
+        /* Botón para Usuarios (Azul) */
+        .btn-usuario { background: var(--blue); box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3); }
+        .btn-usuario:hover { background: #2980b9; transform: translateY(-2px); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
@@ -39,22 +48,22 @@
         .badge-rol { background: #fff3e0; color: #e65100; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
         
         .btn-delete { color: #d32f2f; border: none; background: none; cursor: pointer; font-weight: 700; padding: 5px; border-radius: 5px; transition: 0.2s; }
-        .btn-delete:hover { background: #ffebee; }
+        .btn-delete:hover { background: #ffebee; text-decoration: underline; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>AGENDATE<span>LIVE</span></h2>
-        <div class="nav-item active" id="nav-negocios" onclick="mostrarSeccion('negocios')">🏢 Negocios</div>
-        <div class="nav-item" id="nav-usuarios" onclick="mostrarSeccion('usuarios')">👥 Usuarios Globales</div>
-        <div class="nav-item" onclick="cerrarSesion()" style="margin-top: 40px; color: #ff4d4d;">🚪 Cerrar Sesión</div>
+        <div class="nav-item active" id="nav-negocios" onclick="mostrarSeccion('negocios')">🏢 Negocios y Sedes</div>
+        <div class="nav-item" id="nav-usuarios" onclick="mostrarSeccion('usuarios')">👥 Usuarios del Sistema</div>
+        <div class="nav-item" onclick="cerrarSesion()" style="margin-top: 40px; color: #ff4d4d;">🚪 Salir del Sistema</div>
     </div>
 
     <div class="main-content">
         <div class="header">
             <div>
-                <h1 style="margin:0; font-weight: 800;">Panel de Control</h1>
+                <h1 style="margin:0; font-weight: 800;">Panel Maestro de Control</h1>
                 <p id="admin-info" style="color: #888; margin-top: 5px;">Sincronizando datos...</p>
             </div>
         </div>
@@ -63,23 +72,23 @@
             <div class="grid">
                 <div class="stat-card">
                     <h3 id="count-negocios">0</h3>
-                    <p>Negocios Activos</p>
+                    <p>Negocios Vinculados</p>
                 </div>
                 <div class="stat-card">
-                    <h3 style="color: #2e7d32;">En Línea</h3>
-                    <p>Estado del Sistema</p>
+                    <h3 style="color: #2e7d32;">Activo</h3>
+                    <p>Estado de Conexión</p>
                 </div>
             </div>
 
             <div class="card">
-                <h3 style="margin-top:0; font-weight: 800;">Registrar Nuevo Establecimiento</h3>
+                <h3 style="margin-top:0; font-weight: 800;">Registrar Nuevo Negocio</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div>
-                        <label style="font-size: 12px; font-weight: 700;">Nombre del Establecimiento</label>
+                        <label style="font-size: 12px; font-weight: 700;">Nombre Comercial</label>
                         <input type="text" id="neg-nombre" placeholder="Ej: Barbería El Patrón">
                     </div>
                     <div>
-                        <label style="font-size: 12px; font-weight: 700;">Categoría</label>
+                        <label style="font-size: 12px; font-weight: 700;">Tipo de Negocio</label>
                         <select id="neg-categoria">
                             <option value="Barberia">Barbería</option>
                             <option value="Spa">Spa & Estética</option>
@@ -92,21 +101,21 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 12px; font-weight: 700;">Sede / Ubicación</label>
-                        <input type="text" id="neg-ubicacion" placeholder="Ej: Barranquilla - Centro">
+                        <label style="font-size: 12px; font-weight: 700;">Ubicación / Ciudad</label>
+                        <input type="text" id="neg-ubicacion" placeholder="Ej: Barranquilla - Norte">
                     </div>
                 </div>
-                <button class="btn-add" id="btn-crear" onclick="crearNegocio()">+ Registrar Negocio en el Sistema</button>
+                <button class="btn-add btn-negocio" id="btn-crear" onclick="crearNegocio()">+ Vincular Negocio al Sistema</button>
             </div>
 
             <div class="card">
-                <h3 style="margin-top:0; font-weight: 800;">Directorio de Negocios</h3>
+                <h3 style="margin-top:0; font-weight: 800;">Directorio de Sedes</h3>
                 <table>
                     <thead>
                         <tr>
                             <th>Nombre</th>
                             <th>Categoría</th>
-                            <th>Sede / Ubicación</th>
+                            <th>Ubicación</th>
                             <th>Fecha de Registro</th>
                         </tr>
                     </thead>
@@ -116,34 +125,34 @@
         </div>
 
         <div id="seccion-usuarios" style="display:none;">
-            <div class="card" style="border-left: 5px solid var(--accent);">
-                <h3 style="margin-top:0; font-weight: 800;">Gestionar Usuarios Activos</h3>
+            <div class="card" style="border-left: 5px solid var(--blue);">
+                <h3 style="margin-top:0; font-weight: 800;">Generar Acceso para Usuario</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                    <input type="text" id="user-nombre" placeholder="Nombre completo">
+                    <input type="text" id="user-nombre" placeholder="Nombre del colaborador">
                     <input type="email" id="user-email" placeholder="Correo electrónico">
-                    <input type="password" id="user-pass" placeholder="Contraseña temporal">
+                    <input type="password" id="user-pass" placeholder="Clave temporal">
                     <select id="user-rol">
-                        <option value="ADMIN">Dueño (ADMIN)</option>
-                        <option value="STAFF">Empleado (STAFF)</option>
+                        <option value="ADMIN">Dueño del Local (ADMIN)</option>
+                        <option value="STAFF">Colaborador (STAFF)</option>
                     </select>
                     <select id="user-negocio">
-                        <option value="">Seleccionar Sede/Negocio...</option>
+                        <option value="">Asignar a una Sede...</option>
                     </select>
                     <input type="hidden" id="user-id">
                 </div>
-                <button class="btn-add" id="btn-user-main" onclick="crearUsuario()">Vincular Usuario al Sistema</button>
+                <button class="btn-add btn-usuario" id="btn-user-main" onclick="crearUsuario()">+ Crear Credenciales de Acceso</button>
                 <button id="btn-cancelar-edit" style="display:none; background:#888; margin-top:5px;" class="btn-add" onclick="resetFormularioUsuario()">Cancelar Edición</button>
             </div>
 
             <div class="card">
-                <h3 style="margin-top:0; font-weight: 800;">Usuarios Vinculados</h3>
+                <h3 style="margin-top:0; font-weight: 800;">Usuarios con Acceso</h3>
                 <table>
                     <thead>
                         <tr>
                             <th>Nombre</th>
                             <th>Correo</th>
                             <th>Rol</th>
-                            <th>Sede Vinculada</th>
+                            <th>Sede Asignada</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -157,7 +166,7 @@
 
     <script>
         const API = "https://mis-barberias.onrender.com";
-        let negociosGlobales = []; // Para alimentar el select de usuarios
+        let negociosGlobales = [];
 
         window.onload = () => {
             const email = localStorage.getItem('user_email');
@@ -186,7 +195,7 @@
             try {
                 const res = await fetch(`${API}/api/negocios`);
                 const negocios = await res.json();
-                negociosGlobales = negocios; // Guardar en memoria
+                negociosGlobales = negocios;
                 
                 const tabla = document.getElementById('lista-negocios');
                 const selectNegocio = document.getElementById('user-negocio');
@@ -194,12 +203,10 @@
                 
                 tabla.innerHTML = "";
                 contador.innerText = negocios.length;
-
-                // Limpiar y llenar el select de usuarios
-                selectNegocio.innerHTML = '<option value="">Seleccionar Sede/Negocio...</option>';
+                selectNegocio.innerHTML = '<option value="">Asignar a una Sede...</option>';
 
                 negocios.forEach(n => {
-                    const fecha = n.creadoEn ? new Date(n.creadoEn).toLocaleDateString() : 'N/A';
+                    const fecha = n.creadoEn ? new Date(n.creadoEn).toLocaleDateString('es-CO') : 'N/A';
                     tabla.innerHTML += `
                         <tr>
                             <td><b>${n.nombre}</b></td>
@@ -208,9 +215,8 @@
                             <td>${fecha}</td>
                         </tr>`;
                     
-                    // Añadir al select
                     const option = document.createElement('option');
-                    option.value = n.nombre; // O n._id según prefiera tu backend
+                    option.value = n.nombre;
                     option.textContent = n.nombre;
                     selectNegocio.appendChild(option);
                 });
@@ -223,9 +229,9 @@
             const categoria = document.getElementById('neg-categoria').value;
             const btn = document.getElementById('btn-crear');
 
-            if(!nombre) return alert("El nombre del establecimiento es obligatorio.");
+            if(!nombre) return alert("El nombre es obligatorio.");
             btn.disabled = true;
-            btn.innerText = "Registrando...";
+            btn.innerText = "Vinculando...";
 
             try {
                 const res = await fetch(`${API}/api/admin/crear-negocio`, {
@@ -234,15 +240,14 @@
                     body: JSON.stringify({ nombre, ubicacion, categoria, adminEmail: "pendiente@vinculo.com" })
                 });
                 if(res.ok) { 
-                    alert("¡Establecimiento registrado!"); 
+                    alert("¡Éxito! El negocio ha sido vinculado."); 
                     document.getElementById('neg-nombre').value = "";
                     document.getElementById('neg-ubicacion').value = "";
-                    cargarNegocios(); // Recargar lista y select
-                    btn.disabled = false;
-                    btn.innerText = "+ Registrar Negocio en el Sistema";
+                    cargarNegocios();
                 }
-                else { alert("Error al registrar."); btn.disabled = false; }
-            } catch (e) { alert("Error de conexión."); btn.disabled = false; }
+            } catch (e) { alert("Error de conexión."); }
+            btn.disabled = false;
+            btn.innerText = "+ Vincular Negocio al Sistema";
         }
 
         async function cargarUsuariosGlobales() {
@@ -261,11 +266,11 @@
                             <td><span class="badge-rol">${u.rol}</span></td>
                             <td>${u.negocioNombre || '<i style="color:gray;">Sin asignar</i>'}</td>
                             <td>
-                                <button class="btn-delete" onclick="eliminarUsuario('${u._id}', '${u.nombre}')">Eliminar</button>
+                                <button class="btn-delete" onclick="eliminarUsuario('${u._id}', '${u.nombre}')">Borrar Acceso</button>
                             </td>
                         </tr>`;
                 });
-            } catch (e) { tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Error de sincronización.</td></tr>"; }
+            } catch (e) { tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Error al sincronizar usuarios.</td></tr>"; }
         }
 
         async function crearUsuario() {
@@ -276,8 +281,8 @@
             const rol = document.getElementById('user-rol').value;
             const negocio = document.getElementById('user-negocio').value;
 
-            if(!nombre || !correo) return alert("Nombre y correo son obligatorios.");
-            if(!negocio) return alert("Debe vincular el usuario a un negocio existente.");
+            if(!nombre || !correo) return alert("Nombre y correo son necesarios.");
+            if(!negocio) return alert("Debe asignar este usuario a una sede.");
 
             const metodo = id ? 'PUT' : 'POST';
             const ruta = id ? `${API}/api/admin/usuarios/${id}` : `${API}/api/admin/crear-usuario`;
@@ -289,19 +294,19 @@
                     body: JSON.stringify({ nombre, correo, password, rol, negocio })
                 });
                 if(res.ok) { 
-                    alert(id ? "Usuario actualizado con éxito" : "Usuario vinculado con éxito"); 
+                    alert(id ? "Datos actualizados." : "Credenciales creadas con éxito."); 
                     resetFormularioUsuario();
                     cargarUsuariosGlobales(); 
-                } else { alert("Hubo un error en el servidor."); }
+                }
             } catch (e) { alert("Error de red"); }
         }
 
         async function eliminarUsuario(id, nombre) {
-            if(!confirm(`¿Eliminar a ${nombre}?`)) return;
+            if(!confirm(`¿Seguro que desea quitarle el acceso a ${nombre}?`)) return;
             try {
                 const res = await fetch(`${API}/api/admin/usuarios/${id}`, { method: 'DELETE' });
                 if(res.ok) { cargarUsuariosGlobales(); }
-            } catch (e) { alert("Error de conexión."); }
+            } catch (e) { alert("Error al intentar borrar."); }
         }
 
         function prepararEdicion(id, nombre, correo, rol, negocio) {
@@ -311,7 +316,7 @@
             document.getElementById('user-rol').value = rol;
             document.getElementById('user-negocio').value = negocio;
             
-            document.getElementById('btn-user-main').innerText = "Actualizar Datos del Usuario";
+            document.getElementById('btn-user-main').innerText = "Actualizar Información del Usuario";
             document.getElementById('btn-cancelar-edit').style.display = "block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -322,7 +327,7 @@
             document.getElementById('user-email').value = "";
             document.getElementById('user-pass').value = "";
             document.getElementById('user-negocio').value = "";
-            document.getElementById('btn-user-main').innerText = "Vincular Usuario al Sistema";
+            document.getElementById('btn-user-main').innerText = "+ Crear Credenciales de Acceso";
             document.getElementById('btn-cancelar-edit').style.display = "none";
         }
 

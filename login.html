@@ -113,7 +113,7 @@
         const API = "https://mis-barberias.onrender.com";
         let userEmailTemp = "";
 
-        // Limpiamos cualquier sesión previa al cargar el login
+        // Seguridad: Limpiar cualquier rastro de sesiones anteriores al entrar
         window.onload = () => { localStorage.clear(); };
 
         async function iniciarLogin() {
@@ -171,7 +171,7 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // Guardamos los datos estandarizados
+                    // Estandarización de datos en el navegador
                     localStorage.setItem('user_email', data.correo);
                     localStorage.setItem('user_rol', data.rol);
                     localStorage.setItem('negocio_id', data.negocioId || "");
@@ -190,18 +190,18 @@
         }
 
         function redirigirDinamico(rol) {
-            // Sincronización de rutas: SUPER y ADMIN van al mismo panel de control
+            // Rutas separadas para cada nivel de acceso
             const rutas = {
-                'SUPER': 'panel-dueno.html',
-                'ADMIN': 'panel-dueno.html',
-                'STAFF': 'panel-empleado.html'
+                'SUPER': 'super-admin.html',    // Tu control global
+                'ADMIN': 'panel-dueno.html',     // Dueños de negocios
+                'STAFF': 'panel-empleado.html'   // Empleados/Barberos
             };
 
             const destino = rutas[rol];
             if(destino) {
                 window.location.href = destino;
             } else {
-                alert("Rol no reconocido por el sistema: " + rol);
+                alert("Rol no reconocido: " + rol);
                 localStorage.clear();
                 window.location.href = 'login.html';
             }

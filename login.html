@@ -6,19 +6,98 @@
     <title>Acceso Seguro | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #ffffff; }
-        body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: #f9f9f9; display: flex; align-items: center; justify-content: center; height: 100vh; }
-        .login-card { background: white; padding: 40px; border-radius: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 380px; text-align: center; }
-        .logo { font-weight: 800; font-size: 24px; margin-bottom: 20px; color: var(--primary); }
+        :root { 
+            --primary: #1a1a1a; 
+            --accent: #d4af37; 
+            --bg: #ffffff; 
+            --error: #e74c3c;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            margin: 0; 
+            background: #f4f7f6; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+        }
+        .login-card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 400px; 
+            text-align: center; 
+            transition: transform 0.3s ease;
+        }
+        .logo { 
+            font-weight: 800; 
+            font-size: 28px; 
+            margin-bottom: 30px; 
+            color: var(--primary); 
+            letter-spacing: -1px;
+        }
         .logo span { color: var(--accent); }
-        h2 { font-weight: 800; font-size: 20px; margin-bottom: 10px; }
-        p { color: #666; font-size: 14px; margin-bottom: 25px; }
-        input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid #ddd; margin-bottom: 15px; outline: none; font-size: 16px; box-sizing: border-box; font-family: inherit; transition: 0.3s; }
-        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1); }
-        .btn-login { width: 100%; background: var(--primary); color: white; padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 16px; }
-        .btn-login:hover { background: var(--accent); transform: translateY(-2px); }
+        
+        h2 { font-weight: 800; font-size: 22px; margin-bottom: 8px; color: #333; }
+        p { color: #777; font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+        
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 5px; color: #555; text-transform: uppercase; }
+        
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 2px solid #eee; 
+            outline: none; 
+            font-size: 16px; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            transition: all 0.3s; 
+        }
+        input:focus { 
+            border-color: var(--accent); 
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1); 
+        }
+        
+        .btn-login { 
+            width: 100%; 
+            background: var(--primary); 
+            color: white; 
+            padding: 16px; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            font-size: 16px; 
+            margin-top: 10px;
+        }
+        .btn-login:hover { 
+            background: #000; 
+            transform: translateY(-2px); 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-login:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+
         #paso-2 { display: none; }
-        .loader { display: none; color: var(--accent); margin-top: 10px; font-size: 12px; font-weight: 600; }
+        .loader { 
+            display: none; 
+            color: var(--accent); 
+            margin-top: 15px; 
+            font-size: 13px; 
+            font-weight: 600; 
+        }
+        .resend-link { 
+            margin-top: 25px; 
+            font-size: 13px; 
+            cursor: pointer; 
+            color: #888; 
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -27,32 +106,53 @@
         <div class="logo">AGENDATE<span>LIVE</span></div>
         
         <div id="paso-1">
-            <h2>Panel de Gestión</h2>
-            <p>Ingresa tus credenciales para recibir tu código de acceso.</p>
-            <input type="email" id="email" placeholder="Correo electrónico" required onkeypress="if(event.key==='Enter') iniciarLogin()">
-            <input type="password" id="password" placeholder="Contraseña" required onkeypress="if(event.key==='Enter') iniciarLogin()">
-            <button class="btn-login" id="btn-envio" onclick="iniciarLogin()">Continuar</button>
-            <div id="load-1" class="loader">Validando datos y enviando código...</div>
+            <h2>Bienvenido</h2>
+            <p>Gestiona tu negocio de forma profesional. Ingresa para recibir tu código.</p>
+            
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="email" placeholder="ejemplo@correo.com" required onkeypress="if(event.key==='Enter') iniciarLogin()">
+            </div>
+            
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" id="password" placeholder="••••••••" required onkeypress="if(event.key==='Enter') iniciarLogin()">
+            </div>
+
+            <button class="btn-login" id="btn-envio" onclick="iniciarLogin()">Obtener Código</button>
+            <div id="load-1" class="loader">Verificando y enviando código...</div>
         </div>
 
         <div id="paso-2">
-            <h2>Verificar Identidad</h2>
-            <p>Introduce el código de 6 dígitos que enviamos a tu correo.</p>
-            <input type="text" id="codigo" placeholder="000000" maxlength="6" style="text-align:center; letter-spacing: 5px; font-weight: 800; font-size: 24px;" onkeypress="if(event.key==='Enter') verificarCodigo()">
-            <button class="btn-login" id="btn-verificar" style="background: var(--accent);" onclick="verificarCodigo()">Acceder al Panel</button>
-            <p style="margin-top: 20px; font-size: 12px; cursor: pointer; color: #888;" onclick="location.reload()">¿Error en los datos? Volver</p>
+            <h2>Verifica tu cuenta</h2>
+            <p>Hemos enviado un código de seguridad a tu correo electrónico.</p>
+            
+            <input type="text" id="codigo" placeholder="000000" maxlength="6" 
+                   style="text-align:center; letter-spacing: 8px; font-weight: 800; font-size: 28px;" 
+                   onkeypress="if(event.key==='Enter') verificarCodigo()">
+            
+            <button class="btn-login" id="btn-verificar" style="background: var(--accent);" onclick="verificarCodigo()">Confirmar Acceso</button>
+            
+            <div class="resend-link" onclick="location.reload()">¿No recibiste nada? Reintentar</div>
         </div>
     </div>
 
     <script>
-        const API = "https://mis-barberias.onrender.com";
+        // Cambia esta URL a tu dominio de Render cuando despliegues
+        const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" 
+                    ? "http://localhost:10000" 
+                    : "https://mis-barberias.onrender.com";
+
         let userEmail = "";
+
+        // Limpiar sesión al cargar
+        localStorage.clear();
 
         async function iniciarLogin() {
             userEmail = document.getElementById('email').value.trim().toLowerCase();
             const pass = document.getElementById('password').value;
 
-            if(!userEmail || !pass) return alert("Completa todos los campos");
+            if(!userEmail || !pass) return alert("Por favor, completa todos los campos.");
 
             const btn = document.getElementById('btn-envio');
             const loader = document.getElementById('load-1');
@@ -78,7 +178,7 @@
                     loader.style.display = 'none';
                 }
             } catch (e) { 
-                alert("Error de conexión con el servidor."); 
+                alert("Error de conexión. Verifica que el servidor esté activo."); 
                 btn.disabled = false;
                 loader.style.display = 'none';
             }
@@ -88,8 +188,10 @@
             const code = document.getElementById('codigo').value.trim();
             const btnVerificar = document.getElementById('btn-verificar');
             
-            if(code.length < 6) return alert("Ingresa los 6 dígitos");
+            if(code.length < 6) return alert("El código debe tener 6 dígitos.");
+            
             btnVerificar.disabled = true;
+            btnVerificar.innerText = "Verificando...";
 
             try {
                 const res = await fetch(`${API}/api/auth/verificar`, {
@@ -101,21 +203,20 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // --- GUARDADO DE DATOS (CORREGIDO PARA STAFF) ---
-                    localStorage.setItem('admin_email', data.correo);
-                    localStorage.setItem('admin_rol', data.rol);
+                    // Guardado profesional de datos de sesión
+                    localStorage.setItem('user_email', data.correo);
+                    localStorage.setItem('user_rol', data.rol);
                     localStorage.setItem('negocio_id', data.negocioId || "");
-                    // Importante: Guardamos el nombre para que el barbero vea sus citas
-                    localStorage.setItem('usuario_nombre', data.nombre || ""); 
+                    localStorage.setItem('user_nombre', data.nombre || ""); 
 
-                    console.log("Login exitoso. Rol:", data.rol);
                     redirigirDinamico(data.rol);
                 } else {
-                    alert(data.mensaje || "Código incorrecto");
+                    alert(data.mensaje || "Código inválido o expirado.");
                     btnVerificar.disabled = false;
+                    btnVerificar.innerText = "Confirmar Acceso";
                 }
             } catch (e) { 
-                alert("Error al verificar."); 
+                alert("Error en el proceso de verificación."); 
                 btnVerificar.disabled = false;
             }
         }
@@ -130,10 +231,9 @@
             const destino = rutas[rol];
 
             if(destino) {
-                console.log("Redirigiendo a:", destino);
                 window.location.href = destino;
             } else {
-                alert("Rol no reconocido: " + rol);
+                alert("Error de permisos: Rol no asignado.");
                 location.reload();
             }
         }

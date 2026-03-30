@@ -16,7 +16,7 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; color: #333; }
         
         /* Sidebar */
-        .sidebar { width: 260px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; box-sizing: border-box; }
+        .sidebar { width: 260px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; box-sizing: border-box; z-index: 100; }
         .logo { font-weight: 800; font-size: 24px; margin-bottom: 40px; text-align: center; }
         .logo span { color: var(--accent); }
         .menu-item { padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #999; }
@@ -24,7 +24,7 @@
         .menu-item.active { background: var(--accent); color: var(--primary); }
         
         /* Main Content */
-        .main-content { margin-left: 260px; padding: 40px; width: 100%; box-sizing: border-box; }
+        .main-content { margin-left: 260px; padding: 40px; width: calc(100% - 260px); box-sizing: border-box; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         
         /* Cards */
@@ -51,7 +51,9 @@
         .btn-icon { background: #f4f4f4; border: none; padding: 8px; border-radius: 8px; cursor: pointer; margin-left: 5px; }
         .btn-icon:hover { background: #eee; }
 
-        #seccion-servicios, #seccion-equipo { display: none; }
+        /* Control de secciones */
+        .content-section { display: none; }
+        .content-section.active { display: block; }
     </style>
 </head>
 <body>
@@ -76,7 +78,7 @@
             </div>
         </div>
 
-        <div id="seccion-dashboard">
+        <div id="seccion-dashboard" class="content-section active">
             <div class="stats-grid">
                 <div class="stat-card"><h3>Hoy</h3><p id="stat-hoy">0</p></div>
                 <div class="stat-card"><h3>Este Mes</h3><p id="stat-mes">0</p></div>
@@ -86,7 +88,7 @@
             <div class="section-card">
                 <div class="flex-header">
                     <h2 style="font-weight: 800; font-size: 20px; margin: 0;">Agenda Global</h2>
-                    <button class="btn-add" onclick="alert('Funcionalidad de agendar manualmente en desarrollo')">+ Nueva Cita</button>
+                    <button class="btn-add" onclick="alert('Funcionalidad en desarrollo')">+ Nueva Cita</button>
                 </div>
                 <table>
                     <thead>
@@ -99,66 +101,69 @@
                         </tr>
                     </thead>
                     <tbody id="lista-citas-admin">
-                        </tbody>
+                        <tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Cargando citas...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
 
-        <div id="seccion-servicios" class="section-card">
-            <div class="flex-header">
-                <h2 style="font-weight: 800; font-size: 20px; margin: 0;">Configuración de Servicios</h2>
-                <button class="btn-add" onclick="agregarServicio()">+ Agregar Servicio</button>
+        <div id="seccion-servicios" class="content-section">
+            <div class="section-card">
+                <div class="flex-header">
+                    <h2 style="font-weight: 800; font-size: 20px; margin: 0;">Configuración de Servicios</h2>
+                    <button class="btn-add" onclick="agregarServicio()">+ Agregar Servicio</button>
+                </div>
+                <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Define los precios y servicios de tu barbería.</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Nombre del Servicio</th>
+                            <th>Precio</th>
+                            <th>Duración</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-servicios">
+                        </tbody>
+                </table>
             </div>
-            <p style="color: #888; font-size: 14px; margin-bottom: 20px;">Define los precios y servicios que tus clientes podrán elegir.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Categoría</th>
-                        <th>Nombre del Servicio</th>
-                        <th>Precio</th>
-                        <th>Duración</th>
-                        <th>Acción</th>
-                    </tr>
-                </thead>
-                <tbody id="lista-servicios">
-                    <tr>
-                        <td>Corte</td>
-                        <td>Corte Clásico</td>
-                        <td>$25,000</td>
-                        <td>40 min</td>
-                        <td><button class="btn-icon">🗑️</button></td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
     <script>
         const API = "https://mis-barberias.onrender.com";
+        
+        // RECUPERAR DATOS DE SESIÓN (Nombres estandarizados con el Login)
+        const adminEmail = localStorage.getItem('user_email');
+        const adminRol = localStorage.getItem('user_rol');
+        const adminNombre = localStorage.getItem('user_nombre');
         const negocioId = localStorage.getItem('negocio_id');
 
         window.onload = function() {
-            const adminEmail = localStorage.getItem('user_email');
-            const adminRol = localStorage.getItem('user_rol');
-            const adminNombre = localStorage.getItem('user_nombre');
-
+            // SEGURIDAD: Si no hay email o no es ADMIN, expulsar
             if (!adminEmail || adminRol !== 'ADMIN') {
                 window.location.href = 'login.html';
                 return;
             }
 
+            // Mostrar info del administrador
             document.getElementById('admin-name').innerText = adminNombre || "Administrador";
             document.getElementById('admin-mail').innerText = adminEmail;
             
             if(negocioId) {
                 cargarCitas();
+            } else {
+                document.getElementById('negocio-nombre').innerText = "ID de negocio no encontrado";
             }
         };
 
         async function cargarCitas() {
             try {
                 const res = await fetch(`${API}/api/citas/negocio/${negocioId}`);
+                if(!res.ok) throw new Error("Error en respuesta");
                 const citas = await res.json();
+                
                 const tbody = document.getElementById('lista-citas-admin');
                 tbody.innerHTML = "";
                 
@@ -166,10 +171,15 @@
                 let ingresos = 0;
                 const hoyFecha = new Date().toISOString().split('T')[0];
 
+                if(citas.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:20px;'>No hay citas registradas aún.</td></tr>";
+                }
+
                 citas.forEach(cita => {
                     const esHoy = cita.fecha === hoyFecha;
                     if(esHoy) hoyCount++;
-                    ingresos += 25000; // Valor base ejemplo
+                    // Sumamos ingresos si la cita no está anulada (ejemplo con valor base)
+                    ingresos += cita.precio || 25000; 
 
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -179,14 +189,13 @@
                         </td>
                         <td>
                             <span style="${!cita.barbero ? 'color: var(--danger);' : ''}">
-                                ${cita.barbero || '⚠️ Pendiente Asignar'}
+                                ${cita.barbero || '⚠️ No asignado'}
                             </span>
                         </td>
                         <td>${cita.fecha}<br><small>${cita.hora}</small></td>
                         <td><span class="badge badge-${cita.estado || 'confirmada'}">${cita.estado || 'confirmada'}</span></td>
                         <td>
                             <button class="btn-icon" onclick="anularCita('${cita._id}')" title="Anular">🚫</button>
-                            ${!cita.barbero ? `<button class="btn-icon" style="background: var(--accent);" onclick="asignarBarbero('${cita._id}')">👤</button>` : ''}
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -195,21 +204,21 @@
                 document.getElementById('stat-hoy').innerText = hoyCount;
                 document.getElementById('stat-mes').innerText = citas.length;
                 document.getElementById('stat-ingresos').innerText = "$" + ingresos.toLocaleString();
+                
             } catch (error) {
                 console.error("Error cargando citas:", error);
+                document.getElementById('lista-citas-admin').innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Error al conectar con el servidor.</td></tr>";
             }
         }
 
         function cambiarSeccion(seccion, elemento) {
-            // Ocultar todas
-            document.getElementById('seccion-dashboard').style.display = 'none';
-            document.getElementById('seccion-servicios').style.display = 'none';
-            
-            // Quitar active de menús
+            // Ocultar todas las secciones
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            // Quitar clase active de todos los menús
             document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
             
-            // Mostrar seleccionada
-            document.getElementById('seccion-' + seccion).style.display = 'block';
+            // Activar la seleccionada
+            document.getElementById('seccion-' + seccion).classList.add('active');
             elemento.classList.add('active');
         }
 
@@ -219,19 +228,18 @@
         }
 
         function anularCita(id) {
-            if(confirm("¿Estás seguro de que deseas anular esta cita?")) {
-                alert("Cita anulada (Conexión a base de datos en siguiente paso)");
+            if(confirm("¿Deseas anular esta cita?")) {
+                alert("Función para anular en desarrollo.");
             }
         }
 
-        // Esta función se conectará con el backend en el próximo paso para guardar servicios
         function agregarServicio() {
             const nombre = prompt("Nombre del servicio:");
             const precio = prompt("Precio:");
             if(nombre && precio) {
                 const tbody = document.getElementById('lista-servicios');
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>Personalizado</td><td>${nombre}</td><td>$${precio}</td><td>30 min</td><td><button class="btn-icon">🗑️</button></td>`;
+                tr.innerHTML = `<td>Corte</td><td>${nombre}</td><td>$${precio}</td><td>40 min</td><td><button class="btn-icon">🗑️</button></td>`;
                 tbody.appendChild(tr);
             }
         }

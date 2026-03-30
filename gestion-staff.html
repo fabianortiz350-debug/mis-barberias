@@ -6,62 +6,70 @@
     <title>Gestión de Equipo | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --danger: #ff4d4d; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --danger: #ff4d4d; --success: #2e7d32; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; }
         
         /* Sidebar */
-        .sidebar { width: 250px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; }
-        .logo { font-weight: 800; font-size: 22px; margin-bottom: 40px; }
+        .sidebar { width: 260px; background: var(--primary); height: 100vh; color: white; padding: 30px 20px; position: fixed; box-sizing: border-box; }
+        .logo { font-weight: 800; font-size: 24px; margin-bottom: 40px; text-align: center; }
         .logo span { color: var(--accent); }
-        .menu-item { padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 10px; color: #aaa; text-decoration: none; }
+        .menu-item { padding: 15px; border-radius: 12px; cursor: pointer; transition: 0.3s; margin-bottom: 10px; font-weight: 600; display: flex; align-items: center; gap: 12px; color: #aaa; text-decoration: none; }
         .menu-item:hover { color: white; background: rgba(255,255,255,0.05); }
-        .menu-item.active { background: rgba(212, 175, 55, 0.2); color: var(--accent); }
+        .menu-item.active { background: var(--accent); color: var(--primary); }
 
         /* Contenido Principal */
-        .main-content { margin-left: 290px; padding: 40px; width: calc(100% - 330px); }
-        
-        .header { margin-bottom: 30px; }
-        .header h1 { font-weight: 800; margin: 0; }
+        .main-content { margin-left: 260px; padding: 40px; width: 100%; box-sizing: border-box; }
+        .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-weight: 800; margin: 0; font-size: 28px; }
 
         /* Formulario */
-        .form-card { background: white; padding: 30px; border-radius: 20px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
-        .form-card h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; }
+        .form-card { background: white; padding: 30px; border-radius: 24px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+        .form-card h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; font-weight: 800; }
         .input-group { display: flex; gap: 15px; flex-wrap: wrap; }
-        input { padding: 12px 15px; border: 1px solid #ddd; border-radius: 12px; outline: none; font-family: inherit; flex: 1; min-width: 200px; }
-        input:focus { border-color: var(--accent); }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-add:hover { background: var(--accent); transform: translateY(-2px); }
+        input { padding: 14px 18px; border: 2px solid #eee; border-radius: 12px; outline: none; font-family: inherit; flex: 1; min-width: 200px; transition: 0.3s; }
+        input:focus { border-color: var(--accent); background: #fff; }
+        
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px 30px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        .btn-add:hover { background: #000; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .btn-add:disabled { background: #ccc; cursor: not-allowed; }
 
         /* Tabla */
-        .table-container { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); }
+        .table-container { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 15px; color: #888; border-bottom: 1px solid #eee; font-size: 13px; }
-        td { padding: 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; font-weight: 600; }
-        .rol-badge { background: #fff8e1; color: #f57f17; padding: 5px 10px; border-radius: 8px; font-size: 11px; }
+        th { text-align: left; padding: 18px; color: #888; border-bottom: 2px solid #f4f4f4; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        td { padding: 18px; border-bottom: 1px solid #f9f9f9; font-size: 14px; font-weight: 600; }
+        
+        .rol-badge { background: #fff8e1; color: #f57f17; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; }
+        .status-pill { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--success); }
+        .dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+        .btn-delete { background: #fff1f0; color: var(--danger); border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+        .btn-delete:hover { background: var(--danger); color: white; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <div class="logo">AGENDATE<span>LIVE</span></div>
-        <div class="menu-item" onclick="location.href='panel-dueno.html'">📊 Estadísticas</div>
-        <div class="menu-item active" onclick="location.href='gestion-staff.html'">💈 Mi Equipo (Staff)</div>
-        <div class="menu-item" onclick="cerrarSesion()" style="margin-top: 50px; color: var(--danger);">🚪 Salir</div>
+        <a href="panel-dueno.html" class="menu-item">📊 Dashboard</a>
+        <a href="gestion-staff.html" class="menu-item active">💈 Mi Equipo</a>
+        <div class="menu-item" onclick="cerrarSesion()" style="margin-top: 50px; color: var(--danger);">🚪 Cerrar Sesión</div>
     </div>
 
     <div class="main-content">
         <div class="header">
-            <h1>Gestión de Staff</h1>
-            <p style="color: #666;">Registra y administra a los barberos de tu negocio.</p>
+            <div>
+                <h1>Gestión de Staff</h1>
+                <p style="color: #666; margin: 5px 0 0;">Registra a tus barberos para que puedan ver su agenda personal.</p>
+            </div>
         </div>
         
         <div class="form-card">
             <h3>+ Registrar Nuevo Barbero</h3>
             <div class="input-group">
-                <input type="text" id="staff-nombre" placeholder="Nombre completo">
-                <input type="email" id="staff-correo" placeholder="Correo electrónico">
+                <input type="text" id="staff-nombre" placeholder="Nombre completo del barbero">
+                <input type="email" id="staff-correo" placeholder="Email (será su usuario)">
                 <input type="password" id="staff-pass" placeholder="Contraseña temporal">
-                <button class="btn-add" onclick="registrarStaff()">Agregar al Equipo</button>
+                <button class="btn-add" id="btn-registro" onclick="registrarStaff()">Registrar Barbero</button>
             </div>
         </div>
 
@@ -69,8 +77,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th>NOMBRE</th>
-                        <th>CORREO</th>
+                        <th>BARBERO</th>
+                        <th>CORREO DE ACCESO</th>
                         <th>ROL</th>
                         <th>ESTADO</th>
                         <th>ACCIONES</th>
@@ -84,10 +92,12 @@
 
     <script>
         const API = "https://mis-barberias.onrender.com";
+        // IMPORTANTE: Sincronizado con los nombres de localStorage del login
         const negocioId = localStorage.getItem('negocio_id');
+        const userRol = localStorage.getItem('user_rol');
 
         window.onload = function() {
-            if(!negocioId || localStorage.getItem('admin_rol') !== 'ADMIN') {
+            if(!negocioId || userRol !== 'ADMIN') {
                 window.location.href = 'login.html';
                 return;
             }
@@ -98,8 +108,12 @@
             const nombre = document.getElementById('staff-nombre').value.trim();
             const correo = document.getElementById('staff-correo').value.trim();
             const password = document.getElementById('staff-pass').value;
+            const btn = document.getElementById('btn-registro');
 
             if(!nombre || !correo || !password) return alert("Por favor, completa todos los campos.");
+
+            btn.disabled = true;
+            btn.innerText = "Registrando...";
 
             try {
                 const res = await fetch(`${API}/api/admin/registrar-staff`, {
@@ -107,19 +121,24 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ nombre, correo, password, negocioId })
                 });
+                
                 const data = await res.json();
                 
                 if(data.success) {
-                    alert("¡Barbero registrado con éxito!");
+                    alert(`¡${nombre} ahora es parte de tu equipo!`);
+                    // Limpiar campos
                     document.getElementById('staff-nombre').value = "";
                     document.getElementById('staff-correo').value = "";
                     document.getElementById('staff-pass').value = "";
                     cargarStaff();
                 } else {
-                    alert(data.error || "Error al registrar");
+                    alert(data.error || "Error al registrar barbero.");
                 }
             } catch (e) {
                 alert("Error de conexión con el servidor");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Registrar Barbero";
             }
         }
 
@@ -130,26 +149,34 @@
                 const tbody = document.getElementById('lista-staff');
                 tbody.innerHTML = "";
 
-                if(staff.length === 0) {
-                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:#888;'>No hay barberos registrados aún.</td></tr>";
+                if(!staff.length) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:#999;'>Aún no has registrado personal.</td></tr>";
                     return;
                 }
 
                 staff.forEach(s => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td>${s.nombre}</td>
-                        <td>${s.correo}</td>
-                        <td><span class="rol-badge">BARBERO</span></td>
-                        <td><span style="color: #2e7d32;">● Activo</span></td>
+                        <td style="font-weight: 800;">${s.nombre}</td>
+                        <td style="color: #666;">${s.correo}</td>
+                        <td><span class="rol-badge">STAFF / BARBERO</span></td>
                         <td>
-                            <button onclick="alert('ID: ${s._id}')" style="border:none; background:none; cursor:pointer;">⚙️</button>
+                            <div class="status-pill"><div class="dot"></div> Activo</div>
+                        </td>
+                        <td>
+                            <button class="btn-delete" onclick="eliminarBarbero('${s._id}')">Eliminar</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
                 });
             } catch (e) {
                 console.error("Error al cargar staff:", e);
+            }
+        }
+
+        function eliminarBarbero(id) {
+            if(confirm("¿Estás seguro de eliminar a este barbero? Sus citas podrían quedar sin asignar.")) {
+                alert("Función de eliminación en desarrollo.");
             }
         }
 

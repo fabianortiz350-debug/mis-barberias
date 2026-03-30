@@ -113,6 +113,9 @@
         const API = "https://mis-barberias.onrender.com";
         let userEmailTemp = "";
 
+        // Limpiamos cualquier sesión previa al cargar el login
+        window.onload = () => { localStorage.clear(); };
+
         async function iniciarLogin() {
             const emailInput = document.getElementById('email').value.trim().toLowerCase();
             const passInput = document.getElementById('password').value;
@@ -135,7 +138,7 @@
                 const data = await res.json();
 
                 if(res.ok) {
-                    userEmailTemp = emailInput; // Guardamos el email temporalmente
+                    userEmailTemp = emailInput; 
                     document.getElementById('paso-1').style.display = 'none';
                     document.getElementById('paso-2').style.display = 'block';
                 } else {
@@ -168,13 +171,12 @@
                 const data = await res.json();
                 
                 if(data.success) {
-                    // ESTANDARIZACIÓN TOTAL DE LOCALSTORAGE
+                    // Guardamos los datos estandarizados
                     localStorage.setItem('user_email', data.correo);
                     localStorage.setItem('user_rol', data.rol);
                     localStorage.setItem('negocio_id', data.negocioId || "");
                     localStorage.setItem('user_nombre', data.nombre || ""); 
 
-                    // Redirigir según el rol que devuelve el servidor
                     redirigirDinamico(data.rol);
                 } else {
                     alert(data.mensaje || "Código incorrecto.");
@@ -188,8 +190,9 @@
         }
 
         function redirigirDinamico(rol) {
+            // Sincronización de rutas: SUPER y ADMIN van al mismo panel de control
             const rutas = {
-                'SUPER': 'super-admin.html',
+                'SUPER': 'panel-dueno.html',
                 'ADMIN': 'panel-dueno.html',
                 'STAFF': 'panel-empleado.html'
             };
@@ -198,7 +201,9 @@
             if(destino) {
                 window.location.href = destino;
             } else {
-                alert("Rol desconocido: " + rol);
+                alert("Rol no reconocido por el sistema: " + rol);
+                localStorage.clear();
+                window.location.href = 'login.html';
             }
         }
     </script>

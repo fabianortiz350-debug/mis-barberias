@@ -35,7 +35,6 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         td { padding: 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .badge-admin { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
         .badge-category { background: #f4f4f4; color: #555; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
         .badge-rol { background: #fff3e0; color: #e65100; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
         
@@ -73,14 +72,14 @@
             </div>
 
             <div class="card">
-                <h3 style="margin-top:0; font-weight: 800;">Vincular Nuevo Negocio</h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <h3 style="margin-top:0; font-weight: 800;">Registrar Nuevo Establecimiento</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div>
                         <label style="font-size: 12px; font-weight: 700;">Nombre del Establecimiento</label>
                         <input type="text" id="neg-nombre" placeholder="Ej: Barbería El Patrón">
                     </div>
                     <div>
-                        <label style="font-size: 12px; font-weight: 700;">Categoría de Servicio</label>
+                        <label style="font-size: 12px; font-weight: 700;">Categoría</label>
                         <select id="neg-categoria">
                             <option value="Barberia">Barbería</option>
                             <option value="Spa">Spa & Estética</option>
@@ -93,12 +92,8 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 12px; font-weight: 700;">Sede / Ciudad / Ubicación</label>
+                        <label style="font-size: 12px; font-weight: 700;">Sede / Ubicación</label>
                         <input type="text" id="neg-ubicacion" placeholder="Ej: Barranquilla - Centro">
-                    </div>
-                    <div>
-                        <label style="font-size: 12px; font-weight: 700;">Correo del Dueño (Administrador)</label>
-                        <input type="email" id="neg-admin" placeholder="dueño@correo.com">
                     </div>
                 </div>
                 <button class="btn-add" id="btn-crear" onclick="crearNegocio()">+ Registrar Negocio en el Sistema</button>
@@ -112,7 +107,6 @@
                             <th>Nombre</th>
                             <th>Categoría</th>
                             <th>Sede / Ubicación</th>
-                            <th>Administrador</th>
                             <th>Fecha de Registro</th>
                         </tr>
                     </thead>
@@ -124,16 +118,17 @@
         <div id="seccion-usuarios" style="display:none;">
             <div class="card" style="border-left: 5px solid var(--accent);">
                 <h3 style="margin-top:0; font-weight: 800;">Gestionar Usuarios Activos</h3>
-                <p style="font-size: 13px; color: #666;">Para modificar un usuario, haga clic sobre su nombre en la tabla.</p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                     <input type="text" id="user-nombre" placeholder="Nombre completo">
                     <input type="email" id="user-email" placeholder="Correo electrónico">
-                    <input type="password" id="user-pass" placeholder="Contraseña (deje vacío para no cambiar)">
+                    <input type="password" id="user-pass" placeholder="Contraseña temporal">
                     <select id="user-rol">
                         <option value="ADMIN">Dueño (ADMIN)</option>
                         <option value="STAFF">Empleado (STAFF)</option>
                     </select>
-                    <input type="text" id="user-negocio" placeholder="Nombre de la Sede o ID">
+                    <select id="user-negocio">
+                        <option value="">Seleccionar Sede/Negocio...</option>
+                    </select>
                     <input type="hidden" id="user-id">
                 </div>
                 <button class="btn-add" id="btn-user-main" onclick="crearUsuario()">Vincular Usuario al Sistema</button>
@@ -148,7 +143,7 @@
                             <th>Nombre</th>
                             <th>Correo</th>
                             <th>Rol</th>
-                            <th>Vinculado a</th>
+                            <th>Sede Vinculada</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -162,6 +157,7 @@
 
     <script>
         const API = "https://mis-barberias.onrender.com";
+        let negociosGlobales = []; // Para alimentar el select de usuarios
 
         window.onload = () => {
             const email = localStorage.getItem('user_email');
@@ -190,10 +186,17 @@
             try {
                 const res = await fetch(`${API}/api/negocios`);
                 const negocios = await res.json();
+                negociosGlobales = negocios; // Guardar en memoria
+                
                 const tabla = document.getElementById('lista-negocios');
+                const selectNegocio = document.getElementById('user-negocio');
                 const contador = document.getElementById('count-negocios');
+                
                 tabla.innerHTML = "";
                 contador.innerText = negocios.length;
+
+                // Limpiar y llenar el select de usuarios
+                selectNegocio.innerHTML = '<option value="">Seleccionar Sede/Negocio...</option>';
 
                 negocios.forEach(n => {
                     const fecha = n.creadoEn ? new Date(n.creadoEn).toLocaleDateString() : 'N/A';
@@ -202,9 +205,14 @@
                             <td><b>${n.nombre}</b></td>
                             <td><span class="badge-category">${n.categoria || 'N/A'}</span></td>
                             <td>${n.ubicacion || '---'}</td>
-                            <td><span class="badge-admin">${n.adminEmail}</span></td>
                             <td>${fecha}</td>
                         </tr>`;
+                    
+                    // Añadir al select
+                    const option = document.createElement('option');
+                    option.value = n.nombre; // O n._id según prefiera tu backend
+                    option.textContent = n.nombre;
+                    selectNegocio.appendChild(option);
                 });
             } catch (e) { console.error(e); }
         }
@@ -212,21 +220,27 @@
         async function crearNegocio() {
             const nombre = document.getElementById('neg-nombre').value.trim();
             const ubicacion = document.getElementById('neg-ubicacion').value.trim();
-            const adminEmail = document.getElementById('neg-admin').value.trim();
             const categoria = document.getElementById('neg-categoria').value;
             const btn = document.getElementById('btn-crear');
 
-            if(!nombre || !adminEmail) return alert("Por favor, completa los datos requeridos.");
+            if(!nombre) return alert("El nombre del establecimiento es obligatorio.");
             btn.disabled = true;
-            btn.innerText = "Registrando sede...";
+            btn.innerText = "Registrando...";
 
             try {
                 const res = await fetch(`${API}/api/admin/crear-negocio`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ nombre, ubicacion, adminEmail, categoria })
+                    body: JSON.stringify({ nombre, ubicacion, categoria, adminEmail: "pendiente@vinculo.com" })
                 });
-                if(res.ok) { alert("¡Sede registrada exitosamente!"); location.reload(); }
+                if(res.ok) { 
+                    alert("¡Establecimiento registrado!"); 
+                    document.getElementById('neg-nombre').value = "";
+                    document.getElementById('neg-ubicacion').value = "";
+                    cargarNegocios(); // Recargar lista y select
+                    btn.disabled = false;
+                    btn.innerText = "+ Registrar Negocio en el Sistema";
+                }
                 else { alert("Error al registrar."); btn.disabled = false; }
             } catch (e) { alert("Error de conexión."); btn.disabled = false; }
         }
@@ -245,13 +259,13 @@
                             <td><b style="cursor:pointer; color:var(--accent);" onclick="prepararEdicion('${u._id}', '${u.nombre}', '${u.correo}', '${u.rol}', '${u.negocioNombre || ''}')">${u.nombre}</b></td>
                             <td>${u.correo}</td>
                             <td><span class="badge-rol">${u.rol}</span></td>
-                            <td>${u.negocioNombre || 'Sin sede'}</td>
+                            <td>${u.negocioNombre || '<i style="color:gray;">Sin asignar</i>'}</td>
                             <td>
                                 <button class="btn-delete" onclick="eliminarUsuario('${u._id}', '${u.nombre}')">Eliminar</button>
                             </td>
                         </tr>`;
                 });
-            } catch (e) { tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Error al cargar usuarios.</td></tr>"; }
+            } catch (e) { tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Error de sincronización.</td></tr>"; }
         }
 
         async function crearUsuario() {
@@ -263,8 +277,8 @@
             const negocio = document.getElementById('user-negocio').value;
 
             if(!nombre || !correo) return alert("Nombre y correo son obligatorios.");
+            if(!negocio) return alert("Debe vincular el usuario a un negocio existente.");
 
-            // Si hay ID, es una edición, si no, es creación
             const metodo = id ? 'PUT' : 'POST';
             const ruta = id ? `${API}/api/admin/usuarios/${id}` : `${API}/api/admin/crear-usuario`;
 
@@ -275,22 +289,18 @@
                     body: JSON.stringify({ nombre, correo, password, rol, negocio })
                 });
                 if(res.ok) { 
-                    alert(id ? "Usuario actualizado" : "Usuario vinculado"); 
+                    alert(id ? "Usuario actualizado con éxito" : "Usuario vinculado con éxito"); 
                     resetFormularioUsuario();
                     cargarUsuariosGlobales(); 
-                } else { alert("Error en la operación"); }
+                } else { alert("Hubo un error en el servidor."); }
             } catch (e) { alert("Error de red"); }
         }
 
         async function eliminarUsuario(id, nombre) {
-            if(!confirm(`¿Está seguro de que desea eliminar a ${nombre}? Esta acción no se puede deshacer.`)) return;
-
+            if(!confirm(`¿Eliminar a ${nombre}?`)) return;
             try {
                 const res = await fetch(`${API}/api/admin/usuarios/${id}`, { method: 'DELETE' });
-                if(res.ok) {
-                    alert("Usuario eliminado correctamente.");
-                    cargarUsuariosGlobales();
-                } else { alert("No se pudo eliminar el usuario."); }
+                if(res.ok) { cargarUsuariosGlobales(); }
             } catch (e) { alert("Error de conexión."); }
         }
 
@@ -301,7 +311,7 @@
             document.getElementById('user-rol').value = rol;
             document.getElementById('user-negocio').value = negocio;
             
-            document.getElementById('btn-user-main').innerText = "Guardar Cambios";
+            document.getElementById('btn-user-main').innerText = "Actualizar Datos del Usuario";
             document.getElementById('btn-cancelar-edit').style.display = "block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

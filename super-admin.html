@@ -6,10 +6,9 @@
     <title>Super Admin | Agendate Live</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; }
+        :root { --primary: #1a1a1a; --accent: #d4af37; --bg: #f4f7f6; --blue: #3498db; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; background: var(--bg); display: flex; }
         
-        /* Sidebar lateral */
         .sidebar { width: 260px; background: var(--primary); color: white; height: 100vh; padding: 30px 20px; position: fixed; box-sizing: border-box; }
         .sidebar h2 { font-weight: 800; font-size: 22px; margin-bottom: 40px; text-align: center; }
         .sidebar h2 span { color: var(--accent); }
@@ -17,103 +16,105 @@
         .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .nav-item.active { background: var(--accent); color: var(--primary); font-weight: 800; }
 
-        /* Contenido principal */
         .main-content { margin-left: 260px; padding: 40px; width: calc(100% - 260px); box-sizing: border-box; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         
         .card { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee; }
         
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 20px; border-radius: 15px; text-align: center; border-bottom: 4px solid var(--accent); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; text-align: center; border-bottom: 4px solid var(--accent); }
         .stat-card h3 { margin: 0; font-size: 32px; font-weight: 800; }
         .stat-card p { color: #666; margin: 5px 0 0; font-size: 14px; font-weight: 600; }
 
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
-        .btn-add { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; transition: 0.3s; width: 100%; margin-top: 10px; }
-        .btn-add:hover { background: var(--accent); color: var(--primary); }
+        
+        .btn-add { background: var(--primary); color: white; padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; width: 100%; margin-top: 10px; transition: 0.3s; }
+        .btn-add:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-blue { background: var(--blue); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #888; font-size: 12px; text-transform: uppercase; }
         td { padding: 15px; border-bottom: 1px solid #f9f9f9; font-size: 14px; }
-        .badge-admin { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
-        .badge-category { background: #f4f4f4; color: #555; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .badge-admin { background: #e3f2fd; color: #1976d2; }
+        .badge-staff { background: #e8f5e9; color: #2e7d32; }
     </style>
 </head>
 <body>
 
     <div class="sidebar">
         <h2>AGENDATE<span>LIVE</span></h2>
-        <div class="nav-item active">🏢 Negocios</div>
-        <div class="nav-item">👥 Usuarios</div>
+        <div class="nav-item active">🏢 Gestión Global</div>
         <div class="nav-item" onclick="cerrarSesion()" style="margin-top: 40px; color: #ff4d4d;">🚪 Cerrar Sesión</div>
     </div>
 
     <div class="main-content">
         <div class="header">
             <div>
-                <h1 style="margin:0; font-weight: 800;">Panel de Control</h1>
-                <p id="admin-info" style="color: #888; margin-top: 5px;">Sincronizando...</p>
+                <h1 style="margin:0; font-weight: 800;">Panel de Control Maestro</h1>
+                <p id="admin-info" style="color: #888; margin-top: 5px;">Cargando...</p>
             </div>
         </div>
 
         <div class="grid">
             <div class="stat-card">
                 <h3 id="count-negocios">0</h3>
-                <p>Negocios Activos</p>
+                <p>Negocios</p>
             </div>
             <div class="stat-card">
-                <h3 style="color: #2e7d32;">Online</h3>
-                <p>Estado del Sistema</p>
+                <h3 id="count-usuarios">0</h3>
+                <p>Usuarios Totales</p>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div class="card">
+                <h3 style="margin-top:0; font-weight: 800;">1. Registrar Negocio</h3>
+                <input type="text" id="neg-nombre" placeholder="Nombre comercial">
+                <select id="neg-categoria">
+                    <option value="Barberia">Barbería</option>
+                    <option value="Spa">Spa & Estética</option>
+                    <option value="Odontologia">Odontología</option>
+                    <option value="Veterinaria">Veterinaria</option>
+                    <option value="Gastronomia">Gastronomía</option>
+                    <option value="Turismo">Turismo</option>
+                    <option value="Automotriz">Automotriz</option>
+                    <option value="Otros">Otros</option>
+                </select>
+                <input type="text" id="neg-ubicacion" placeholder="Ciudad / Sucursal">
+                <input type="email" id="neg-admin-mail" placeholder="Email del Dueño">
+                <button class="btn-add" onclick="crearNegocio()">+ Crear Negocio</button>
+            </div>
+
+            <div class="card" style="border-left: 5px solid var(--blue);">
+                <h3 style="margin-top:0; font-weight: 800;">2. Registrar Usuario</h3>
+                <input type="text" id="user-nombre" placeholder="Nombre completo">
+                <input type="email" id="user-email" placeholder="Correo electrónico">
+                <select id="user-rol">
+                    <option value="ADMIN">Dueño (ADMIN)</option>
+                    <option value="STAFF">Empleado (STAFF)</option>
+                </select>
+                <select id="user-negocio-select">
+                    <option value="">Vincular a Negocio...</option>
+                </select>
+                <button class="btn-add btn-blue" onclick="crearUsuario()">+ Crear Acceso</button>
             </div>
         </div>
 
         <div class="card">
-            <h3 style="margin-top:0; font-weight: 800;">Registrar Nuevo Negocio</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <label style="font-size: 12px; font-weight: 700;">Nombre del Negocio</label>
-                    <input type="text" id="neg-nombre" placeholder="Nombre comercial">
-                </div>
-                <div>
-                    <label style="font-size: 12px; font-weight: 700;">Categoría</label>
-                    <select id="neg-categoria">
-                        <option value="Barberia">Barbería</option>
-                        <option value="Spa">Spa & Estética</option>
-                        <option value="Odontologia">Odontología</option>
-                        <option value="Veterinaria">Veterinaria</option>
-                        <option value="Gastronomia">Gastronomía</option>
-                        <option value="Turismo">Turismo</option>
-                        <option value="Automotriz">Automotriz</option>
-                        <option value="Otros">Otros</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size: 12px; font-weight: 700;">Ubicación</label>
-                    <input type="text" id="neg-ubicacion" placeholder="Ciudad / Sucursal">
-                </div>
-                <div>
-                    <label style="font-size: 12px; font-weight: 700;">Email del Administrador</label>
-                    <input type="email" id="neg-admin" placeholder="correo@admin.com">
-                </div>
-            </div>
-            <button class="btn-add" id="btn-crear" onclick="crearNegocio()">+ Dar de Alta Negocio</button>
-        </div>
-
-        <div class="card">
-            <h3 style="margin-top:0; font-weight: 800;">Directorio de Negocios</h3>
+            <h3 style="margin-top:0; font-weight: 800;">Directorio de Negocios Registrados</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Nombre</th>
                         <th>Categoría</th>
                         <th>Ubicación</th>
-                        <th>Administrador</th>
-                        <th>Fecha de Registro</th>
+                        <th>Email Admin</th>
+                        <th>Acción</th>
                     </tr>
                 </thead>
-                <tbody id="lista-negocios">
-                    <tr><td colspan="5" style="text-align:center; color:#999; padding:20px;">Cargando base de datos...</td></tr>
-                </tbody>
+                <tbody id="lista-negocios"></tbody>
             </table>
         </div>
     </div>
@@ -124,60 +125,51 @@
         window.onload = () => {
             const email = localStorage.getItem('user_email');
             const rol = localStorage.getItem('user_rol');
-            const nombre = localStorage.getItem('user_nombre');
-
             if (!email || rol !== 'SUPER') {
                 window.location.href = 'login.html';
                 return;
             }
-
-            document.getElementById('admin-info').innerText = `Administrador: ${nombre || email}`;
-            cargarNegocios();
+            document.getElementById('admin-info').innerText = `Administrador: ${email}`;
+            cargarDatos();
         };
 
-        async function cargarNegocios() {
+        async function cargarDatos() {
             try {
                 const res = await fetch(`${API}/api/negocios`);
                 const negocios = await res.json();
                 
                 const tabla = document.getElementById('lista-negocios');
-                const contador = document.getElementById('count-negocios');
+                const selectNegocios = document.getElementById('user-negocio-select');
+                const contadorNeg = document.getElementById('count-negocios');
+                
                 tabla.innerHTML = "";
-                contador.innerText = negocios.length;
-
-                if(negocios.length === 0) {
-                    tabla.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No hay negocios registrados.</td></tr>";
-                    return;
-                }
+                selectNegocios.innerHTML = '<option value="">Vincular a Negocio...</option>';
+                contadorNeg.innerText = negocios.length;
 
                 negocios.forEach(n => {
-                    const fecha = n.creadoEn ? new Date(n.creadoEn).toLocaleDateString() : 'N/A';
+                    // Llenar Tabla
                     tabla.innerHTML += `
                         <tr>
-                            <td><b style="color: var(--primary);">${n.nombre}</b></td>
-                            <td><span class="badge-category">${n.categoria || 'N/A'}</span></td>
-                            <td>${n.ubicacion || '---'}</td>
-                            <td><span class="badge-admin">${n.adminEmail}</span></td>
-                            <td>${fecha}</td>
+                            <td><b>${n.nombre}</b></td>
+                            <td><span class="badge" style="background:#eee;">${n.categoria}</span></td>
+                            <td>${n.ubicacion}</td>
+                            <td>${n.adminEmail}</td>
+                            <td><button onclick="eliminarNegocio('${n._id}')" style="color:red; border:none; background:none; cursor:pointer; font-weight:700;">Eliminar</button></td>
                         </tr>
                     `;
+                    // Llenar Selector de Usuarios
+                    selectNegocios.innerHTML += `<option value="${n.nombre}">${n.nombre}</option>`;
                 });
-            } catch (e) { 
-                document.getElementById('lista-negocios').innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Error al conectar con la base de datos.</td></tr>";
-            }
+            } catch (e) { console.error("Error al cargar datos"); }
         }
 
         async function crearNegocio() {
-            const nombre = document.getElementById('neg-nombre').value.trim();
-            const ubicacion = document.getElementById('neg-ubicacion').value.trim();
-            const adminEmail = document.getElementById('neg-admin').value.trim();
+            const nombre = document.getElementById('neg-nombre').value;
+            const ubicacion = document.getElementById('neg-ubicacion').value;
+            const adminEmail = document.getElementById('neg-admin-mail').value;
             const categoria = document.getElementById('neg-categoria').value;
-            const btn = document.getElementById('btn-crear');
 
-            if(!nombre || !adminEmail) return alert("Por favor, completa los campos requeridos.");
-
-            btn.disabled = true;
-            btn.innerText = "Registrando...";
+            if(!nombre || !adminEmail) return alert("Completa los campos obligatorios");
 
             try {
                 const res = await fetch(`${API}/api/admin/crear-negocio`, {
@@ -185,20 +177,40 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ nombre, ubicacion, adminEmail, categoria })
                 });
+                if(res.ok) { alert("Negocio creado"); cargarDatos(); }
+            } catch (e) { alert("Error de conexión"); }
+        }
 
+        async function crearUsuario() {
+            const nombre = document.getElementById('user-nombre').value;
+            const email = document.getElementById('user-email').value;
+            const rol = document.getElementById('user-rol').value;
+            const negocio = document.getElementById('user-negocio-select').value;
+
+            if(!nombre || !email || !negocio) return alert("Completa todos los datos del usuario");
+
+            try {
+                // Endpoint para creación manual de usuarios por el Super Admin
+                const res = await fetch(`${API}/api/admin/crear-usuario-manual`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ nombre, email, rol, negocio })
+                });
                 if(res.ok) {
-                    alert("Negocio registrado con éxito.");
+                    alert("Usuario creado y vinculado con éxito");
                     location.reload();
                 } else {
-                    const error = await res.json();
-                    alert("Error: " + (error.mensaje || "No se pudo crear"));
-                    btn.disabled = false;
-                    btn.innerText = "+ Dar de Alta Negocio";
+                    alert("No se pudo crear el usuario. Verifica si el email ya existe.");
                 }
-            } catch (e) { 
-                alert("Error de conexión.");
-                btn.disabled = false;
-                btn.innerText = "+ Dar de Alta Negocio";
+            } catch (e) { alert("Error al conectar con el servidor."); }
+        }
+
+        async function eliminarNegocio(id) {
+            if(confirm("¿Estás seguro de eliminar este negocio? Esto no se puede deshacer.")) {
+                try {
+                    await fetch(`${API}/api/admin/negocio/${id}`, { method: 'DELETE' });
+                    cargarDatos();
+                } catch (e) { alert("Error al eliminar"); }
             }
         }
 

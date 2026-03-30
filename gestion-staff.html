@@ -18,7 +18,7 @@
         .menu-item.active { background: var(--accent); color: var(--primary); }
 
         /* Contenido Principal */
-        .main-content { margin-left: 260px; padding: 40px; width: 100%; box-sizing: border-box; }
+        .main-content { margin-left: 260px; padding: 40px; width: calc(100% - 260px); box-sizing: border-box; }
         .header { margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
         .header h1 { font-weight: 800; margin: 0; font-size: 28px; }
 
@@ -85,23 +85,32 @@
                     </tr>
                 </thead>
                 <tbody id="lista-staff">
-                    </tbody>
+                    <tr><td colspan="5" style="text-align:center; padding:20px;">Cargando equipo...</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
     <script>
         const API = "https://mis-barberias.onrender.com";
-        // IMPORTANTE: Sincronizado con los nombres de localStorage del login
+        
+        // RECUPERAR DATOS (Sincronizado con Login)
         const negocioId = localStorage.getItem('negocio_id');
         const userRol = localStorage.getItem('user_rol');
+        const userEmail = localStorage.getItem('user_email');
 
         window.onload = function() {
-            if(!negocioId || userRol !== 'ADMIN') {
+            // SEGURIDAD: Validación estricta
+            if(!userEmail || userRol !== 'ADMIN') {
                 window.location.href = 'login.html';
                 return;
             }
-            cargarStaff();
+            
+            if(negocioId) {
+                cargarStaff();
+            } else {
+                alert("Error: No se encontró el ID de negocio.");
+            }
         };
 
         async function registrarStaff() {
@@ -124,15 +133,14 @@
                 
                 const data = await res.json();
                 
-                if(data.success) {
+                if(res.ok && data.success) {
                     alert(`¡${nombre} ahora es parte de tu equipo!`);
-                    // Limpiar campos
                     document.getElementById('staff-nombre').value = "";
                     document.getElementById('staff-correo').value = "";
                     document.getElementById('staff-pass').value = "";
                     cargarStaff();
                 } else {
-                    alert(data.error || "Error al registrar barbero.");
+                    alert(data.error || data.mensaje || "Error al registrar barbero.");
                 }
             } catch (e) {
                 alert("Error de conexión con el servidor");
@@ -145,12 +153,14 @@
         async function cargarStaff() {
             try {
                 const res = await fetch(`${API}/api/admin/staff/${negocioId}`);
+                if(!res.ok) throw new Error("Error al obtener staff");
+                
                 const staff = await res.json();
                 const tbody = document.getElementById('lista-staff');
                 tbody.innerHTML = "";
 
-                if(!staff.length) {
-                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:#999;'>Aún no has registrado personal.</td></tr>";
+                if(!staff || staff.length === 0) {
+                    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:40px; color:#999;'>Aún no tienes barberos registrados.</td></tr>";
                     return;
                 }
 
@@ -171,11 +181,13 @@
                 });
             } catch (e) {
                 console.error("Error al cargar staff:", e);
+                document.getElementById('lista-staff').innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Error al cargar datos del staff.</td></tr>";
             }
         }
 
         function eliminarBarbero(id) {
-            if(confirm("¿Estás seguro de eliminar a este barbero? Sus citas podrían quedar sin asignar.")) {
+            if(confirm("¿Estás seguro de eliminar a este barbero?")) {
+                // Aquí iría el fetch a la ruta de eliminar si la tienes creada
                 alert("Función de eliminación en desarrollo.");
             }
         }
